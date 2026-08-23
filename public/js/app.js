@@ -579,6 +579,23 @@
     var out = document.getElementById('s-result');
     out.innerHTML = '';
     var love = analyzeLove(saju);
+
+    currentSajuA = { saju: saju, love: love, name: name };
+
+    // "연애 캐릭터 카드" — 게임 캐릭터 카드처럼 유형명/스탯/스킬을 보여주는 메인 카드.
+    if (window.YeonbunLoveCharacter) {
+      out.appendChild(window.YeonbunLoveCharacter.buildCard(currentSajuA));
+    }
+
+    // 캐릭터 카드 바로 아래에 프리미엄 리포트 구매 + 공유 카드 버튼(reports.js)을 붙임.
+    var ctaHost = el('div', { class: 'card' });
+    out.appendChild(ctaHost);
+    if (window.YeonbunReports) window.YeonbunReports.attachSingleCTA(ctaHost, currentSajuA);
+
+    // 기존의 상세 사주 풀이(명식표/오행분포/신살 등)는 접이식으로 남겨서 원하는 사람만 보게 함.
+    var detailToggle = el('details', { class: 'saju-detail-toggle' });
+    detailToggle.appendChild(txt('summary', '', '자세한 사주 풀이 보기'));
+
     var card = el('div', { class: 'card' });
     var heading = (name ? name + '님의 ' : '') + '사주 명식';
     card.appendChild(txt('h2', '', heading));
@@ -614,11 +631,8 @@
     }
 
     card.appendChild(result);
-    out.appendChild(card);
-
-    currentSajuA = { saju: saju, love: love, name: name };
-
-    if (window.YeonbunReports) window.YeonbunReports.attachSingleCTA(card, currentSajuA);
+    detailToggle.appendChild(card);
+    out.appendChild(detailToggle);
 
     renderGuideEmptyOrKeep();
   }

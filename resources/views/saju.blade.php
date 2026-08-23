@@ -246,6 +246,7 @@
     naverLoginUrl: @json(route('auth.redirect', 'naver'))
   };
 </script>
+<script src="{{ asset('js/love-character.js') }}"></script>
 <script src="{{ asset('js/app.js') }}"></script>
 <script src="{{ asset('js/reports.js') }}"></script>
 <script src="{{ asset('js/chat.js') }}"></script>
