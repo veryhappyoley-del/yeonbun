@@ -329,20 +329,6 @@
     return host;
   }
 
-  // 이미 페이지에 그려진 실제 DOM 노드(예: 연애 캐릭터 카드)를 화면 밖에서 그대로 렌더링.
-  // 이 노드는 site의 app.css(.lc-*)를 그대로 쓰므로 별도 <style> 주입이 필요 없어요.
-  // width를 지정해 두 번째 사용자든 첫 번째든 캡처 결과 크기가 일정하게 나오게 함.
-  function mountOffscreenNode(node, width) {
-    var host = document.createElement('div');
-    host.style.position = 'absolute';
-    host.style.top = '0';
-    host.style.left = '-10000px';
-    host.style.width = width + 'px';
-    host.appendChild(node);
-    document.body.appendChild(host);
-    return host;
-  }
-
   function siteShareUrl() {
     if (window.YeonbunSite && window.YeonbunSite.url) return window.YeonbunSite.url;
     return (window.location && window.location.origin) || '';
@@ -453,6 +439,12 @@
     container.appendChild(row);
   }
 
+  // 화면에 실제로 그려진 카드(cardEl)를 그대로 캡처합니다 — 예전처럼 카드를 복제해서
+  // 화면 밖 고정 폭(440px) 컨테이너에 다시 그리면, 실제 화면 폭(반응형 레이아웃에 따라
+  // 다름)과 달라져서 "너비가 줄어들면서 볼품없어지는" 문제가 생겼습니다.
+  // html2canvas의 onclone 옵션을 쓰면 html2canvas가 캡처용으로 만드는 내부 사본에만
+  // 유입 문구 푸터를 추가할 수 있어서, 실제 페이지의 카드는 전혀 건드리지 않고도
+  // (깜빡임 없이) 화면에 보이는 그대로의 크기/모양으로 캡처할 수 있습니다.
   function renderCharacterCardShare(cardEl, previewBox) {
     previewBox.innerHTML = '';
     previewBox.appendChild(txt('div', 'hint', '카드 이미지를 만드는 중…'));
@@ -463,28 +455,48 @@
       return;
     }
 
-    var clone = cardEl.cloneNode(true);
-    clone.style.animation = 'none'; // 리빌 애니메이션은 캡처 순간과 안 맞을 수 있어서 끔
+    // onclone 콜백 안에서 캡처 대상을 정확히 찾기 위한 임시 마커(캡처 후 원상복구).
+    var markerAttr = 'data-lc-share-capture';
+    var hadMarker = cardEl.hasAttribute(markerAttr);
+    cardEl.setAttribute(markerAttr, '1');
 
-    // 캡처본 전용 — "결" 유입을 유도하는 문구를 카드 하단에 덧붙임(온페이지 카드는 안 건드림).
-    var shareFooter = el('div', { class: 'lc-share-footer' });
-    shareFooter.appendChild(txt('div', 'lc-share-footer-cta', '나도 내 연애 캐릭터 뽑아보기 👉'));
-    shareFooter.appendChild(txt('div', 'lc-share-footer-host', siteShareHost()));
-    clone.appendChild(shareFooter);
-
-    var host = mountOffscreenNode(clone, 440);
+    function restore() {
+      if (!hadMarker) cardEl.removeAttribute(markerAttr);
+    }
 
     fontsReady().then(function () {
-      return window.html2canvas(clone, { backgroundColor: null, scale: 2, useCORS: true });
+      return window.html2canvas(cardEl, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+        onclone: function (clonedDoc) {
+          var target = clonedDoc.querySelector('[' + markerAttr + ']');
+          if (!target) return;
+          target.style.animation = 'none'; // 리빌 애니메이션은 캡처 순간과 안 맞을 수 있어서 끔
+
+          // 캡처본 전용 — "결" 유입을 유도하는 문구를 카드 하단에 덧붙임(실제 온페이지 카드는 안 건드림).
+          var shareFooter = clonedDoc.createElement('div');
+          shareFooter.className = 'lc-share-footer';
+          var cta = clonedDoc.createElement('div');
+          cta.className = 'lc-share-footer-cta';
+          cta.textContent = '나도 내 연애 캐릭터 뽑아보기 👉';
+          var hostLine = clonedDoc.createElement('div');
+          hostLine.className = 'lc-share-footer-host';
+          hostLine.textContent = siteShareHost();
+          shareFooter.appendChild(cta);
+          shareFooter.appendChild(hostLine);
+          target.appendChild(shareFooter);
+        }
+      });
     }).then(function (canvas) {
-      document.body.removeChild(host);
+      restore();
       presentCanvasResult(canvas, previewBox, 'gyeol-love-character-card.png', {
         title: '결 — 나의 연애 캐릭터 카드',
         text: '내 사주로 나온 연애 캐릭터 카드! 너도 확인해볼래?',
         url: siteShareUrl()
       });
     }).catch(function () {
-      if (host.parentNode) document.body.removeChild(host);
+      restore();
       previewBox.innerHTML = '';
       previewBox.appendChild(txt('div', 'hint', '카드를 만드는 중 문제가 생겼어요. 다시 시도해 주세요.'));
     });

@@ -47,6 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/success', [ReportController::class, 'success'])->name('reports.success');
     Route::get('/reports/fail', [ReportController::class, 'fail'])->name('reports.fail');
     Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
+    Route::get('/reports/{report}/status', [ReportController::class, 'status'])->name('reports.status');
     Route::post('/reports/{report}/regenerate', [ReportController::class, 'regenerate'])->name('reports.regenerate');
 });
 
