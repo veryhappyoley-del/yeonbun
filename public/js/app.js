@@ -295,7 +295,153 @@
     return {
       input: input, solarLongitude: lambda, sajuYear: sajuYear,
       year: yearPillar, month: monthPillar, day: dayPillar, hour: hourPillar,
-      wuxingCount: wu, branchesPresent: branchesPresent
+      wuxingCount: wu, branchesPresent: branchesPresent,
+      deep: analyzeDeepSaju(
+        { year: yearPillar, month: monthPillar, day: dayPillar, hour: hourPillar },
+        wu
+      )
+    };
+  }
+
+  /* ============================================================
+   * 1-b. 심층 사주 엔진 확장 — 십신 / 지장간 / 합충형파해 / 신강신약 / 용신(간이)
+   *      "심층 연애 리포트"(유료)의 AI 분석 근거로 쓰기 위해 calcSaju()의 기존
+   *      반환값에 saju.deep 으로만 새로 더한다. 기존 필드(연/월/일/시주, 오행분포,
+   *      branchesPresent 등)는 하나도 건드리지 않아서 이 값을 몰라도 되는 다른
+   *      기능(오행 분포 카드, 신살, 궁합, 연애 캐릭터 카드 등)은 전혀 영향받지 않는다.
+   *      ※ 격국/조후 등은 유파마다 해석이 갈리는 영역이라, 아래는 여러 기초 명리학
+   *        자료에서 공통적으로 쓰이는 간이(簡易) 조견표 기반의 콘텐츠용 근사 계산이다
+   *        (전문 명리 상담을 대체하지 않음 — 자세한 배경은 saju.deep.note 참고).
+   * ============================================================ */
+
+  // 지장간(地藏干) 조견표 — 여기→중기→정기 순으로 배열, 마지막 값이 정기(그 지지의 오행과 일치).
+  var HIDDEN_STEMS = {
+    자: ['계'], 축: ['계', '신', '기'], 인: ['무', '병', '갑'], 묘: ['을'],
+    진: ['을', '계', '무'], 사: ['무', '경', '병'], 오: ['기', '정'], 미: ['정', '을', '기'],
+    신: ['무', '임', '경'], 유: ['신'], 술: ['신', '정', '무'], 해: ['갑', '임']
+  };
+
+  var EL_GENERATES = { 목: '화', 화: '토', 토: '금', 금: '수', 수: '목' }; // A가 B를 생함
+  var EL_CONTROLS = { 목: '토', 화: '금', 토: '수', 금: '목', 수: '화' }; // A가 B를 극함
+
+  // 십신(十神) — 일간(오행+음양) 대비 대상 글자(오행+음양)의 관계.
+  function tenGodOf(dayEl, dayYY, el, yy) {
+    if (!el) return null;
+    if (el === dayEl) return yy === dayYY ? '비견' : '겁재';
+    if (EL_GENERATES[el] === dayEl) return yy === dayYY ? '편인' : '정인';
+    if (EL_GENERATES[dayEl] === el) return yy === dayYY ? '식신' : '상관';
+    if (EL_CONTROLS[el] === dayEl) return yy === dayYY ? '편관' : '정관';
+    if (EL_CONTROLS[dayEl] === el) return yy === dayYY ? '편재' : '정재';
+    return null;
+  }
+
+  // 지지 관계(육합/충/형/파/해) 조견표. 삼형(인사신·축술미)은 두 글자만 있어도 "부분 성립"으로
+  // 간이 처리한다(엄밀하게는 세 글자가 모두 있어야 완전히 성립하는 유파도 있음).
+  var BRANCH_RELATIONS = {
+    육합: [['자', '축'], ['인', '해'], ['묘', '술'], ['진', '유'], ['사', '신'], ['오', '미']],
+    충: [['자', '오'], ['축', '미'], ['인', '신'], ['묘', '유'], ['진', '술'], ['사', '해']],
+    형: [['인', '사'], ['사', '신'], ['인', '신'], ['축', '술'], ['술', '미'], ['축', '미'], ['자', '묘']],
+    파: [['자', '유'], ['오', '묘'], ['사', '신'], ['인', '해'], ['진', '축'], ['술', '미']],
+    해: [['자', '미'], ['축', '오'], ['인', '사'], ['묘', '진'], ['신', '해'], ['유', '술']]
+  };
+  var SELF_PUNISH = ['진', '오', '유', '해']; // 같은 글자가 2개 이상이면 자형(自刑)
+
+  function findBranchRelations(branches) {
+    var found = { 육합: [], 충: [], 형: [], 파: [], 해: [], 자형: [] };
+    for (var i = 0; i < branches.length; i++) {
+      for (var j = i + 1; j < branches.length; j++) {
+        var a = branches[i], b = branches[j];
+        if (a === b) {
+          if (SELF_PUNISH.indexOf(a) !== -1 && found.자형.indexOf(a + a) === -1) found.자형.push(a + a);
+          continue;
+        }
+        Object.keys(BRANCH_RELATIONS).forEach(function (key) {
+          BRANCH_RELATIONS[key].forEach(function (pair) {
+            var matches = (pair[0] === a && pair[1] === b) || (pair[0] === b && pair[1] === a);
+            if (!matches) return;
+            var label = a + b, labelRev = b + a;
+            if (found[key].indexOf(label) === -1 && found[key].indexOf(labelRev) === -1) {
+              found[key].push(label);
+            }
+          });
+        });
+      }
+    }
+    return found;
+  }
+
+  // 신강신약(간이): 일간과 같은 오행(비겁) + 일간을 생하는 오행(인성)을 "힘을 보태는 쪽",
+  // 나머지(식상·재성·관성)를 "힘을 빼는 쪽"으로 보고, 월지(득령)에 가중치를 살짝 더한 근사치.
+  function dayMasterStrength(dayEl, wuxingCount, monthBranchElement) {
+    var supportSet = [dayEl];
+    Object.keys(EL_GENERATES).forEach(function (el) { if (EL_GENERATES[el] === dayEl) supportSet.push(el); });
+
+    var support = 0, drain = 0;
+    Object.keys(wuxingCount).forEach(function (el) {
+      var count = wuxingCount[el];
+      if (supportSet.indexOf(el) !== -1) support += count; else drain += count;
+    });
+
+    var score = support - drain;
+    if (monthBranchElement) {
+      score += supportSet.indexOf(monthBranchElement) !== -1 ? 1 : -1; // 득령 가중치
+    }
+
+    var label = '중화';
+    if (score >= 2) label = '신강';
+    else if (score <= -2) label = '신약';
+
+    return { label: label, score: score, supportCount: support, drainCount: drain };
+  }
+
+  // 용희신(간이): 신약이면 일간을 돕는 오행(비겁·인성 계열), 신강이면 일간의 힘을 덜어내는
+  // 오행(식상 계열 우선, 관성 보조), 중화면 오행 분포상 가장 부족한 오행을 보완 후보로 제시.
+  function simpleUsefulGod(dayEl, strengthLabel, wuxingCount) {
+    if (strengthLabel === '신약') {
+      var supportEls = [dayEl];
+      Object.keys(EL_GENERATES).forEach(function (el) { if (EL_GENERATES[el] === dayEl) supportEls.push(el); });
+      var secondary = supportEls.filter(function (e) { return e !== dayEl; })[0] || dayEl;
+      return { primary: dayEl, secondary: secondary, reason: '일간의 힘이 상대적으로 약해서, 같은 오행이나 일간을 생조하는 오행이 도움이 되는 방향이에요.' };
+    }
+    if (strengthLabel === '신강') {
+      return { primary: EL_GENERATES[dayEl], secondary: EL_CONTROLS[dayEl], reason: '일간의 힘이 상대적으로 강해서, 힘을 밖으로 풀어내거나 적절히 눌러주는 오행이 도움이 되는 방향이에요.' };
+    }
+    var minEl = null, minCount = Infinity;
+    Object.keys(wuxingCount).forEach(function (el) {
+      if (wuxingCount[el] < minCount) { minCount = wuxingCount[el]; minEl = el; }
+    });
+    return { primary: minEl, secondary: dayEl, reason: '오행 균형이 비교적 고른 편이라, 사주 원국에서 가장 적은 오행을 보완하는 방향을 참고용으로 제시해요.' };
+  }
+
+  function analyzeDeepSaju(pillars, wuxingCount) {
+    var year = pillars.year, month = pillars.month, day = pillars.day, hour = pillars.hour;
+    if (!day) return null;
+
+    var dayEl = day.stemElement, dayYY = day.stemYinYang;
+
+    function pillarDeep(p, isDayPillar) {
+      if (!p) return null;
+      return {
+        stemTenGod: isDayPillar ? null : tenGodOf(dayEl, dayYY, p.stemElement, p.stemYinYang),
+        branchTenGod: tenGodOf(dayEl, dayYY, p.branchElement, p.branchYinYang),
+        hiddenStems: HIDDEN_STEMS[p.branch] || []
+      };
+    }
+
+    var branchesPresent = [year, month, day, hour].filter(Boolean).map(function (p) { return p.branch; });
+    var relations = findBranchRelations(branchesPresent);
+    var strength = dayMasterStrength(dayEl, wuxingCount, month ? month.branchElement : null);
+    var usefulGod = simpleUsefulGod(dayEl, strength.label, wuxingCount);
+
+    return {
+      tenGods: {
+        year: pillarDeep(year, false), month: pillarDeep(month, false),
+        day: pillarDeep(day, true), hour: pillarDeep(hour, false)
+      },
+      relations: relations,
+      dayMasterStrength: strength,
+      usefulGod: usefulGod,
+      note: '간이 조견표 기반의 콘텐츠용 근사 계산이며, 전문 명리 상담을 대체하지 않습니다.'
     };
   }
 

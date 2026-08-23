@@ -777,6 +777,135 @@
     flex-wrap: wrap;
   }
 
+  /* ---------- 심층 연애 리포트 — 구조화 JSON 렌더링(reports/partials/single-report) ---------- */
+  .rpt { margin-top: 4px; }
+
+  .rpt-section {
+    margin-top: 26px;
+    padding-top: 20px;
+    border-top: 1px dashed var(--line);
+  }
+  .rpt-section:first-child { margin-top: 8px; padding-top: 0; border-top: none; }
+
+  .rpt-section-title {
+    font-family: 'Song Myung', serif;
+    font-weight: 400;
+    font-size: 1.05rem;
+    color: var(--seal-deep);
+    margin: 0 0 12px;
+  }
+
+  .rpt-p { margin: 0 0 10px; line-height: 1.75; font-size: 0.92rem; color: var(--ink-soft); }
+
+  .rpt-quote {
+    background: var(--paper);
+    border-left: 3px solid var(--seal);
+    border-radius: 0 12px 12px 0;
+    padding: 12px 16px;
+    font-size: 0.94rem;
+    line-height: 1.7;
+    color: var(--ink);
+    margin-top: 10px;
+  }
+  .rpt-quote--final { border-left-color: var(--gold); font-weight: 600; }
+
+  .rpt-character-link { background: var(--seal-tint); border-radius: 14px; padding: 16px; border-top: none; margin-top: 20px; }
+  .rpt-character-link .rpt-p { color: var(--ink); }
+
+  /* LOVE SCORE / COMPATIBILITY 게이지 바 — 오행 바(.oheang-*)와 같은 시각 언어 재사용 */
+  .rpt-score-list { display: flex; flex-direction: column; gap: 9px; margin-top: 4px; }
+  .rpt-score-row { display: grid; grid-template-columns: 84px 1fr 30px; align-items: center; gap: 10px; font-size: 0.82rem; }
+  .rpt-score-label { color: var(--ink-soft); }
+  .rpt-score-track { height: 9px; border-radius: 999px; background: var(--paper-3); overflow: hidden; }
+  .rpt-score-fill { height: 100%; border-radius: 999px; background: var(--gold); }
+  .rpt-score-fill--indigo { background: var(--indigo); }
+  .rpt-score-row .rpt-score-value { text-align: right; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+  /* LOVE OS / WHO ATTRACTS YOU / PARTNER'S VIEW 카드 그리드 */
+  .rpt-os-grid, .rpt-attract-grid, .rpt-partner-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .rpt-os-card, .rpt-attract-card, .rpt-partner-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .rpt-os-title { font-size: 0.86rem; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+  .rpt-os-line { font-size: 0.86rem; color: var(--ink-soft); line-height: 1.6; margin-top: 4px; }
+  .rpt-os-line span {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--seal);
+    background: var(--seal-tint);
+    border-radius: 6px;
+    padding: 1px 6px;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* LOVE SIGNAL */
+  .rpt-signal-row { margin-top: 12px; }
+  .rpt-signal-row:first-child { margin-top: 4px; }
+  .rpt-signal-label { font-size: 0.84rem; font-weight: 700; color: var(--ink); }
+
+  /* STRENGTH / WEAKNESS */
+  .rpt-sw-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 10px;
+  }
+  .rpt-sw-line { font-size: 0.88rem; line-height: 1.65; color: var(--ink-soft); margin-top: 6px; }
+  .rpt-sw-line:first-child { margin-top: 0; }
+  .rpt-sw-line span { display: block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 2px; }
+  .rpt-sw-strength span { color: var(--gold); }
+  .rpt-sw-escalation span { color: var(--ink-faint); }
+  .rpt-sw-weakness span { color: var(--seal); }
+
+  /* RECURRING PATTERN */
+  .rpt-pattern-flow { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .rpt-pattern-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .rpt-pattern-num {
+    flex: none;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--indigo-tint);
+    color: var(--indigo);
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* RELATIONSHIP ADVICE */
+  .rpt-advice-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 10px;
+  }
+  .rpt-advice-num { font-size: 0.72rem; font-weight: 700; color: var(--gold); letter-spacing: 0.05em; margin-bottom: 6px; }
+
+  .rpt-final { background: var(--gold-tint); border-radius: 14px; padding: 18px; border-top: none; margin-top: 26px; }
+
+  @media (min-width: 560px) {
+    .rpt-os-grid, .rpt-attract-grid, .rpt-partner-grid { grid-template-columns: 1fr 1fr; }
+  }
+
   footer {
     margin-top: 44px;
     padding-top: 18px;

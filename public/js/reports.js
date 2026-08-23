@@ -100,7 +100,20 @@
 
   function pillarSummary(p) {
     if (!p) return null;
-    return { stem: p.stem, branch: p.branch, element: p.stemElement, label: p.label };
+    return {
+      stem: p.stem, stemHanja: p.stemHanja, stemElement: p.stemElement, stemYinYang: p.stemYinYang,
+      branch: p.branch, branchHanja: p.branchHanja, branchElement: p.branchElement, branchYinYang: p.branchYinYang,
+      label: p.label, hanja: p.hanja
+    };
+  }
+
+  // 무료 "나의 연애 사주" 탭에서 이미 보여준 연애 캐릭터 유형(있다면)을 심층 리포트에도 넘겨서
+  // AI가 "왜 이 유형으로 나왔는지"를 사주 데이터로 설명하도록 한다(같은 요약 반복 방지).
+  function characterSummary(saju, love) {
+    if (!window.YeonbunLoveCharacter) return null;
+    var c = window.YeonbunLoveCharacter.getCharacter(love.dayEl, love.dayYY);
+    if (!c) return null;
+    return { typeName: c.typeName, oneLiner: c.oneLiner, signatureStat: c.signatureStat, trait: c.trait };
   }
 
   function buildSingleInput(state) {
@@ -121,7 +134,11 @@
       weakElements: love.weak,
       loveStyle: love.base.style,
       loveCharm: love.base.charm,
-      loveCaution: love.base.caution
+      loveCaution: love.base.caution,
+      // 심층 사주 엔진(app.js analyzeDeepSaju) 결과 — 십신/지장간/합충형파해/신강신약/용신(간이).
+      deep: saju.deep || null,
+      // 무료 캐릭터 카드와 동일한 유형(있다면) — 프리미엄 리포트가 "왜 이 유형인지"를 설명하도록.
+      characterType: characterSummary(saju, love)
     };
   }
 
