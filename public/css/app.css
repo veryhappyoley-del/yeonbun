@@ -255,6 +255,15 @@
   .btn:hover { background: var(--seal-deep); }
   .btn:active { transform: scale(0.98); }
 
+  .btn.outline {
+    background: transparent;
+    color: var(--seal-deep);
+    border: 1.6px solid var(--seal);
+    box-shadow: none;
+  }
+
+  .btn.outline:hover { background: var(--seal-tint); }
+
   .btn.secondary {
     background: transparent;
     color: var(--indigo);
@@ -484,6 +493,81 @@
     color: var(--ink-faint);
     font-size: 0.88rem;
     padding: 10px 2px 4px;
+  }
+
+  /* ---------- 결제 완료 페이지 ---------- */
+  .complete-badge {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--wood);
+    color: #fbf3e9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    margin: 0 auto 14px;
+    box-shadow: 0 6px 16px -6px rgba(76, 122, 82, 0.4);
+  }
+
+  .complete-title {
+    text-align: center;
+    margin-bottom: 26px;
+  }
+
+  .complete-title h2 {
+    margin-bottom: 6px;
+  }
+
+  .complete-title p {
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  .receipt {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 4px 16px;
+    margin-bottom: 18px;
+  }
+
+  .receipt-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    font-size: 0.9rem;
+  }
+
+  .receipt-row + .receipt-row {
+    border-top: 1px dashed var(--line);
+  }
+
+  .receipt-row dt {
+    color: var(--ink-faint);
+  }
+
+  .receipt-row dd {
+    margin: 0;
+    text-align: right;
+    font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .receipt-row.total dd {
+    color: var(--seal-deep);
+    font-size: 1.02rem;
+  }
+
+  .complete-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 22px;
   }
 
   footer {

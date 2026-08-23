@@ -146,10 +146,24 @@ class BillingController extends Controller
 
         $request->user()->increment('credits', $payment->credits);
 
-        return redirect()->route('home')->with(
-            'billing_success',
-            "결제가 완료됐어요! 코인 {$payment->credits}개가 충전됐어요."
-        );
+        return redirect()->route('billing.complete', ['payment' => $payment->id]);
+    }
+
+    /**
+     * 결제 성공 후 도착하는 "결제 완료" 확인 페이지.
+     * 본인이 방금 결제한(paid 상태) 건만 볼 수 있게 막아둡니다.
+     */
+    public function complete(Request $request, Payment $payment)
+    {
+        if ($payment->user_id !== $request->user()->id || $payment->status !== 'paid') {
+            abort(404);
+        }
+
+        return view('billing.complete', [
+            'payment' => $payment,
+            'plan' => self::PLANS[$payment->plan] ?? null,
+            'credits' => $request->user()->credits,
+        ]);
     }
 
     /**

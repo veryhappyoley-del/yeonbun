@@ -34,6 +34,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
     Route::post('/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
     Route::get('/billing/success', [BillingController::class, 'success'])->name('billing.success');
+    Route::get('/billing/complete/{payment}', [BillingController::class, 'complete'])->name('billing.complete');
     Route::get('/billing/fail', [BillingController::class, 'fail'])->name('billing.fail');
     Route::post('/billing/purchase', [BillingController::class, 'purchase'])->name('billing.purchase');
 });
