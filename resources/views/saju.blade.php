@@ -245,6 +245,12 @@
     kakaoLoginUrl: @json(route('auth.redirect', 'kakao')),
     naverLoginUrl: @json(route('auth.redirect', 'naver'))
   };
+  // 공유 카드(연애 캐릭터 카드 등)에 사이트 유입 유도 문구/링크를 넣을 때 씀 — 정적 JS 파일은
+  // Blade의 route()/url() 헬퍼를 직접 못 쓰기 때문에 여기서 서버가 렌더링해서 넘겨줌.
+  window.YeonbunSite = {
+    url: @json(url('/')),
+    host: @json(request()->getHost())
+  };
 </script>
 <script src="{{ asset('js/love-character.js') }}"></script>
 <script src="{{ asset('js/app.js') }}"></script>

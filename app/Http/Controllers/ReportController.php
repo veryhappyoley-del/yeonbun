@@ -35,7 +35,7 @@ class ReportController extends Controller
     private const TYPES = [
         'single' => [
             'label' => '심층 연애 리포트',
-            'price' => 4900,
+            'price' => 8900,
         ],
         'compat' => [
             'label' => '프리미엄 궁합 리포트',

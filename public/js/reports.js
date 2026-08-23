@@ -1,18 +1,20 @@
 /**
- * "심층 리포트 / 프리미엄 궁합 리포트(유료)" + "공유 카드(무료)" 버튼을
+ * "심층 리포트 / 프리미엄 궁합 리포트(유료)" 구매 버튼 + "공유 카드(무료)" 기능을
  * 사주풀이/궁합 결과 카드 아래에 붙여주는 스크립트.
  *
- * app.js가 결과를 렌더링한 직후 window.YeonbunReports.attachSingleCTA / attachCompatCTA를
- * 호출해서 이 스크립트에 결과 데이터를 넘겨줍니다. 결제는 billing.blade.php와 동일한
- * 토스페이먼츠 위젯 방식이고, 서버(ReportController)가 가격을 최종적으로 결정합니다.
- * 공유 카드는 순수 클라이언트 <canvas> 렌더링이라 서버 호출이 없어요(로그인 불필요).
+ * app.js가 결과를 렌더링한 직후 아래 함수들을 호출해서 이 스크립트에 결과 데이터를 넘겨줍니다.
+ * - attachSingleCTA / attachCompatCTA: 결제 CTA. 결제는 billing.blade.php와 동일한
+ *   토스페이먼츠 위젯 방식이고, 서버(ReportController)가 가격을 최종적으로 결정합니다.
+ * - attachCardShare: "나의 연애 사주"의 연애 캐릭터 카드(love-character.js가 그린 실제
+ *   .lc-card DOM)를 그대로 캡처해서 공유하는 기능. 궁합 카드는 여전히 별도의 HTML 템플릿
+ *   (buildCompatCardHTML)으로 만듭니다. 둘 다 html2canvas 캡처라 서버 호출이 없어요(로그인 불필요).
  */
 (function () {
   'use strict';
 
   // 화면 표시용 가격 안내일 뿐, 실제 결제 금액은 항상 서버(ReportController::TYPES)가 결정합니다.
   var TYPE_INFO = {
-    single: { label: '심층 연애 리포트', priceLabel: '4,900원' },
+    single: { label: '심층 연애 리포트', priceLabel: '8,900원' },
     compat: { label: '프리미엄 궁합 리포트', priceLabel: '3,900원' }
   };
 
@@ -157,10 +159,14 @@
   }
 
   /* ============================================================
-   * CTA(구매 + 공유카드 버튼) 렌더링
+   * CTA(구매 버튼, 필요하면 공유카드 버튼도 함께) 렌더링
    * ============================================================ */
 
-  function buildCTA(typeKey, buildTitle, onShare) {
+  // showShare: false면 공유 카드 버튼을 아예 안 그림 — "나의 연애 사주"는 이제 연애 캐릭터
+  // 카드 자체를 공유하는 별도 버튼(attachCardShare)이 있어서 여기선 구매 버튼만 둠.
+  function buildCTA(typeKey, buildTitle, onShare, opts) {
+    opts = opts || {};
+    var showShare = opts.showShare !== false;
     var info = TYPE_INFO[typeKey];
     var wrap = el('div', { class: 'report-cta' });
     wrap.appendChild(txt('p', '', '더 깊은 해석이 궁금하다면?'));
@@ -177,12 +183,14 @@
     });
     row.appendChild(buyBtn);
 
-    var shareBtn = el('button', { type: 'button', class: 'btn outline' }, [document.createTextNode('공유 카드 만들기')]);
     var previewBox = el('div', { class: 'share-preview' });
-    shareBtn.addEventListener('click', function () {
-      onShare(previewBox);
-    });
-    row.appendChild(shareBtn);
+    if (showShare) {
+      var shareBtn = el('button', { type: 'button', class: 'btn outline' }, [document.createTextNode('공유 카드 만들기')]);
+      shareBtn.addEventListener('click', function () {
+        onShare(previewBox);
+      });
+      row.appendChild(shareBtn);
+    }
 
     wrap.appendChild(row);
     wrap.appendChild(statusBox);
@@ -193,16 +201,14 @@
   function attachSingleCTA(card, state) {
     var input = buildSingleInput(state);
     var title = (state.name ? state.name + '님의 ' : '') + '심층 연애 리포트';
-    card.appendChild(buildCTA('single', { input: input, title: title }, function (previewBox) {
-      renderShareCard(previewBox, 'single', state);
-    }));
+    card.appendChild(buildCTA('single', { input: input, title: title }, null, { showShare: false }));
   }
 
   function attachCompatCTA(card, state) {
     var input = buildCompatInput(state);
     var title = (state.nameA || 'A') + ' × ' + (state.nameB || 'B') + ' 프리미엄 궁합 리포트';
     card.appendChild(buildCTA('compat', { input: input, title: title }, function (previewBox) {
-      renderShareCard(previewBox, 'compat', state);
+      renderCompatShareCard(previewBox, state);
     }));
   }
 
@@ -225,21 +231,10 @@
    * 서버 호출이 없어서 로그인하지 않아도 만들 수 있어요(바이럴 유입용).
    * ============================================================ */
 
-  // 일간 오행 × 음양 조합(10가지)에 붙이는 트렌디한 "연애 유형" 닉네임.
-  // 기존 해석 로직(app.js의 ELEMENT_LOVE)은 건드리지 않고, 공유 카드에서만 쓰는 재미 요소예요.
-  var TYPE_NAME = {
-    '목_양': { name: '직진 대시형', emoji: '🌱' },
-    '목_음': { name: '은근 성장형', emoji: '🌿' },
-    '화_양': { name: '텐션 메이커형', emoji: '🔥' },
-    '화_음': { name: '잔잔한 불꽃형', emoji: '🕯️' },
-    '토_양': { name: '든든한 베이스형', emoji: '🏡' },
-    '토_음': { name: '묵묵한 진심형', emoji: '🌾' },
-    '금_양': { name: '확신의 아이코닉형', emoji: '✨' },
-    '금_음': { name: '츤데레 원칙형', emoji: '❄️' },
-    '수_양': { name: '센스만렙 눈치형', emoji: '💧' },
-    '수_음': { name: '잔잔한 감성형', emoji: '🌊' }
-  };
-
+  // 궁합 공유 카드용 HTML/CSS 템플릿. "나의 연애 사주" 쪽은 이제 이 템플릿을 쓰지 않고
+  // 실제 연애 캐릭터 카드(.lc-card, love-character.js)를 그대로 캡처합니다 — 예전엔 여기 별도
+  // TYPE_NAME 닉네임 매핑이 있었는데, love-character.js의 LOVE_CHARACTERS와 데이터가
+  // 중복·불일치할 위험이 있어서 정리했습니다(캐릭터 카드가 유일한 유형명 출처가 됨).
   var CARD_CSS = '' +
     '.gyeol-card { width: 1080px; height: 1080px; position: relative; overflow: hidden; ' +
     '  box-sizing: border-box; font-family: "Gowun Dodum", sans-serif; color: #201d1a; ' +
@@ -285,34 +280,6 @@
       '<span class="gyeol-sparkle" style="top:170px; right:110px; font-size:30px;">✨</span>';
   }
 
-  function buildSingleCardHTML(state) {
-    var saju = state.saju, love = state.love;
-    var typeKey = love.dayEl + '_' + love.dayYY;
-    var type = TYPE_NAME[typeKey] || { name: love.base.style, emoji: '💕' };
-    var dayLabel = saju.day.stem + saju.day.branch;
-    var name = state.name ? escapeHtml(state.name) + '님은' : '나는';
-
-    return '' +
-      '<div class="gyeol-card">' +
-        decorBlobs() +
-        '<div class="gyeol-kicker">결 · AI 연애 사주</div>' +
-        '<div class="gyeol-panel">' +
-          '<div class="gyeol-emoji">' + type.emoji + '</div>' +
-          '<div class="gyeol-tagline" style="margin-bottom:6px; font-weight:700;">' + name + '</div>' +
-          '<div class="gyeol-type">' + escapeHtml(type.name) + '</div>' +
-          '<div class="gyeol-tagline">' + escapeHtml(truncate(love.base.style, 46)) + '</div>' +
-          '<div>' +
-            '<span class="gyeol-chip">일주 ' + escapeHtml(dayLabel) + '</span>' +
-            '<span class="gyeol-chip">오행 ' + escapeHtml(love.dayEl) + '</span>' +
-          '</div>' +
-        '</div>' +
-        '<div class="gyeol-footer">' +
-          '<div class="gyeol-footer-cta">너의 연애 유형은 뭘까? 👉</div>' +
-          '<div class="gyeol-footer-brand">결 · 사주로 읽는 나의 연애 기질</div>' +
-        '</div>' +
-      '</div>';
-  }
-
   function buildCompatCardHTML(state) {
     var compat = state.compat;
     var nameA = escapeHtml(state.nameA || 'A');
@@ -349,7 +316,9 @@
     ]).catch(function () {}).then(function () { return document.fonts.ready; });
   }
 
-  // 화면 밖에 카드를 실제로 렌더링해서 html2canvas가 캡처할 수 있게 함(display:none이면 캡처 불가).
+  // 화면 밖에 HTML 문자열 카드를 실제로 렌더링해서 html2canvas가 캡처할 수 있게 함
+  // (display:none이면 캡처 불가). 궁합 카드(buildCompatCardHTML)처럼 CARD_CSS를
+  // 함께 주입해야 하는 "문자열로 만든" 카드용입니다.
   function mountOffscreen(html) {
     var host = document.createElement('div');
     host.style.position = 'absolute';
@@ -360,7 +329,80 @@
     return host;
   }
 
-  function renderShareCard(previewBox, kind, state) {
+  // 이미 페이지에 그려진 실제 DOM 노드(예: 연애 캐릭터 카드)를 화면 밖에서 그대로 렌더링.
+  // 이 노드는 site의 app.css(.lc-*)를 그대로 쓰므로 별도 <style> 주입이 필요 없어요.
+  // width를 지정해 두 번째 사용자든 첫 번째든 캡처 결과 크기가 일정하게 나오게 함.
+  function mountOffscreenNode(node, width) {
+    var host = document.createElement('div');
+    host.style.position = 'absolute';
+    host.style.top = '0';
+    host.style.left = '-10000px';
+    host.style.width = width + 'px';
+    host.appendChild(node);
+    document.body.appendChild(host);
+    return host;
+  }
+
+  function siteShareUrl() {
+    if (window.YeonbunSite && window.YeonbunSite.url) return window.YeonbunSite.url;
+    return (window.location && window.location.origin) || '';
+  }
+
+  function siteShareHost() {
+    if (window.YeonbunSite && window.YeonbunSite.host) return window.YeonbunSite.host;
+    try { return new URL(siteShareUrl()).host; } catch (e) { return '결'; }
+  }
+
+  // 캡처된 canvas를 미리보기 + "이미지 저장"/"공유하기" 버튼으로 보여주는 공통 로직.
+  // shareMeta.url을 같이 넘기면(Web Share API가 지원하는 기기에서) 카카오톡/인스타 등으로
+  // 공유할 때 이미지와 함께 사이트 링크도 실려서 "유입 유도" 역할을 함.
+  function presentCanvasResult(canvas, previewBox, filename, shareMeta) {
+    previewBox.innerHTML = '';
+    var img = document.createElement('img');
+    img.src = canvas.toDataURL('image/png');
+    img.alt = '공유 카드 미리보기';
+    previewBox.appendChild(img);
+    previewBox.appendChild(txt('div', 'hint', '이미지를 길게 눌러 저장하거나, 아래 버튼으로 저장/공유하세요.'));
+
+    var actions = el('div', { class: 'share-card-actions' });
+
+    var saveBtn = el('button', { type: 'button', class: 'btn outline' }, [document.createTextNode('이미지 저장')]);
+    saveBtn.addEventListener('click', function () {
+      canvas.toBlob(function (blob) {
+        if (!blob) return;
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      }, 'image/png');
+    });
+    actions.appendChild(saveBtn);
+
+    if (navigator.share) {
+      var shareBtn = el('button', { type: 'button', class: 'btn' }, [document.createTextNode('공유하기')]);
+      shareBtn.addEventListener('click', function () {
+        canvas.toBlob(function (blob) {
+          if (!blob) return;
+          var file = new File([blob], filename, { type: 'image/png' });
+          var payload = { title: shareMeta.title, text: shareMeta.text, url: shareMeta.url };
+          if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+            payload.files = [file];
+          }
+          // 파일 공유가 안 되는 브라우저에서도 문구+링크만이라도 공유되게(사이트 유입 유도).
+          navigator.share(payload).catch(function () {});
+        }, 'image/png');
+      });
+      actions.appendChild(shareBtn);
+    }
+
+    previewBox.appendChild(actions);
+  }
+
+  function renderCompatShareCard(previewBox, state) {
     previewBox.innerHTML = '';
     previewBox.appendChild(txt('div', 'hint', '카드를 만드는 중…'));
 
@@ -370,7 +412,7 @@
       return;
     }
 
-    var html = kind === 'compat' ? buildCompatCardHTML(state) : buildSingleCardHTML(state);
+    var html = buildCompatCardHTML(state);
 
     fontsReady().then(function () {
       var host = mountOffscreen(html);
@@ -379,46 +421,11 @@
       return window.html2canvas(target, { backgroundColor: null, scale: 1, useCORS: true })
         .then(function (canvas) {
           document.body.removeChild(host);
-
-          previewBox.innerHTML = '';
-          var img = document.createElement('img');
-          img.src = canvas.toDataURL('image/png');
-          img.alt = '공유 카드 미리보기';
-          previewBox.appendChild(img);
-          previewBox.appendChild(txt('div', 'hint', '이미지를 길게 눌러 저장하거나, 아래 버튼으로 저장/공유하세요.'));
-
-          var actions = el('div', { class: 'share-card-actions' });
-
-          var saveBtn = el('button', { type: 'button', class: 'btn outline' }, [document.createTextNode('이미지 저장')]);
-          saveBtn.addEventListener('click', function () {
-            canvas.toBlob(function (blob) {
-              if (!blob) return;
-              var url = URL.createObjectURL(blob);
-              var a = document.createElement('a');
-              a.href = url;
-              a.download = 'gyeol-' + kind + '-card.png';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
-            }, 'image/png');
+          presentCanvasResult(canvas, previewBox, 'gyeol-compat-card.png', {
+            title: '결 — 궁합 리포트 공유 카드',
+            text: '우리 궁합 점수 나왔어! 너도 확인해볼래?',
+            url: siteShareUrl()
           });
-          actions.appendChild(saveBtn);
-
-          if (navigator.share) {
-            var shareBtn = el('button', { type: 'button', class: 'btn' }, [document.createTextNode('공유하기')]);
-            shareBtn.addEventListener('click', function () {
-              canvas.toBlob(function (blob) {
-                if (!blob) return;
-                var file = new File([blob], 'gyeol-' + kind + '-card.png', { type: 'image/png' });
-                if (navigator.canShare && !navigator.canShare({ files: [file] })) return;
-                navigator.share({ files: [file], title: '결 — 사주 공유 카드' }).catch(function () {});
-              }, 'image/png');
-            });
-            actions.appendChild(shareBtn);
-          }
-
-          previewBox.appendChild(actions);
         });
     }).catch(function () {
       previewBox.innerHTML = '';
@@ -426,8 +433,66 @@
     });
   }
 
+  /* ============================================================
+   * 연애 캐릭터 카드(love-character.js가 그린 .lc-card) 자체를 공유.
+   * 별도 카드를 새로 만들지 않고 실제 온페이지 카드를 그대로 캡처해서(내용 이중 관리 방지),
+   * 캡처본에만 사이트 유입 문구를 덧붙입니다(온페이지 카드는 그대로 둠).
+   * ============================================================ */
+
+  function attachCardShare(cardEl, container) {
+    var row = el('div', { class: 'lc-share-row' });
+    var shareBtn = el('button', { type: 'button', class: 'btn outline' }, [document.createTextNode('이 카드 공유하기')]);
+    var previewBox = el('div', { class: 'share-preview' });
+
+    shareBtn.addEventListener('click', function () {
+      renderCharacterCardShare(cardEl, previewBox);
+    });
+
+    row.appendChild(shareBtn);
+    row.appendChild(previewBox);
+    container.appendChild(row);
+  }
+
+  function renderCharacterCardShare(cardEl, previewBox) {
+    previewBox.innerHTML = '';
+    previewBox.appendChild(txt('div', 'hint', '카드 이미지를 만드는 중…'));
+
+    if (!window.html2canvas) {
+      previewBox.innerHTML = '';
+      previewBox.appendChild(txt('div', 'hint', '카드 생성 기능을 불러오지 못했어요. 새로고침 후 다시 시도해 주세요.'));
+      return;
+    }
+
+    var clone = cardEl.cloneNode(true);
+    clone.style.animation = 'none'; // 리빌 애니메이션은 캡처 순간과 안 맞을 수 있어서 끔
+
+    // 캡처본 전용 — "결" 유입을 유도하는 문구를 카드 하단에 덧붙임(온페이지 카드는 안 건드림).
+    var shareFooter = el('div', { class: 'lc-share-footer' });
+    shareFooter.appendChild(txt('div', 'lc-share-footer-cta', '나도 내 연애 캐릭터 뽑아보기 👉'));
+    shareFooter.appendChild(txt('div', 'lc-share-footer-host', siteShareHost()));
+    clone.appendChild(shareFooter);
+
+    var host = mountOffscreenNode(clone, 440);
+
+    fontsReady().then(function () {
+      return window.html2canvas(clone, { backgroundColor: null, scale: 2, useCORS: true });
+    }).then(function (canvas) {
+      document.body.removeChild(host);
+      presentCanvasResult(canvas, previewBox, 'gyeol-love-character-card.png', {
+        title: '결 — 나의 연애 캐릭터 카드',
+        text: '내 사주로 나온 연애 캐릭터 카드! 너도 확인해볼래?',
+        url: siteShareUrl()
+      });
+    }).catch(function () {
+      if (host.parentNode) document.body.removeChild(host);
+      previewBox.innerHTML = '';
+      previewBox.appendChild(txt('div', 'hint', '카드를 만드는 중 문제가 생겼어요. 다시 시도해 주세요.'));
+    });
+  }
+
   window.YeonbunReports = {
     attachSingleCTA: attachSingleCTA,
-    attachCompatCTA: attachCompatCTA
+    attachCompatCTA: attachCompatCTA,
+    attachCardShare: attachCardShare
   };
 })();

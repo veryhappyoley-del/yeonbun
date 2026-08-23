@@ -530,6 +530,31 @@
     position: relative; z-index: 1;
   }
 
+  /* 캐릭터 카드 바로 아래 "이 카드 공유하기" 버튼 줄 */
+  .lc-share-row { margin: 6px 0 20px; text-align: center; }
+
+  /* 공유용 캡처(reports.js renderCharacterCardShare)에서만 카드 맨 아래에 덧붙는 유입 유도 문구.
+     온페이지에 실제로 보이는 .lc-card에는 렌더링되지 않고, 캡처 직전 복제본에만 추가됨. */
+  .lc-share-footer {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(255,255,255,0.28);
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+  .lc-share-footer-cta {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 1rem;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .lc-share-footer-host {
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: rgba(255,255,255,0.8);
+  }
+
   @media (max-width: 420px) {
     .lc-skill-grid { grid-template-columns: 1fr; }
   }

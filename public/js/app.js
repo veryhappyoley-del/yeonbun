@@ -728,25 +728,35 @@
 
     currentSajuA = { saju: saju, love: love, name: name };
 
-    // "연애 캐릭터 카드" — 게임 캐릭터 카드처럼 유형명/스탯/스킬을 보여주는 메인 카드.
+    // 1. 사주 명식 — 언제나 바로 보이는 첫 화면(예전엔 접이식 안에 있던 걸 맨 위로 뺌).
+    var myeongsikCard = el('div', { class: 'card' });
+    var heading = (name ? name + '님의 ' : '') + '사주 명식';
+    myeongsikCard.appendChild(txt('h2', '', heading));
+    myeongsikCard.appendChild(renderMyeongsik(saju));
+    myeongsikCard.appendChild(txt('div', 'day-note', '일간(나를 상징하는 글자) · ' + saju.day.stem + saju.day.stemElement + ' — 아래 연애 해석의 중심이 되는 글자예요'));
+    out.appendChild(myeongsikCard);
+
+    // 2. "연애 캐릭터 카드"(love type card) — 게임 캐릭터 카드처럼 유형명/스탯/스킬을 보여주는 카드.
+    //    카드 바로 아래에 "이 카드 공유하기" 버튼을 붙여서(reports.js) 카드 자체를 공유할 수 있게 함.
+    var characterCard = null;
     if (window.YeonbunLoveCharacter) {
-      out.appendChild(window.YeonbunLoveCharacter.buildCard(currentSajuA));
+      characterCard = window.YeonbunLoveCharacter.buildCard(currentSajuA);
+      out.appendChild(characterCard);
+    }
+    if (characterCard && window.YeonbunReports) {
+      window.YeonbunReports.attachCardShare(characterCard, out);
     }
 
-    // 캐릭터 카드 바로 아래에 프리미엄 리포트 구매 + 공유 카드 버튼(reports.js)을 붙임.
+    // 3. "심층 연애 리포트 보기" 구매 CTA(공유 카드 버튼은 위 캐릭터 카드 공유로 대체돼서 여기선 뺌).
     var ctaHost = el('div', { class: 'card' });
     out.appendChild(ctaHost);
     if (window.YeonbunReports) window.YeonbunReports.attachSingleCTA(ctaHost, currentSajuA);
 
-    // 기존의 상세 사주 풀이(명식표/오행분포/신살 등)는 접이식으로 남겨서 원하는 사람만 보게 함.
+    // 나머지 상세 사주 풀이(오행분포/신살/연애 스타일 텍스트)는 접이식으로 남겨서 원하는 사람만 보게 함.
     var detailToggle = el('details', { class: 'saju-detail-toggle' });
     detailToggle.appendChild(txt('summary', '', '자세한 사주 풀이 보기'));
 
     var card = el('div', { class: 'card' });
-    var heading = (name ? name + '님의 ' : '') + '사주 명식';
-    card.appendChild(txt('h2', '', heading));
-    card.appendChild(renderMyeongsik(saju));
-    card.appendChild(txt('div', 'day-note', '일간(나를 상징하는 글자) · ' + saju.day.stem + saju.day.stemElement + ' — 아래 연애 해석의 중심이 되는 글자예요'));
     card.appendChild(txt('h3', '', '오행 분포'));
     card.appendChild(renderOheang(saju.wuxingCount));
 
