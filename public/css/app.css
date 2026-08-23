@@ -570,6 +570,87 @@
     margin-top: 22px;
   }
 
+  /* ---------- 심층/궁합 프리미엄 리포트 ---------- */
+  .report-cta {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--line);
+    text-align: center;
+  }
+
+  .report-cta p {
+    margin: 0 0 12px;
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+  }
+
+  .report-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    margin-bottom: 18px;
+  }
+
+  .report-body h3 {
+    font-family: 'Song Myung', serif;
+    font-weight: 400;
+    font-size: 1.08rem;
+    color: var(--seal-deep);
+    margin: 22px 0 8px;
+  }
+
+  .report-body h3:first-child { margin-top: 0; }
+
+  .report-body p {
+    margin: 0 0 10px;
+    line-height: 1.75;
+    font-size: 0.92rem;
+  }
+
+  .report-body ul {
+    margin: 0 0 10px;
+    padding-left: 20px;
+    line-height: 1.75;
+    font-size: 0.92rem;
+  }
+
+  .report-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .share-card-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 14px;
+  }
+
+  .share-preview {
+    margin-top: 16px;
+    text-align: center;
+  }
+
+  .share-preview img {
+    max-width: 260px;
+    width: 100%;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--line);
+  }
+
+  .login-gate-inline {
+    margin-top: 14px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
   footer {
     margin-top: 44px;
     padding-top: 18px;

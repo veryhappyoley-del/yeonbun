@@ -123,8 +123,34 @@
     @endif
   </div>
 
+  <div class="card">
+    <h2>선택 기간 리포트 판매 내역 (최근 10건)</h2>
+    @if ($recentReports->isEmpty())
+      <div class="empty-state">선택한 기간에는 리포트 판매 기록이 없어요.</div>
+    @else
+      <div style="overflow-x:auto;">
+        <table class="admin-table">
+          <thead>
+            <tr><th>일시</th><th>사용자</th><th>종류</th><th>제목</th><th>금액</th></tr>
+          </thead>
+          <tbody>
+            @foreach ($recentReports as $report)
+              <tr>
+                <td>{{ $report->created_at->format('Y-m-d H:i') }}</td>
+                <td>{{ $report->user->name ?? '탈퇴한 사용자' }}</td>
+                <td>{{ $report->type === 'compat' ? '프리미엄 궁합' : '심층 개인' }}</td>
+                <td>{{ $report->title ?? '-' }}</td>
+                <td>{{ number_format($report->amount) }}원</td>
+              </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
+    @endif
+  </div>
+
   <footer>
-    방문자 수는 브라우저 쿠키 기반의 대략적인 집계예요(광고 유입 경로·봇 필터링 등은 포함하지 않음). 정확한 마케팅 분석이 필요하면 GA4 같은 별도 분석 도구를 붙이는 걸 추천해요.
+    방문자 수는 브라우저 쿠키 기반의 대략적인 집계예요(광고 유입 경로·봇 필터링 등은 포함하지 않음). 정확한 마케팅 분석이 필요하면 GA4 같은 별도 분석 도구를 붙이는 걸 추천해요. 위 매출/결제 통계는 코인 결제와 프리미엄 리포트 결제를 합산한 값이에요.
   </footer>
 </div>
 

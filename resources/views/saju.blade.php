@@ -6,6 +6,9 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>결 — 연애 특화 사주</title>
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+  @if (config('services.toss.client_key'))
+    <script src="https://js.tosspayments.com/v1/payment"></script>
+  @endif
 </head>
 <body>
 
@@ -15,6 +18,7 @@
     @auth
       <div class="user-chip">
         <a class="chip-link" id="topbar-credits" href="{{ route('billing.index') }}">코인 {{ auth()->user()->credits }}개</a>
+        <a class="chip-link" href="{{ route('reports.index') }}">내 리포트함</a>
         <span>{{ auth()->user()->name }}님</span>
         <form method="POST" action="{{ route('logout') }}">
           @csrf
@@ -230,8 +234,18 @@
     loggedIn: @json(auth()->check()),
     name: @json(auth()->user()->name ?? null)
   };
+  window.YeonbunBilling = {
+    tossConfigured: @json((bool) config('services.toss.client_key')),
+    tossClientKey: @json(config('services.toss.client_key')),
+    reportsCheckoutUrl: @json(route('reports.checkout')),
+    reportsSuccessUrl: @json(route('reports.success')),
+    reportsFailUrl: @json(route('reports.fail')),
+    kakaoLoginUrl: @json(route('auth.redirect', 'kakao')),
+    naverLoginUrl: @json(route('auth.redirect', 'naver'))
+  };
 </script>
 <script src="{{ asset('js/app.js') }}"></script>
+<script src="{{ asset('js/reports.js') }}"></script>
 <script src="{{ asset('js/chat.js') }}"></script>
 </body>
 </html>

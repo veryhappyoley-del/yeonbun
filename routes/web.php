@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -37,6 +38,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/billing/complete/{payment}', [BillingController::class, 'complete'])->name('billing.complete');
     Route::get('/billing/fail', [BillingController::class, 'fail'])->name('billing.fail');
     Route::post('/billing/purchase', [BillingController::class, 'purchase'])->name('billing.purchase');
+});
+
+// 심층 개인 리포트 / 프리미엄 궁합 리포트 (단건 결제 + AI 리포트 생성). 흐름은 위 billing.* 와 동일.
+Route::middleware('auth')->group(function () {
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::post('/reports/checkout', [ReportController::class, 'checkout'])->name('reports.checkout');
+    Route::get('/reports/success', [ReportController::class, 'success'])->name('reports.success');
+    Route::get('/reports/fail', [ReportController::class, 'fail'])->name('reports.fail');
+    Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
+    Route::post('/reports/{report}/regenerate', [ReportController::class, 'regenerate'])->name('reports.regenerate');
 });
 
 // 관리자 대시보드(방문자/전환율/매출) + 상담 내용 열람. users.is_admin = true 인 계정만 접근 가능.

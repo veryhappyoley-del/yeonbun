@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChatSession;
 use App\Models\PageView;
 use App\Models\Payment;
+use App\Models\Report;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -31,9 +32,15 @@ class DashboardController extends Controller
         $totalVisitors = PageView::whereBetween('created_at', [$stDate, $edDate])->distinct()->count('visitor_id');
         $totalPageViews = PageView::whereBetween('created_at', [$stDate, $edDate])->count();
         $totalUsers = User::whereBetween('created_at', [$stDate, $edDate])->count();
-        $payingUsers = Payment::where('status', 'paid')->whereBetween('created_at', [$stDate, $edDate])->distinct()->count('user_id');
-        $totalRevenue = (int) Payment::where('status', 'paid')->whereBetween('created_at', [$stDate, $edDate])->sum('amount');
-        $totalPayments = Payment::where('status', 'paid')->whereBetween('created_at', [$stDate, $edDate])->count();
+        // 매출은 코인 결제(payments)와 프리미엄 리포트 결제(reports) 두 테이블에 걸쳐 있어서 합산합니다.
+        $paymentUserIds = Payment::where('status', 'paid')->whereBetween('created_at', [$stDate, $edDate])->pluck('user_id');
+        $reportUserIds = Report::where('status', 'paid')->whereBetween('created_at', [$stDate, $edDate])->pluck('user_id');
+        $payingUsers = $paymentUserIds->merge($reportUserIds)->unique()->count();
+
+        $totalRevenue = (int) Payment::where('status', 'paid')->whereBetween('created_at', [$stDate, $edDate])->sum('amount')
+            + (int) Report::where('status', 'paid')->whereBetween('created_at', [$stDate, $edDate])->sum('amount');
+        $totalPayments = Payment::where('status', 'paid')->whereBetween('created_at', [$stDate, $edDate])->count()
+            + Report::where('status', 'paid')->whereBetween('created_at', [$stDate, $edDate])->count();
 
         $visitorToSignup = $totalVisitors > 0 ? round($totalUsers / $totalVisitors * 100, 1) : 0;
         $signupToPaid = $totalUsers > 0 ? round($payingUsers / $totalUsers * 100, 1) : 0;
@@ -52,11 +59,25 @@ class DashboardController extends Controller
             ->groupBy('day')
             ->pluck('count', 'day');
 
-        $dailyRevenue = Payment::where('status', 'paid')
+        $dailyRevenuePayments = Payment::where('status', 'paid')
             ->whereBetween('created_at', [$chartStart, $edDate])
             ->selectRaw('DATE(created_at) as day, SUM(amount) as total')
             ->groupBy('day')
             ->pluck('total', 'day');
+
+        $dailyRevenueReports = Report::where('status', 'paid')
+            ->whereBetween('created_at', [$chartStart, $edDate])
+            ->selectRaw('DATE(created_at) as day, SUM(amount) as total')
+            ->groupBy('day')
+            ->pluck('total', 'day');
+
+        // 코인 결제 + 리포트 결제 일별 매출 합산.
+        $dailyRevenue = collect();
+        foreach ([$dailyRevenuePayments, $dailyRevenueReports] as $series) {
+            foreach ($series as $day => $amount) {
+                $dailyRevenue[$day] = ($dailyRevenue[$day] ?? 0) + (int) $amount;
+            }
+        }
 
         $chartDays = collect(range(0, $chartDayCount - 1))
             ->map(fn ($i) => $chartStart->copy()->addDays($i)->format('Y-m-d'));
@@ -81,6 +102,13 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
 
+        $recentReports = Report::with('user')
+            ->where('status', 'paid')
+            ->whereBetween('created_at', [$stDate, $edDate])
+            ->latest()
+            ->take(10)
+            ->get();
+
         return view('admin.dashboard', [
             'stDate' => $stDate->format('Y-m-d'),
             'edDate' => $edDate->format('Y-m-d'),
@@ -96,6 +124,7 @@ class DashboardController extends Controller
             'chart' => $chart,
             'chartTruncated' => $chartTruncated,
             'recentPayments' => $recentPayments,
+            'recentReports' => $recentReports,
         ]);
     }
 

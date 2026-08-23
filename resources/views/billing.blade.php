@@ -89,7 +89,6 @@
   </div>
 
   <footer>
-    표시된 가격은 예시 값이며, 자유롭게 조정하실 수 있어요. 정기결제(구독)는 제공하지 않고 건별 결제만 지원해요.
     @include('partials.business-footer')
   </footer>
 </div>

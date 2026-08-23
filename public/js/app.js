@@ -503,6 +503,7 @@
   };
 
   var currentSajuA = null; // 나의 연애 사주 결과 (탭1) — 상담 가이드에서 재사용
+  var currentCompat = null; // 궁합 결과 (탭2) — 프리미엄 궁합 리포트/공유 카드에서 재사용
 
   /* ============================================================
    * 6. DOM 렌더링 유틸
@@ -616,6 +617,9 @@
     out.appendChild(card);
 
     currentSajuA = { saju: saju, love: love, name: name };
+
+    if (window.YeonbunReports) window.YeonbunReports.attachSingleCTA(card, currentSajuA);
+
     renderGuideEmptyOrKeep();
   }
 
@@ -645,6 +649,10 @@
     });
     card.appendChild(result);
     out.appendChild(card);
+
+    currentCompat = { sajuA: sajuA, sajuB: sajuB, nameA: nameA, nameB: nameB, compat: compat };
+
+    if (window.YeonbunReports) window.YeonbunReports.attachCompatCTA(card, currentCompat);
   }
 
   function renderGuideResult(concernKey) {
