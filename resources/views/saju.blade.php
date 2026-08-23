@@ -9,6 +9,8 @@
   @if (config('services.toss.client_key'))
     <script src="https://js.tosspayments.com/v1/payment"></script>
   @endif
+  <!-- 공유 카드를 실제 HTML/CSS 디자인 그대로 이미지로 캡처하는 데 사용 (public/js/reports.js) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 

@@ -177,13 +177,7 @@
     var input = buildSingleInput(state);
     var title = (state.name ? state.name + '님의 ' : '') + '심층 연애 리포트';
     card.appendChild(buildCTA('single', { input: input, title: title }, function (previewBox) {
-      renderShareCard(previewBox, {
-        kind: 'single',
-        title: (state.name ? state.name + '님' : '나') + '의 연애 사주',
-        big: state.saju.day.stem + state.saju.day.branch,
-        badge: state.love.dayEl,
-        subtitle: truncate(state.love.base.style, 58)
-      });
+      renderShareCard(previewBox, 'single', state);
     }));
   }
 
@@ -191,165 +185,227 @@
     var input = buildCompatInput(state);
     var title = (state.nameA || 'A') + ' × ' + (state.nameB || 'B') + ' 프리미엄 궁합 리포트';
     card.appendChild(buildCTA('compat', { input: input, title: title }, function (previewBox) {
-      renderShareCard(previewBox, {
-        kind: 'compat',
-        title: (state.nameA || 'A') + ' × ' + (state.nameB || 'B'),
-        big: String(state.compat.score),
-        badge: '점',
-        subtitle: truncate(state.compat.levelLabel + ' · ' + state.compat.notes[0], 58)
-      });
+      renderShareCard(previewBox, 'compat', state);
     }));
   }
 
   function truncate(str, n) {
     if (!str) return '';
+    str = String(str);
     return str.length > n ? str.slice(0, n - 1) + '…' : str;
   }
 
-  /* ============================================================
-   * 공유 카드 — 순수 클라이언트 <canvas> 렌더링, 서버 호출 없음
-   * ============================================================ */
-
-  var CARD_COLORS = {
-    paper: '#ede6d6',
-    paper2: '#e3dac4',
-    ink: '#201d1a',
-    inkSoft: '#57524a',
-    seal: '#8B5E83',
-    sealDeep: '#6B4460',
-    gold: '#E8735B'
-  };
-
-  function wrapText(ctx, text, maxWidth) {
-    var words = String(text).split(' ');
-    var lines = [];
-    var line = '';
-    words.forEach(function (w) {
-      var test = line ? line + ' ' + w : w;
-      if (ctx.measureText(test).width > maxWidth && line) {
-        lines.push(line);
-        line = w;
-      } else {
-        line = test;
-      }
-    });
-    if (line) lines.push(line);
-    return lines;
+  function escapeHtml(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 
-  function drawCard(canvas, data) {
-    var size = 1080;
-    canvas.width = size;
-    canvas.height = size;
-    var ctx = canvas.getContext('2d');
+  /* ============================================================
+   * 공유 카드 — HTML/CSS로 디자인한 카드를 html2canvas로 그대로 이미지 캡처.
+   * 서버 호출이 없어서 로그인하지 않아도 만들 수 있어요(바이럴 유입용).
+   * ============================================================ */
 
-    ctx.fillStyle = CARD_COLORS.paper;
-    ctx.fillRect(0, 0, size, size);
+  // 일간 오행 × 음양 조합(10가지)에 붙이는 트렌디한 "연애 유형" 닉네임.
+  // 기존 해석 로직(app.js의 ELEMENT_LOVE)은 건드리지 않고, 공유 카드에서만 쓰는 재미 요소예요.
+  var TYPE_NAME = {
+    '목_양': { name: '직진 대시형', emoji: '🌱' },
+    '목_음': { name: '은근 성장형', emoji: '🌿' },
+    '화_양': { name: '텐션 메이커형', emoji: '🔥' },
+    '화_음': { name: '잔잔한 불꽃형', emoji: '🕯️' },
+    '토_양': { name: '든든한 베이스형', emoji: '🏡' },
+    '토_음': { name: '묵묵한 진심형', emoji: '🌾' },
+    '금_양': { name: '확신의 아이코닉형', emoji: '✨' },
+    '금_음': { name: '츤데레 원칙형', emoji: '❄️' },
+    '수_양': { name: '센스만렙 눈치형', emoji: '💧' },
+    '수_음': { name: '잔잔한 감성형', emoji: '🌊' }
+  };
 
-    // 바깥 테두리
-    ctx.strokeStyle = CARD_COLORS.seal;
-    ctx.lineWidth = 6;
-    ctx.strokeRect(48, 48, size - 96, size - 96);
+  var CARD_CSS = '' +
+    '.gyeol-card { width: 1080px; height: 1080px; position: relative; overflow: hidden; ' +
+    '  box-sizing: border-box; font-family: "Gowun Dodum", sans-serif; color: #201d1a; ' +
+    '  background: linear-gradient(135deg, #6B4460 0%, #8B5E83 48%, #E8735B 100%); }' +
+    '.gyeol-card * { box-sizing: border-box; }' +
+    '.gyeol-blob { position: absolute; border-radius: 50%; }' +
+    '.gyeol-sparkle { position: absolute; font-size: 40px; opacity: 0.85; }' +
+    '.gyeol-kicker { position: absolute; top: 56px; left: 56px; padding: 12px 26px; ' +
+    '  background: rgba(255,255,255,0.22); border-radius: 999px; color: #fff; ' +
+    '  font-size: 26px; font-weight: 700; letter-spacing: 0.02em; }' +
+    '.gyeol-panel { position: absolute; left: 64px; right: 64px; top: 220px; bottom: 176px; ' +
+    '  background: rgba(253,247,240,0.96); border-radius: 44px; ' +
+    '  display: flex; flex-direction: column; align-items: center; justify-content: center; ' +
+    '  padding: 60px 56px; text-align: center; }' +
+    '.gyeol-emoji { font-size: 128px; line-height: 1; margin-bottom: 12px; }' +
+    '.gyeol-type { font-family: "Black Han Sans", sans-serif; font-size: 68px; color: #6B4460; ' +
+    '  line-height: 1.25; margin-bottom: 18px; }' +
+    '.gyeol-names { font-family: "Black Han Sans", sans-serif; font-size: 54px; color: #6B4460; ' +
+    '  line-height: 1.3; margin-bottom: 20px; }' +
+    '.gyeol-tagline { font-size: 32px; color: #57524a; line-height: 1.6; margin-bottom: 22px; }' +
+    '.gyeol-chip { display: inline-block; padding: 12px 24px; margin: 0 6px 10px; ' +
+    '  background: rgba(139,94,131,0.12); border: 2px solid rgba(139,94,131,0.35); ' +
+    '  border-radius: 999px; font-size: 26px; color: #6B4460; font-weight: 700; }' +
+    '.gyeol-score-row { display: flex; align-items: flex-end; justify-content: center; gap: 10px; margin-bottom: 14px; }' +
+    '.gyeol-score { font-family: "Black Han Sans", sans-serif; font-size: 168px; color: #E8735B; line-height: 0.9; }' +
+    '.gyeol-score-unit { font-size: 40px; color: #57524a; font-weight: 700; padding-bottom: 22px; }' +
+    '.gyeol-gauge-track { width: 100%; max-width: 620px; height: 28px; border-radius: 999px; ' +
+    '  background: rgba(139,94,131,0.16); margin: 6px 0 22px; overflow: hidden; }' +
+    '.gyeol-gauge-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #8B5E83, #E8735B); }' +
+    '.gyeol-level { display: inline-block; padding: 14px 32px; border-radius: 999px; ' +
+    '  background: #6B4460; color: #fbf3e9; font-size: 30px; font-weight: 700; margin-bottom: 20px; }' +
+    '.gyeol-footer { position: absolute; left: 0; right: 0; bottom: 56px; text-align: center; }' +
+    '.gyeol-footer-cta { font-size: 32px; font-weight: 700; color: #fff; margin-bottom: 10px; }' +
+    '.gyeol-footer-brand { font-size: 24px; color: rgba(255,255,255,0.85); }';
 
-    // 인장(도장) 마크
-    var sealX = size / 2, sealY = 300, sealR = 84;
-    ctx.strokeStyle = CARD_COLORS.seal;
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.roundRect ? ctx.roundRect(sealX - sealR, sealY - sealR, sealR * 2, sealR * 2, 20) : ctx.rect(sealX - sealR, sealY - sealR, sealR * 2, sealR * 2);
-    ctx.stroke();
-    ctx.fillStyle = CARD_COLORS.seal;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.font = '400 92px "Song Myung", serif';
-    ctx.fillText('결', sealX, sealY + 10);
+  function decorBlobs() {
+    return '' +
+      '<div class="gyeol-blob" style="width:460px;height:460px;top:-160px;right:-140px;' +
+      '  background:radial-gradient(circle, rgba(255,255,255,0.30), transparent 70%);"></div>' +
+      '<div class="gyeol-blob" style="width:520px;height:520px;bottom:-200px;left:-160px;' +
+      '  background:radial-gradient(circle, rgba(255,255,255,0.20), transparent 70%);"></div>' +
+      '<span class="gyeol-sparkle" style="top:190px; left:96px;">✨</span>' +
+      '<span class="gyeol-sparkle" style="top:170px; right:110px; font-size:30px;">✨</span>';
+  }
 
-    // 큰 숫자/글자(궁합 점수 또는 일주)
-    ctx.fillStyle = CARD_COLORS.sealDeep;
-    ctx.font = '400 150px "Song Myung", serif';
-    ctx.fillText(data.big, sealX, 520);
+  function buildSingleCardHTML(state) {
+    var saju = state.saju, love = state.love;
+    var typeKey = love.dayEl + '_' + love.dayYY;
+    var type = TYPE_NAME[typeKey] || { name: love.base.style, emoji: '💕' };
+    var dayLabel = saju.day.stem + saju.day.branch;
+    var name = state.name ? escapeHtml(state.name) + '님은' : '나는';
 
-    ctx.fillStyle = CARD_COLORS.inkSoft;
-    ctx.font = '700 34px "Gowun Dodum", sans-serif';
-    ctx.fillText(data.badge, sealX, 590);
+    return '' +
+      '<div class="gyeol-card">' +
+        decorBlobs() +
+        '<div class="gyeol-kicker">결 · AI 연애 사주</div>' +
+        '<div class="gyeol-panel">' +
+          '<div class="gyeol-emoji">' + type.emoji + '</div>' +
+          '<div class="gyeol-tagline" style="margin-bottom:6px; font-weight:700;">' + name + '</div>' +
+          '<div class="gyeol-type">' + escapeHtml(type.name) + '</div>' +
+          '<div class="gyeol-tagline">' + escapeHtml(truncate(love.base.style, 46)) + '</div>' +
+          '<div>' +
+            '<span class="gyeol-chip">일주 ' + escapeHtml(dayLabel) + '</span>' +
+            '<span class="gyeol-chip">오행 ' + escapeHtml(love.dayEl) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="gyeol-footer">' +
+          '<div class="gyeol-footer-cta">너의 연애 유형은 뭘까? 👉</div>' +
+          '<div class="gyeol-footer-brand">결 · 사주로 읽는 나의 연애 기질</div>' +
+        '</div>' +
+      '</div>';
+  }
 
-    // 타이틀
-    ctx.fillStyle = CARD_COLORS.ink;
-    ctx.font = '700 52px "Gowun Dodum", sans-serif';
-    ctx.fillText(data.title, sealX, 700);
+  function buildCompatCardHTML(state) {
+    var compat = state.compat;
+    var nameA = escapeHtml(state.nameA || 'A');
+    var nameB = escapeHtml(state.nameB || 'B');
+    var note = truncate(compat.notes[0] || '', 50);
 
-    // 서브타이틀(여러 줄)
-    ctx.fillStyle = CARD_COLORS.inkSoft;
-    ctx.font = '400 32px "Gowun Dodum", sans-serif';
-    var lines = wrapText(ctx, data.subtitle, size - 220);
-    lines.slice(0, 3).forEach(function (line, i) {
-      ctx.fillText(line, sealX, 760 + i * 44);
-    });
-
-    // 하단 브랜드
-    ctx.fillStyle = CARD_COLORS.seal;
-    ctx.font = '700 30px "Gowun Dodum", sans-serif';
-    ctx.fillText('결 · 연애 특화 사주', sealX, size - 120);
-    ctx.fillStyle = CARD_COLORS.inkSoft;
-    ctx.font = '400 24px "Gowun Dodum", sans-serif';
-    ctx.fillText('사주팔자로 읽는 나의 연애 기질과 궁합', sealX, size - 82);
+    return '' +
+      '<div class="gyeol-card">' +
+        decorBlobs() +
+        '<div class="gyeol-kicker">결 · 궁합 리포트</div>' +
+        '<div class="gyeol-panel">' +
+          '<div class="gyeol-names">' + nameA + ' 💘 ' + nameB + '</div>' +
+          '<div class="gyeol-score-row">' +
+            '<span class="gyeol-score">' + compat.score + '</span>' +
+            '<span class="gyeol-score-unit">점</span>' +
+          '</div>' +
+          '<div class="gyeol-gauge-track"><div class="gyeol-gauge-fill" style="width:' + compat.score + '%;"></div></div>' +
+          '<div class="gyeol-level">' + escapeHtml(compat.levelLabel) + '</div>' +
+          '<div class="gyeol-tagline">' + escapeHtml(note) + '</div>' +
+        '</div>' +
+        '<div class="gyeol-footer">' +
+          '<div class="gyeol-footer-cta">우리 궁합도 봐볼까? 👉</div>' +
+          '<div class="gyeol-footer-brand">결 · 사주로 보는 우리의 궁합</div>' +
+        '</div>' +
+      '</div>';
   }
 
   function fontsReady() {
     if (!document.fonts || !document.fonts.ready) return Promise.resolve();
     return Promise.all([
-      document.fonts.load('400 92px "Song Myung"'),
-      document.fonts.load('700 34px "Gowun Dodum"')
+      document.fonts.load('400 40px "Song Myung"'),
+      document.fonts.load('700 40px "Gowun Dodum"'),
+      document.fonts.load('400 60px "Black Han Sans"')
     ]).catch(function () {}).then(function () { return document.fonts.ready; });
   }
 
-  function renderShareCard(previewBox, data) {
+  // 화면 밖에 카드를 실제로 렌더링해서 html2canvas가 캡처할 수 있게 함(display:none이면 캡처 불가).
+  function mountOffscreen(html) {
+    var host = document.createElement('div');
+    host.style.position = 'absolute';
+    host.style.top = '0';
+    host.style.left = '-10000px';
+    host.innerHTML = '<style>' + CARD_CSS + '</style>' + html;
+    document.body.appendChild(host);
+    return host;
+  }
+
+  function renderShareCard(previewBox, kind, state) {
     previewBox.innerHTML = '';
     previewBox.appendChild(txt('div', 'hint', '카드를 만드는 중…'));
 
-    fontsReady().then(function () {
-      var canvas = document.createElement('canvas');
-      drawCard(canvas, data);
-
+    if (!window.html2canvas) {
       previewBox.innerHTML = '';
-      var img = document.createElement('img');
-      img.src = canvas.toDataURL('image/png');
-      img.alt = '공유 카드 미리보기';
-      previewBox.appendChild(img);
-      previewBox.appendChild(txt('div', 'hint', '이미지를 길게 눌러 저장하거나, 아래 버튼으로 저장/공유하세요.'));
+      previewBox.appendChild(txt('div', 'hint', '카드 생성 기능을 불러오지 못했어요. 새로고침 후 다시 시도해 주세요.'));
+      return;
+    }
 
-      var actions = el('div', { class: 'share-card-actions' });
+    var html = kind === 'compat' ? buildCompatCardHTML(state) : buildSingleCardHTML(state);
 
-      var saveBtn = el('button', { type: 'button', class: 'btn outline' }, [document.createTextNode('이미지 저장')]);
-      saveBtn.addEventListener('click', function () {
-        canvas.toBlob(function (blob) {
-          if (!blob) return;
-          var url = URL.createObjectURL(blob);
-          var a = document.createElement('a');
-          a.href = url;
-          a.download = 'gyeol-' + data.kind + '-card.png';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
-        }, 'image/png');
-      });
-      actions.appendChild(saveBtn);
+    fontsReady().then(function () {
+      var host = mountOffscreen(html);
+      var target = host.querySelector('.gyeol-card');
 
-      if (navigator.share) {
-        var shareBtn = el('button', { type: 'button', class: 'btn' }, [document.createTextNode('공유하기')]);
-        shareBtn.addEventListener('click', function () {
-          canvas.toBlob(function (blob) {
-            if (!blob) return;
-            var file = new File([blob], 'gyeol-' + data.kind + '-card.png', { type: 'image/png' });
-            if (navigator.canShare && !navigator.canShare({ files: [file] })) return;
-            navigator.share({ files: [file], title: '결 — 사주 공유 카드', text: data.title }).catch(function () {});
-          }, 'image/png');
+      return window.html2canvas(target, { backgroundColor: null, scale: 1, useCORS: true })
+        .then(function (canvas) {
+          document.body.removeChild(host);
+
+          previewBox.innerHTML = '';
+          var img = document.createElement('img');
+          img.src = canvas.toDataURL('image/png');
+          img.alt = '공유 카드 미리보기';
+          previewBox.appendChild(img);
+          previewBox.appendChild(txt('div', 'hint', '이미지를 길게 눌러 저장하거나, 아래 버튼으로 저장/공유하세요.'));
+
+          var actions = el('div', { class: 'share-card-actions' });
+
+          var saveBtn = el('button', { type: 'button', class: 'btn outline' }, [document.createTextNode('이미지 저장')]);
+          saveBtn.addEventListener('click', function () {
+            canvas.toBlob(function (blob) {
+              if (!blob) return;
+              var url = URL.createObjectURL(blob);
+              var a = document.createElement('a');
+              a.href = url;
+              a.download = 'gyeol-' + kind + '-card.png';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+            }, 'image/png');
+          });
+          actions.appendChild(saveBtn);
+
+          if (navigator.share) {
+            var shareBtn = el('button', { type: 'button', class: 'btn' }, [document.createTextNode('공유하기')]);
+            shareBtn.addEventListener('click', function () {
+              canvas.toBlob(function (blob) {
+                if (!blob) return;
+                var file = new File([blob], 'gyeol-' + kind + '-card.png', { type: 'image/png' });
+                if (navigator.canShare && !navigator.canShare({ files: [file] })) return;
+                navigator.share({ files: [file], title: '결 — 사주 공유 카드' }).catch(function () {});
+              }, 'image/png');
+            });
+            actions.appendChild(shareBtn);
+          }
+
+          previewBox.appendChild(actions);
         });
-        actions.appendChild(shareBtn);
-      }
-
-      previewBox.appendChild(actions);
+    }).catch(function () {
+      previewBox.innerHTML = '';
+      previewBox.appendChild(txt('div', 'hint', '카드를 만드는 중 문제가 생겼어요. 다시 시도해 주세요.'));
     });
   }
 
