@@ -1,0 +1,1096 @@
+@import url('https://fonts.googleapis.com/css2?family=Song+Myung&family=Gowun+Dodum&display=swap');
+
+  :root {
+    --paper: #ede6d6;
+    --paper-2: #e3dac4;
+    --paper-3: #d9cdb0;
+    --ink: #201d1a;
+    --ink-soft: #57524a;
+    --ink-faint: #857e70;
+    --line: rgba(32, 29, 26, 0.14);
+    --seal: #8B5E83;
+    --seal-deep: #6B4460;
+    --seal-tint: rgba(139, 94, 131, 0.1);
+    --indigo: #2b4570;
+    --indigo-tint: rgba(43, 69, 112, 0.12);
+    --gold: #E8735B;
+    --gold-tint: rgba(232, 115, 91, 0.14);
+    --wood: #4c7a52;
+    --fire: #c81e2c;
+    --earth: #b98a3d;
+    --metal: #8d8375;
+    --water: #2b4570;
+    --shadow: 0 1px 2px rgba(32, 24, 16, 0.06), 0 8px 24px -12px rgba(32, 24, 16, 0.22);
+    --radius: 14px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1b1712;
+      --paper-2: #242019;
+      --paper-3: #2f2a20;
+      --ink: #ede4d2;
+      --ink-soft: #c2b8a3;
+      --ink-faint: #8d8371;
+      --line: rgba(237, 228, 210, 0.14);
+      --seal: #C48BB8;
+      --seal-deep: #E3A8D9;
+      --seal-tint: rgba(196, 139, 184, 0.16);
+      --indigo: #7e9dd4;
+      --indigo-tint: rgba(126, 157, 212, 0.16);
+      --gold: #FF9478;
+      --gold-tint: rgba(255, 148, 120, 0.18);
+      --wood: #7fb086;
+      --fire: #e6533f;
+      --earth: #d9ae64;
+      --metal: #b6ac9a;
+      --water: #7e9dd4;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.55);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #1b1712;
+    --paper-2: #242019;
+    --paper-3: #2f2a20;
+    --ink: #ede4d2;
+    --ink-soft: #c2b8a3;
+    --ink-faint: #8d8371;
+    --line: rgba(237, 228, 210, 0.14);
+    --seal: #C48BB8;
+    --seal-deep: #E3A8D9;
+    --seal-tint: rgba(196, 139, 184, 0.16);
+    --indigo: #7e9dd4;
+    --indigo-tint: rgba(126, 157, 212, 0.16);
+    --gold: #FF9478;
+    --gold-tint: rgba(255, 148, 120, 0.18);
+    --wood: #7fb086;
+    --fire: #e6533f;
+    --earth: #d9ae64;
+    --metal: #b6ac9a;
+    --water: #7e9dd4;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 12% 8%, rgba(0,0,0,0.035) 0, transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(0,0,0,0.035) 0, transparent 40%),
+      var(--paper);
+    color: var(--ink);
+    font-family: 'Gowun Dodum', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: var(--seal-tint); }
+
+  a { color: var(--seal); }
+
+  .wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 40px 20px 100px;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    padding: 6px 4px 30px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 28px;
+  }
+
+  .seal-mark {
+    flex: none;
+    width: 64px;
+    height: 64px;
+  }
+
+  .hero-text h1 {
+    font-family: 'Song Myung', serif;
+    font-weight: 400;
+    font-size: 2.6rem;
+    letter-spacing: 0.04em;
+    margin: 0 0 4px;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  .hero-text p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 0.98rem;
+  }
+
+  .hero-text .sub {
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+    margin-top: 6px;
+  }
+
+  /* ---------- Tabs ---------- */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 26px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .tab-btn {
+    appearance: none;
+    background: none;
+    border: none;
+    font-family: 'Gowun Dodum', sans-serif;
+    font-size: 0.95rem;
+    color: var(--ink-faint);
+    padding: 10px 4px 12px;
+    margin-right: 22px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .tab-btn:hover { color: var(--ink); }
+
+  .tab-btn.active {
+    color: var(--seal);
+    border-bottom-color: var(--seal);
+    font-weight: 700;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeIn 0.25s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---------- Cards / form ---------- */
+  .card {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+
+  .card h2 {
+    font-family: 'Song Myung', serif;
+    font-weight: 400;
+    font-size: 1.3rem;
+    margin: 0 0 14px;
+    letter-spacing: 0.01em;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    margin-bottom: 5px;
+    letter-spacing: 0.02em;
+  }
+
+  input[type="number"], input[type="text"], select {
+    width: 100%;
+    font-family: 'Gowun Dodum', sans-serif;
+    font-size: 0.95rem;
+    padding: 9px 10px;
+    border-radius: 9px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  input:focus, select:focus, button:focus-visible {
+    outline: 2px solid var(--indigo);
+    outline-offset: 1px;
+  }
+
+  .check-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 16px;
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+  }
+
+  .check-row input { width: auto; }
+
+  .btn {
+    appearance: none;
+    border: none;
+    border-radius: 999px;
+    padding: 11px 26px;
+    font-family: 'Gowun Dodum', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    background: var(--seal);
+    color: #fbf3e9;
+    box-shadow: 0 6px 16px -6px var(--seal-tint);
+    transition: transform 0.12s ease, background 0.15s ease;
+  }
+
+  .btn:hover { background: var(--seal-deep); }
+  .btn:active { transform: scale(0.98); }
+
+  .btn.secondary {
+    background: transparent;
+    color: var(--indigo);
+    border: 1px solid var(--indigo);
+    box-shadow: none;
+  }
+
+  .btn.secondary:hover { background: var(--indigo-tint); }
+
+  .btn-center {
+    display: block;
+    width: fit-content;
+    margin: 18px auto 0;
+  }
+
+  .hint {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    margin-top: -4px;
+    margin-bottom: 14px;
+  }
+
+  /* ---------- 사주 명식표 ---------- */
+  .myeongsik {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin: 4px 0 6px;
+  }
+
+  .pillar {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    text-align: center;
+    padding: 10px 4px 12px;
+  }
+
+  .pillar .role {
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  .pillar .hanja {
+    font-family: 'Song Myung', serif;
+    font-size: 1.9rem;
+    line-height: 1.15;
+  }
+
+  .pillar .hangul {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+
+  .pillar .stem-el { color: var(--el-color, var(--ink)); }
+  .pillar .branch-el { color: var(--el-color2, var(--ink)); }
+
+  .el-목 { --el-color: var(--wood); }
+  .el-화 { --el-color: var(--fire); }
+  .el-토 { --el-color: var(--earth); }
+  .el-금 { --el-color: var(--metal); }
+  .el-수 { --el-color: var(--water); }
+
+  .day-note {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+    margin-bottom: 18px;
+  }
+
+  /* ---------- 오행 바 ---------- */
+  .oheang-list { display: flex; flex-direction: column; gap: 8px; margin: 14px 0 4px; }
+  .oheang-row { display: grid; grid-template-columns: 52px 1fr 24px; align-items: center; gap: 10px; font-size: 0.84rem; }
+  .oheang-row .lab { color: var(--ink-soft); }
+  .oheang-track { height: 9px; border-radius: 999px; background: var(--paper-3); overflow: hidden; }
+  .oheang-fill { height: 100%; border-radius: 999px; }
+  .oheang-row .cnt { text-align: right; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+  /* ---------- 결과 텍스트 ---------- */
+  .result-block { margin-top: 6px; }
+  .result-block h3 {
+    font-size: 0.98rem;
+    margin: 18px 0 6px;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .result-block h3::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--seal);
+    flex: none;
+  }
+  .result-block p { margin: 0 0 10px; color: var(--ink-soft); font-size: 0.92rem; }
+
+  .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 12px; }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: var(--gold-tint);
+    color: var(--gold);
+    border: 1px solid var(--gold-tint);
+  }
+  .badge.seal { background: var(--seal-tint); color: var(--seal); }
+  .badge.indigo { background: var(--indigo-tint); color: var(--indigo); }
+
+  /* ---------- 궁합 ---------- */
+  .compat-people {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 560px) { .compat-people { grid-template-columns: 1fr; } }
+
+  .compat-person {
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--paper);
+    padding: 20px 16px 16px;
+  }
+
+  .compat-person-label {
+    position: absolute;
+    top: -11px;
+    left: 14px;
+    background: var(--indigo);
+    color: #fbf3e9;
+    font-family: 'Gowun Dodum', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 4px 11px;
+    border-radius: 999px;
+  }
+
+  .compat-person-b .compat-person-label { background: var(--seal); }
+
+  .compat-score-wrap {
+    text-align: center;
+    padding: 18px 10px 6px;
+  }
+  .compat-score {
+    font-family: 'Song Myung', serif;
+    font-size: 3.2rem;
+    color: var(--seal);
+    line-height: 1;
+  }
+  .compat-score span { font-size: 1.3rem; color: var(--ink-faint); font-family: 'Gowun Dodum', sans-serif; }
+  .compat-score-label { color: var(--ink-soft); font-size: 0.85rem; margin-top: 6px; }
+
+  /* ---------- 상담 가이드 ---------- */
+  .concern-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px;
+    margin: 4px 0 18px;
+  }
+  .concern-chip {
+    appearance: none;
+    text-align: left;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 12px;
+    cursor: pointer;
+    font-family: 'Gowun Dodum', sans-serif;
+    color: var(--ink);
+    font-size: 0.88rem;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .concern-chip:hover { border-color: var(--seal); }
+  .concern-chip.active {
+    background: var(--seal-tint);
+    border-color: var(--seal);
+    color: var(--seal-deep);
+    font-weight: 700;
+  }
+
+  .guide-card {
+    border-left: 3px solid var(--seal);
+    padding: 4px 0 4px 16px;
+  }
+  .guide-card .field-label {
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+    margin: 14px 0 4px;
+  }
+  .guide-card .field-label:first-child { margin-top: 2px; }
+  .guide-card p { margin: 0; color: var(--ink-soft); font-size: 0.93rem; }
+
+  .stamp {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px; height: 30px;
+    border: 1.6px solid var(--seal);
+    border-radius: 6px;
+    color: var(--seal);
+    font-family: 'Song Myung', serif;
+    font-size: 0.95rem;
+    transform: rotate(-4deg);
+    flex: none;
+  }
+
+  .placeholder-note {
+    background: var(--indigo-tint);
+    border: 1px dashed var(--indigo);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin-top: 18px;
+  }
+
+  .empty-state {
+    color: var(--ink-faint);
+    font-size: 0.88rem;
+    padding: 10px 2px 4px;
+  }
+
+  footer {
+    margin-top: 44px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    font-size: 0.76rem;
+    color: var(--ink-faint);
+    line-height: 1.7;
+  }
+
+  .business-footer {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    font-size: 0.74rem;
+    color: var(--ink-faint);
+  }
+
+  .business-footer p {
+    margin: 0 0 4px;
+  }
+
+  .business-footer a {
+    color: var(--ink-faint);
+    text-decoration: underline;
+  }
+
+  .business-footer a:hover { color: var(--seal); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  /* ---------- AI 상담(챗봇) ---------- */
+  #chat-error {
+    display: none;
+    background: var(--seal-tint);
+    border: 1px solid var(--seal);
+    color: var(--seal-deep);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.84rem;
+    margin-bottom: 14px;
+  }
+
+  #chat-room { display: none; }
+
+  #chat-log {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding: 4px 2px 12px;
+    margin-bottom: 12px;
+  }
+
+  .chat-bubble {
+    max-width: 82%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+
+  .chat-assistant {
+    align-self: flex-start;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-bottom-left-radius: 4px;
+    color: var(--ink);
+  }
+
+  .chat-user {
+    align-self: flex-end;
+    background: var(--seal);
+    color: #fbf3e9;
+    border-bottom-right-radius: 4px;
+  }
+
+  .chat-system {
+    align-self: center;
+    background: transparent;
+    color: var(--ink-faint);
+    font-size: 0.76rem;
+    max-width: 100%;
+    text-align: center;
+    padding: 2px 6px;
+  }
+
+  #chat-typing {
+    display: none;
+    align-self: flex-start;
+    color: var(--ink-faint);
+    font-size: 0.8rem;
+    padding: 0 4px 6px;
+  }
+
+  .chat-input-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .chat-input-row input {
+    flex: 1;
+  }
+
+  /* ---------- 로그인 바 ---------- */
+  .topbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 2px 0;
+    font-size: 0.84rem;
+  }
+
+  .social-btn {
+    appearance: none;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-family: 'Gowun Dodum', sans-serif;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .social-btn.kakao { background: #FEE500; color: #191600; }
+  .social-btn.naver { background: #03C75A; color: #ffffff; }
+  .social-btn:hover { filter: brightness(0.96); }
+
+  .user-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ink-soft);
+  }
+
+  .user-chip form { display: inline; }
+
+  .user-chip button {
+    appearance: none;
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-family: 'Gowun Dodum', sans-serif;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    cursor: pointer;
+  }
+
+  .user-chip button:hover { border-color: var(--seal); color: var(--seal); }
+
+  .chip-link {
+    color: var(--gold);
+    text-decoration: none;
+    font-weight: 700;
+    border: 1px solid var(--gold-tint);
+    background: var(--gold-tint);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 0.78rem;
+  }
+
+  .chip-link:hover { filter: brightness(0.96); }
+
+  /* ---------- 코인 충전(결제) 페이지 ---------- */
+  .plan-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin: 24px 0;
+  }
+
+  .plan-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 26px 18px 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .plan-card.highlight {
+    border-color: var(--seal);
+    box-shadow: 0 6px 20px -8px var(--seal-tint);
+  }
+
+  .plan-badge {
+    position: absolute;
+    top: -11px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--seal);
+    color: #fbf3e9;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 999px;
+  }
+
+  .plan-name {
+    font-family: 'Song Myung', serif;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+
+  .plan-credits {
+    font-family: 'Song Myung', serif;
+    font-size: 2.4rem;
+    color: var(--seal);
+    line-height: 1;
+  }
+
+  .plan-credits span { font-size: 1rem; color: var(--ink-faint); font-family: 'Gowun Dodum', sans-serif; }
+
+  .plan-desc {
+    color: var(--ink-soft);
+    font-size: 0.84rem;
+    margin: 8px 0 14px;
+    min-height: 2.6em;
+  }
+
+  .plan-price {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .plan-unit {
+    font-size: 0.74rem;
+    color: var(--ink-faint);
+    margin: 4px 0 16px;
+  }
+
+  .plan-card .btn { width: 100%; }
+
+  /* ---------- 로그인 필요 안내 (AI 상담 탭) ---------- */
+  .login-gate {
+    text-align: center;
+    padding: 24px 10px 8px;
+  }
+
+  .login-gate p { color: var(--ink-soft); font-size: 0.92rem; margin-bottom: 16px; }
+  .login-gate .social-btn { padding: 11px 22px; font-size: 0.9rem; margin: 0 5px; }
+
+  /* ---------- 이전 대화 목록 ---------- */
+  #chat-history {
+    margin-bottom: 16px;
+  }
+
+  #chat-history .field-label {
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
+  }
+
+  .chat-history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 9px 12px;
+    margin-bottom: 6px;
+    font-size: 0.84rem;
+    color: var(--ink);
+    cursor: pointer;
+    font-family: 'Gowun Dodum', sans-serif;
+  }
+
+  .chat-history-item:hover { border-color: var(--seal); }
+  .chat-history-item .meta { color: var(--ink-faint); font-size: 0.76rem; }
+
+  .chat-new-btn {
+    background: none;
+    border: 1px dashed var(--line);
+    border-radius: 9px;
+    padding: 9px 12px;
+    width: 100%;
+    text-align: center;
+    color: var(--ink-faint);
+    font-family: 'Gowun Dodum', sans-serif;
+    font-size: 0.84rem;
+    cursor: pointer;
+    margin-bottom: 4px;
+  }
+
+  /* ---------- 관리자 대시보드 ---------- */
+  .admin-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 22px 0 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .admin-tab {
+    display: inline-block;
+    padding: 8px 4px;
+    margin-bottom: -1px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--ink-faint);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+  }
+
+  .admin-tab:hover { color: var(--ink); }
+
+  .admin-tab.active {
+    color: var(--seal);
+    border-bottom-color: var(--seal);
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .stat-card.highlight {
+    background: var(--seal-tint);
+    border-color: var(--seal);
+  }
+
+  .stat-label {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: 'Song Myung', serif;
+    font-size: 1.9rem;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  .stat-value span {
+    font-family: 'Gowun Dodum', sans-serif;
+    font-size: 0.9rem;
+    color: var(--ink-faint);
+    margin-left: 4px;
+  }
+
+  .stat-sub {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    margin-top: 6px;
+  }
+
+  .chart-block { margin-bottom: 26px; }
+  .chart-block:last-child { margin-bottom: 0; }
+
+  .chart-block-label {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 2px;
+  }
+
+  .bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+
+  .bar-value {
+    font-size: 0.64rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    margin-bottom: 3px;
+    white-space: nowrap;
+  }
+
+  .bar-track {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    width: 100%;
+    height: 110px;
+  }
+
+  .bar {
+    width: 100%;
+    max-width: 22px;
+    border-radius: 3px 3px 0 0;
+    min-height: 2px;
+  }
+
+  .bar-label {
+    font-size: 0.62rem;
+    color: var(--ink-faint);
+    margin-top: 6px;
+    white-space: nowrap;
+  }
+
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    text-align: left;
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+
+  .admin-table th {
+    color: var(--ink-faint);
+    font-weight: 700;
+    font-size: 0.76rem;
+    letter-spacing: 0.02em;
+  }
+
+  .admin-table tbody tr:hover { background: var(--paper); }
+
+  .wrap-narrow { max-width: 620px; }
+
+  .chart-note {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    background: var(--indigo-tint);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: -4px 0 16px;
+  }
+
+  /* ---------- 관리자 기간/사용자 검색 ---------- */
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 20px;
+  }
+
+  .filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .filter-field label {
+    margin-bottom: 0;
+  }
+
+  .filter-field input {
+    font-family: 'Gowun Dodum', sans-serif;
+    font-size: 0.84rem;
+    padding: 7px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  .filter-submit {
+    appearance: none;
+    border: none;
+    background: var(--seal);
+    color: #fbf3e9;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family: 'Gowun Dodum', sans-serif;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .filter-submit:hover { filter: brightness(0.96); }
+
+  .filter-reset {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    text-decoration: none;
+    padding: 8px 4px;
+  }
+
+  .filter-reset:hover { color: var(--seal); }
+
+  /* ---------- 관리자: 상담 세션 목록 ---------- */
+  .chat-session-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .chat-session-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    text-decoration: none;
+    color: var(--ink);
+  }
+
+  .chat-session-row:hover { border-color: var(--seal); }
+
+  .chat-session-main {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .chat-session-user {
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 3px;
+  }
+
+  .chat-session-preview {
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chat-session-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    font-size: 0.74rem;
+    color: var(--ink-faint);
+    flex: none;
+    white-space: nowrap;
+  }
+
+  /* ---------- 관리자: 상담 대화 뷰어 ---------- */
+  .chat-transcript {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .chat-date-divider {
+    align-self: center;
+    color: var(--ink-faint);
+    font-size: 0.76rem;
+    padding: 10px 6px 6px;
+  }
+
+  .chat-turn {
+    display: flex;
+    flex-direction: column;
+    max-width: 82%;
+    margin-bottom: 6px;
+  }
+
+  .chat-turn-user { align-self: flex-end; align-items: flex-end; }
+  .chat-turn-assistant { align-self: flex-start; align-items: flex-start; }
+
+  .chat-turn .chat-bubble { max-width: 100%; }
+
+  .chat-meta {
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+    margin: 3px 4px 0;
+  }
+
+  .chat-new-btn:hover { border-color: var(--seal); color: var(--seal); }
