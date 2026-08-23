@@ -135,8 +135,10 @@ class ReportController extends Controller
             'payment_key' => $data['paymentKey'],
         ]);
 
-        $this->generateContent($report);
-
+        // AI 리포트 생성(수십 초 걸릴 수 있음)은 일부러 여기서 하지 않습니다.
+        // 토스 결제 승인 콜백과 같은 요청 안에서 처리하면 게이트웨이/프록시 타임아웃에
+        // 걸려 "결제는 됐는데 화면은 에러"인 상황이 생길 수 있어서, 결제 확인이 끝나면
+        // 바로 리다이렉트하고 생성은 reports.show 화면에서 별도 요청(regenerate)으로 트리거합니다.
         return redirect()->route('reports.show', $report);
     }
 
@@ -213,7 +215,7 @@ class ReportController extends Controller
                 'content-type' => 'application/json',
             ])->timeout(60)->post('https://api.anthropic.com/v1/messages', [
                 'model' => config('services.anthropic.model'),
-                'max_tokens' => 1600,
+                'max_tokens' => 1200,
                 'messages' => [['role' => 'user', 'content' => $prompt]],
             ]);
 
