@@ -12,15 +12,21 @@
     }
 
   $content는 이 챕터의 report_chapters.content(디코딩된 배열) 전체입니다.
+
+  (2026-08-24 방어 코드 추가) stages/lines가 배열이 아니거나 원소가 객체가 아닌
+  경우를 대비한 방어 코드 — paragraphs.blade.php와 같은 이유.
 --}}
-@php $stages = $content['stages'] ?? []; @endphp
+@php $stages = is_array($content['stages'] ?? null) ? $content['stages'] : []; @endphp
 @if ($stages)
   <div class="rpt-os-grid">
     @foreach ($stages as $stage)
+      @continue(! is_array($stage))
       @if (!empty($stage['title']))
         <div class="rpt-os-card">
           <div class="rpt-os-title">{{ $stage['title'] }}</div>
-          @foreach (($stage['lines'] ?? []) as $line)
+          @php $lines = is_array($stage['lines'] ?? null) ? $stage['lines'] : []; @endphp
+          @foreach ($lines as $line)
+            @continue(! is_array($line))
             @if (!empty($line['text']))
               <div class="rpt-os-line"><span>{{ $line['label'] ?? '' }}</span>{{ $line['text'] }}</div>
             @endif

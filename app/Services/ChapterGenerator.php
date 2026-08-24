@@ -162,12 +162,26 @@ class ChapterGenerator
         $expectedKeys = array_keys($chapter->schema);
         $missingKeys = is_array($decoded) ? array_diff($expectedKeys, array_keys($decoded)) : $expectedKeys;
 
-        if (! is_array($decoded) || ! empty($missingKeys)) {
+        // (2026-08-24 추가) 키가 다 있어도 "값의 모양"이 스키마와 다르면(예: paragraphs가
+        // 배열이어야 하는데 문자열 하나로 옴) Blade 블록 파셜이 렌더링 시점에 그대로
+        // 크래시합니다("foreach() argument must be of type array|object, string given").
+        // 예전에는 키 존재 여부만 확인해서 이런 값 타입 불일치를 걸러내지 못한 채
+        // status=ready로 저장해버렸습니다 — 이제는 값 타입까지 검증해서, 안 맞으면
+        // 조용히 저장하는 대신 failed로 남기고 last_error로 원인을 구분합니다.
+        $typeMismatchKeys = is_array($decoded) ? $this->schemaTypeMismatches($chapter->schema, $decoded) : [];
+
+        if (! is_array($decoded) || ! empty($missingKeys) || ! empty($typeMismatchKeys)) {
+            $lastError = match (true) {
+                $stopReason === 'max_tokens' => 'max_tokens_truncated',
+                ! empty($typeMismatchKeys) => 'schema_type_mismatch',
+                default => 'schema_mismatch',
+            };
+
             $row->update([
                 'status' => 'failed',
                 'stop_reason' => $stopReason,
                 'output_tokens' => $outputTokens,
-                'last_error' => $stopReason === 'max_tokens' ? 'max_tokens_truncated' : 'schema_mismatch',
+                'last_error' => $lastError,
             ]);
 
             Log::warning('결 챕터 리포트: 도구 호출 스키마 검증 실패', [
@@ -176,6 +190,7 @@ class ChapterGenerator
                 'stop_reason' => $stopReason,
                 'has_tool_use' => $toolUse !== null,
                 'missing_keys' => array_values($missingKeys),
+                'type_mismatch_keys' => $typeMismatchKeys,
             ]);
 
             return;
@@ -188,6 +203,81 @@ class ChapterGenerator
             'output_tokens' => $outputTokens,
             'last_error' => null,
         ]);
+    }
+
+    /**
+     * ChapterSpec::schema(예시 값)와 실제 저장된/저장하려는 content를 비교해서, 값의
+     * "모양"(타입)이 다른 최상위 키 목록을 반환합니다. 빈 배열이면 통과. `ChapterGenerator`
+     * 안에서(saveResponse) Tool Use 응답 저장 직전에 쓰이고, 이미 DB에 저장된 레거시
+     * (Tool Use 전환 이전) 행을 점검하는 `chapters:revalidate` 아티즌 명령에서도
+     * 재사용합니다 — 두 경우 모두 "키는 있는데 타입이 다른" 문제(예: paragraphs가
+     * 배열이어야 하는데 문자열로 옴)를 찾아내기 위함입니다.
+     *
+     * @return array<int, string>
+     */
+    public function schemaTypeMismatches(array $schema, array $decoded): array
+    {
+        $mismatched = [];
+
+        foreach ($schema as $key => $exampleValue) {
+            if (array_key_exists($key, $decoded) && ! $this->valueMatchesExample($exampleValue, $decoded[$key])) {
+                $mismatched[] = $key;
+            }
+        }
+
+        return $mismatched;
+    }
+
+    /**
+     * schemaTypeMismatches()가 재귀적으로 쓰는 값 하나짜리 타입 비교. "정확히 이 타입이어야
+     * 렌더링 파셜이 안전하다"는 최소 기준만 봅니다(문자열 예시엔 문자열, 숫자 예시엔
+     * 숫자, 리스트 예시엔 리스트+원소 타입, 연관 배열 예시엔 같은 키를 가진 객체).
+     */
+    private function valueMatchesExample(mixed $example, mixed $value): bool
+    {
+        if (is_string($example)) {
+            return is_string($value);
+        }
+
+        if (is_int($example) || is_float($example)) {
+            return is_int($value) || is_float($value);
+        }
+
+        if (is_array($example)) {
+            if (! is_array($value)) {
+                return false;
+            }
+
+            if (array_is_list($example)) {
+                if (! array_is_list($value)) {
+                    return false;
+                }
+
+                if (empty($example)) {
+                    return true;
+                }
+
+                $itemExample = $example[0];
+
+                foreach ($value as $item) {
+                    if (! $this->valueMatchesExample($itemExample, $item)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            foreach ($example as $key => $exampleValue) {
+                if (! array_key_exists($key, $value) || ! $this->valueMatchesExample($exampleValue, $value[$key])) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return true;
     }
 
     /**

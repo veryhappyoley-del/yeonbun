@@ -11,11 +11,15 @@
     }
 
   $content는 이 챕터의 report_chapters.content(디코딩된 배열) 전체입니다.
+
+  (2026-08-24 방어 코드 추가) scores가 배열이 아니거나 원소가 객체가 아닌 경우를
+  대비한 방어 코드 — paragraphs.blade.php와 같은 이유.
 --}}
-@php $scores = $content['scores'] ?? []; @endphp
+@php $scores = is_array($content['scores'] ?? null) ? $content['scores'] : []; @endphp
 @if ($scores)
   <div class="rpt-score-list">
     @foreach ($scores as $s)
+      @continue(! is_array($s))
       @if (isset($s['label'], $s['value']))
         <div class="rpt-score-row">
           <span class="rpt-score-label">{{ $s['label'] }}</span>

@@ -9,8 +9,13 @@
     }
 
   $content는 이 챕터의 report_chapters.content(디코딩된 배열) 전체입니다.
+
+  (2026-08-24 방어 코드 추가) items가 배열이 아니거나 원소가 객체가 아닌 경우를
+  대비한 방어 코드 — paragraphs.blade.php와 같은 이유.
 --}}
-@foreach (($content['items'] ?? []) as $i => $item)
+@php $items = is_array($content['items'] ?? null) ? $content['items'] : []; @endphp
+@foreach ($items as $i => $item)
+  @continue(! is_array($item))
   <div class="rpt-advice-card">
     <div class="rpt-advice-num">{{ $item['label'] ?? ('조언 '.($i + 1)) }}</div>
     @if (!empty($item['situation']))<div class="rpt-os-line"><span>상황</span>{{ $item['situation'] }}</div>@endif
