@@ -18,9 +18,80 @@
   // — 새 구매는 이 두 타입키만 쓰고, 예전 타입키는 이미 구매한 고객의 리포트를 보여줄 때만
   // 서버 쪽(ReportController)에서 계속 인식합니다.
   var TYPE_INFO = {
-    love_fortune: { label: '연애운분석', priceLabel: '16,900원' },
+    love_fortune: { label: '연애운분석', priceLabel: '27,000원' },
     compatibility: { label: '궁합분석', priceLabel: '21,900원' }
   };
+
+  // 결제 전 "이걸 사면 뭘 받는지" 안내용 — 목차 미리보기(제목+티저, 잠금 아이콘)와 FAQ.
+  // 목차 데이터는 saju.blade.php가 App\ReportTypes\ReportTypeRegistry에서 그대로 뽑아
+  // window.YeonbunReportPreview로 내려준다(AI 호출 없이 정적 데이터라 비용이 안 든다).
+  var REPORT_FAQ = [
+    {
+      q: '어떤 방식으로 리포트를 만드나요?',
+      a: '사주 명식(연월일시), 오행, 십신, 신강신약 같은 명리학 데이터를 AI가 20개의 주제로 나눠서 각각 따로 깊이 있게 분석해요. 하나의 글로 뭉뚱그리지 않고 챕터마다 독립적으로 생성해서 내용이 겹치지 않고 깊이도 유지돼요.'
+    },
+    {
+      q: '생성하는 데 얼마나 걸리나요?',
+      a: '결제 직후 여러 챕터가 동시에 생성을 시작해서, 보통 1~2분 안에 대부분 완료돼요. 화면에서 몇 개가 완료됐는지 실시간으로 확인할 수 있어요.'
+    },
+    {
+      q: '나중에 다시 볼 수 있나요?',
+      a: '네, "내 리포트함"에 그대로 저장돼서 추가 결제 없이 언제든 다시 열람할 수 있어요.'
+    },
+    {
+      q: '일부 챕터만 생성에 실패하면 어떻게 되나요?',
+      a: '가끔 일부 챕터만 생성에 실패할 수 있는데, 그 챕터만 따로 "다시 생성" 버튼으로 재시도할 수 있어요. 나머지 완성된 챕터는 그대로 보실 수 있으니 전체를 다시 기다릴 필요는 없어요.'
+    },
+    {
+      q: '결제는 안전한가요?',
+      a: '토스페이먼츠를 통해 결제되고, 카드 정보는 저희 서버에 저장되지 않아요.'
+    }
+  ];
+
+  function pad2(n) { return n < 10 ? '0' + n : String(n); }
+
+  function buildTocPreview(typeKey) {
+    var previews = window.YeonbunReportPreview || [];
+    var previewData = null;
+    for (var i = 0; i < previews.length; i++) {
+      if (previews[i].key === typeKey) { previewData = previews[i]; break; }
+    }
+    if (!previewData || !previewData.chapters || !previewData.chapters.length) return null;
+
+    var details = el('details', { class: 'report-toc-toggle' });
+    details.appendChild(txt('summary', '', '목차 미리보기 · 챕터 ' + previewData.chapters.length + '개 전체 보기'));
+
+    var list = el('ul', { class: 'report-toc-list' });
+    previewData.chapters.forEach(function (ch, idx) {
+      var item = el('li', { class: 'report-toc-item' });
+      item.appendChild(txt('span', 'report-toc-num', pad2(idx + 1)));
+
+      var body = el('div', { class: 'report-toc-body' });
+      body.appendChild(txt('div', 'report-toc-title', ch.title));
+      if (ch.teaser) body.appendChild(txt('div', 'report-toc-teaser', ch.teaser));
+      item.appendChild(body);
+
+      var lock = txt('span', 'report-toc-lock', '🔒');
+      lock.setAttribute('aria-hidden', 'true');
+      item.appendChild(lock);
+
+      list.appendChild(item);
+    });
+    details.appendChild(list);
+    return details;
+  }
+
+  function buildFaqSection() {
+    var wrap = el('div', { class: 'report-faq' });
+    wrap.appendChild(txt('div', 'report-faq-title', '결제 전 자주 묻는 질문'));
+    REPORT_FAQ.forEach(function (item) {
+      var details = el('details', { class: 'report-faq-item' });
+      details.appendChild(txt('summary', '', item.q));
+      details.appendChild(txt('p', '', item.a));
+      wrap.appendChild(details);
+    });
+    return wrap;
+  }
 
   function csrfToken() {
     var meta = document.querySelector('meta[name="csrf-token"]');
@@ -221,6 +292,13 @@
     wrap.appendChild(row);
     wrap.appendChild(statusBox);
     wrap.appendChild(previewBox);
+
+    // 결제 전 "뭘 받는지" 미리 보여줘서 망설임을 줄이는 목차 미리보기 + FAQ.
+    // 콘텐츠 자체는 공개하지 않고 챕터 제목/티저(정적 데이터)와 자주 묻는 질문만 보여준다.
+    var toc = buildTocPreview(typeKey);
+    if (toc) wrap.appendChild(toc);
+    wrap.appendChild(buildFaqSection());
+
     return wrap;
   }
 

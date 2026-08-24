@@ -1,3 +1,16 @@
+@php
+  // 결제 CTA(public/js/reports.js buildCTA)의 "목차 미리보기"에 쓸 정적 데이터.
+  // AI 콘텐츠는 전혀 포함하지 않고, 이미 코드로 정의된 챕터 제목/티저만 그대로 노출한다.
+  $reportTypePreviews = collect(\App\ReportTypes\ReportTypeRegistry::all())->map(function ($type) {
+      return [
+          'key' => $type->key,
+          'label' => $type->label,
+          'chapters' => collect($type->chapters)->map(function ($chapter) {
+              return ['title' => $chapter->title, 'teaser' => $chapter->teaser];
+          })->values(),
+      ];
+  })->values();
+@endphp
 <!doctype html>
 <html lang="ko">
 <head>
@@ -55,9 +68,15 @@
   <div class="tabs" role="tablist">
     <button class="tab-btn active" data-tab="single" role="tab">나의 연애 사주</button>
     <button class="tab-btn" data-tab="compat" role="tab">궁합 보기</button>
-    <button class="tab-btn" data-tab="guide" role="tab">고민 상담 가이드</button>
     <button class="tab-btn" data-tab="chat" role="tab">연애 코치</button>
   </div>
+  <!-- "고민 상담 가이드" 탭은 상단 메뉴에서 뺐습니다(완성도가 낮다는 판단, 2026-08-24).
+       #panel-guide 섹션 자체는 아래에 그대로 남아있어요 — public/js/app.js의 bindEvents()가
+       #concern-grid에 콘텐츠를 채워 넣는데, 이 요소가 DOM에서 사라지면 그 스크립트가 에러를
+       던지면서 뒤에 이어지는 다른 초기화(fillCitySelects/이벤트 바인딩 등)까지 멈출 수 있어서
+       안전하게 그대로 둡니다. 탭 버튼이 없으니 사용자는 이 패널에 절대 진입할 수 없어요
+       (.panel은 기본 display:none, .active가 있어야만 보임 — app.css 참고). -->
+
 
   <!-- ===================== 1. 나의 연애 사주 ===================== -->
   <section class="panel active" id="panel-single">
@@ -251,6 +270,10 @@
     url: @json(url('/')),
     host: @json(request()->getHost())
   };
+  // 결제 전 "목차 미리보기"(public/js/reports.js)가 쓰는 정적 데이터 — AI 호출 없이
+  // App\ReportTypes\ReportTypeRegistry에 이미 정의된 챕터 제목/티저만 그대로 노출한다.
+  // 콘텐츠(본문)는 절대 여기 포함되지 않는다 — 결제 전 사용자는 "무엇을 받는지"만 알 수 있다.
+  window.YeonbunReportPreview = @json($reportTypePreviews);
 </script>
 <script src="{{ asset('js/love-character.js') }}"></script>
 <script src="{{ asset('js/app.js') }}"></script>

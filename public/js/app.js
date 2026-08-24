@@ -738,7 +738,8 @@
 
     // 2. 나머지 상세 사주 풀이(오행분포/신살/연애 스타일 텍스트)는 접이식으로 원하는 사람만 보게 함.
     //    (연애 캐릭터 카드보다 위에 둬서, 사주 명식 → 자세히 보기 → 캐릭터 카드 순서가 되게 함.)
-    var detailToggle = el('details', { class: 'saju-detail-toggle' });
+    // 예전엔 기본적으로 접혀 있었는데, 사용자 피드백으로 처음부터 펼쳐서 보여주도록 변경(2026-08-24).
+    var detailToggle = el('details', { class: 'saju-detail-toggle', open: 'open' });
     detailToggle.appendChild(txt('summary', '', '자세한 사주 풀이 보기'));
 
     var card = el('div', { class: 'card' });
