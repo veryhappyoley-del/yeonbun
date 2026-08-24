@@ -62,6 +62,17 @@ class CompatibilityReportType implements ReportTypeDefinition
                 'conflict_pattern', 'compat_scores_a', 'long_term_outlook', 'crisis_moments',
                 'jealousy_and_trust', 'love_language_gap', 'red_flags_green_flags', 'final_verdict',
             ],
+            // (2026-08-24 추가) 무료 궁합 결과 화면에서 "점수만 띡 나오고 끝"이라는 피드백에
+            // 대응해, compat_overview 챕터 하나만 결제 전에 실제로 생성해서 일부는 공개, 일부는
+            // (진짜 콘텐츠를 그대로 둔 채) 시각적으로만 블러 처리하는 티저를 보여준다. 전체
+            // 20챕터 중 이 챕터를 고른 이유: ① 무료 점수 바로 다음에 자연스럽게 이어지는 "왜
+            // 이 점수가 나왔는지" 설명이라 이탈 지점을 바로 해소해주고, ② 20챕터 중 가장 저렴한
+            // 챕터(maxTokens 1000)라 미리보기 비용이 가장 적게 들고, ③ concern_answer(사용자가
+            // 직접 고른/적은 "가장 궁금한 것"에 대한 직접 답)까지 담고 있어 개인화 훅으로 가장
+            // 강력하다. resources/views/reports/partials/blocks/concern_answer.blade.php,
+            // App\Services\ChapterGenerator::previewInputHash()/savePreviewResponse(),
+            // App\Http\Controllers\ChapterPreviewController 참고.
+            freePreviewChapterKey: 'compat_overview',
         );
     }
 

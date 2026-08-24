@@ -532,6 +532,61 @@
     .compat-concern-grid { grid-template-columns: 1fr; }
   }
 
+  /* (2026-08-24 추가) 무료 궁합 결과 화면의 "실제 콘텐츠 일부 공개" 티저(app.js
+     startCompatPreview/renderTeaserContent). compat_overview 챕터를 결제 전에 실제로
+     생성해서, concern_answer는 완전 공개하고 paragraphs 1번째도 완전 공개, 2·3번째는
+     진짜 텍스트를 그대로 둔 채 .compat-teaser-fade로 시각적으로만 블러 처리한다(더미
+     텍스트 아님 — 결제 후에도 같은 내용이 그대로 이어짐). */
+  .compat-teaser { margin-top: 20px; }
+  .compat-teaser-label {
+    font-weight: 700;
+    color: var(--ink);
+    font-size: 0.92rem;
+    margin-bottom: 10px;
+  }
+  .compat-teaser-loading {
+    color: var(--ink-faint);
+    font-size: 0.84rem;
+    padding: 14px 0;
+  }
+  .compat-teaser-cta {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--seal-tint);
+    color: var(--seal);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  /* 실제 텍스트(rpt-p) 위에 blur + 그라데이션 마스크를 얹어서 "읽다가 흐려지는" 느낌을
+     낸다 — backdrop-filter로 블러를 만들고, mask-image로 위쪽(투명, 안 흐림)에서
+     아래쪽(불투명, 완전히 흐림)까지 자연스럽게 번지게 한다. 콘텐츠 자체는 실제 생성된
+     그대로라(더미 아님) 결제 후에도 이 블러만 벗겨지고 내용은 안 바뀐다. */
+  .compat-teaser-fade {
+    position: relative;
+    max-height: 130px;
+    overflow: hidden;
+  }
+  .compat-teaser-fade::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    -webkit-backdrop-filter: blur(3.5px);
+    backdrop-filter: blur(3.5px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.55) 30%, #000 75%);
+    mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.55) 30%, #000 75%);
+  }
+  .compat-teaser-fade::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, var(--paper-2));
+    pointer-events: none;
+  }
+
   /* ---------- 연애 캐릭터 카드 (love-character.js) ---------- */
   .lc-card {
     position: relative;

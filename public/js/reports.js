@@ -5,9 +5,14 @@
  * app.js가 결과를 렌더링한 직후 아래 함수들을 호출해서 이 스크립트에 결과 데이터를 넘겨줍니다.
  * - attachSingleCTA / attachCompatCTA: 결제 CTA. 결제는 billing.blade.php와 동일한
  *   토스페이먼츠 위젯 방식이고, 서버(ReportController)가 가격을 최종적으로 결정합니다.
- * - attachCardShare: "나의 연애 사주"의 연애 캐릭터 카드(love-character.js가 그린 실제
- *   .lc-card DOM)를 그대로 캡처해서 공유하는 기능. 궁합 카드는 여전히 별도의 HTML 템플릿
- *   (buildCompatCardHTML)으로 만듭니다. 둘 다 html2canvas 캡처라 서버 호출이 없어요(로그인 불필요).
+ * - attachCardShare: "나의 연애 사주"의 연애 캐릭터 카드(love-character.js) / "궁합 보기"의
+ *   궁합 유형 카드(compat-character.js)가 그린 실제 .lc-card DOM을 그대로 캡처해서 공유하는
+ *   기능. (2026-08-24부터는 궁합 쪽도 별도 HTML 템플릿 없이 이 방식 하나로 통일 — 화면에
+ *   보이는 카드와 공유 이미지의 유형명/문구가 서로 어긋날 위험이 없어짐.) html2canvas
+ *   캡처라 서버 호출이 없어요(로그인 불필요).
+ * - buildTocPreview: 결제 전 목차 미리보기 DOM을 만듭니다. 보통 buildCTA() 안에서 자동으로
+ *   붙지만(includeToc 옵션), 궁합분석처럼 CTA 카드보다 위(무료 티저 바로 아래)에 따로
+ *   배치하고 싶을 때 이 함수를 직접 호출할 수 있게 내보냅니다.
  */
 (function () {
   'use strict';
@@ -297,11 +302,15 @@
    * CTA(구매 버튼, 필요하면 공유카드 버튼도 함께) 렌더링
    * ============================================================ */
 
-  // showShare: false면 공유 카드 버튼을 아예 안 그림 — "나의 연애 사주"는 이제 연애 캐릭터
-  // 카드 자체를 공유하는 별도 버튼(attachCardShare)이 있어서 여기선 구매 버튼만 둠.
+  // showShare: false면 공유 카드 버튼을 아예 안 그림 — "나의 연애 사주"/"궁합 보기" 둘 다
+  // 이제 각자의 캐릭터/유형 카드 자체를 공유하는 별도 버튼(attachCardShare)이 있어서
+  // 여기선 구매 버튼만 둠. includeToc: false면 이 함수 안에서 목차 미리보기를 렌더링하지
+  // 않음 — 궁합분석은 24단계부터 목차 미리보기를 CTA 카드 안이 아니라 무료 티저 바로
+  // 아래(더 이탈 지점에 가깝게)로 옮겨서 별도로 렌더링하므로, 여기서 중복으로 그리지 않게.
   function buildCTA(typeKey, buildTitle, onShare, opts) {
     opts = opts || {};
     var showShare = opts.showShare !== false;
+    var includeToc = opts.includeToc !== false;
     var info = TYPE_INFO[typeKey];
     var wrap = el('div', { class: 'report-cta' });
     wrap.appendChild(txt('p', '', '더 깊은 해석이 궁금하다면?'));
@@ -334,10 +343,13 @@
     wrap.appendChild(statusBox);
     wrap.appendChild(previewBox);
 
-    // 결제 전 "뭘 받는지" 미리 보여줘서 망설임을 줄이는 목차 미리보기 + FAQ.
+    // 결제 전 "뭘 받는지" 미리 보여줘서 망설임을 줄이는 목차 미리보기(includeToc가 false가
+    // 아닐 때만 — 궁합분석은 이 함수 밖에서 별도로 렌더링) + FAQ.
     // 콘텐츠 자체는 공개하지 않고 챕터 제목/티저(정적 데이터)와 자주 묻는 질문만 보여준다.
-    var toc = buildTocPreview(typeKey);
-    if (toc) wrap.appendChild(toc);
+    if (includeToc) {
+      var toc = buildTocPreview(typeKey);
+      if (toc) wrap.appendChild(toc);
+    }
     wrap.appendChild(buildFaqSection());
 
     return wrap;
@@ -349,12 +361,17 @@
     card.appendChild(buildCTA('love_fortune', { input: input, title: title }, null, { showShare: false }));
   }
 
+  // (2026-08-24 수정) 궁합분석의 공유는 이제 별도 HTML 템플릿(buildCompatCardHTML,
+  // renderCompatShareCard)이 아니라 "궁합 유형 카드"(compat-character.js, app.js가
+  // renderCompatResult()에서 이미 attachCardShare로 붙임) 자체를 캡처해서 씀 — "나의 연애
+  // 사주"가 연애 캐릭터 카드 자체를 캡처하는 방식으로 이미 정리된 것과 같은 이유(유형명/
+  // 문구가 화면에 보이는 카드와 공유 이미지에서 서로 어긋날 위험을 없앰). 그래서 여기서는
+  // 일반 "공유 카드 만들기" 버튼을 안 그리고(showShare:false), 목차 미리보기도 이 함수 밖
+  // (app.js)에서 무료 티저 바로 아래에 별도로 렌더링하므로 includeToc:false.
   function attachCompatCTA(card, state) {
     var input = buildTwoPersonInput(state);
     var title = (state.nameA || 'A') + ' × ' + (state.nameB || 'B') + ' 궁합분석';
-    card.appendChild(buildCTA('compatibility', { input: input, title: title }, function (previewBox) {
-      renderCompatShareCard(previewBox, state);
-    }));
+    card.appendChild(buildCTA('compatibility', { input: input, title: title }, null, { showShare: false, includeToc: false }));
   }
 
   function truncate(str, n) {
@@ -372,85 +389,9 @@
   }
 
   /* ============================================================
-   * 공유 카드 — HTML/CSS로 디자인한 카드를 html2canvas로 그대로 이미지 캡처.
+   * 공유 카드 — 화면에 실제로 그려진 카드(.lc-card)를 html2canvas로 그대로 이미지 캡처.
    * 서버 호출이 없어서 로그인하지 않아도 만들 수 있어요(바이럴 유입용).
    * ============================================================ */
-
-  // 궁합 공유 카드용 HTML/CSS 템플릿. "나의 연애 사주" 쪽은 이제 이 템플릿을 쓰지 않고
-  // 실제 연애 캐릭터 카드(.lc-card, love-character.js)를 그대로 캡처합니다 — 예전엔 여기 별도
-  // TYPE_NAME 닉네임 매핑이 있었는데, love-character.js의 LOVE_CHARACTERS와 데이터가
-  // 중복·불일치할 위험이 있어서 정리했습니다(캐릭터 카드가 유일한 유형명 출처가 됨).
-  var CARD_CSS = '' +
-    '.gyeol-card { width: 1080px; height: 1080px; position: relative; overflow: hidden; ' +
-    '  box-sizing: border-box; font-family: "Gowun Dodum", sans-serif; color: #201d1a; ' +
-    '  background: linear-gradient(135deg, #6B4460 0%, #8B5E83 48%, #E8735B 100%); }' +
-    '.gyeol-card * { box-sizing: border-box; }' +
-    '.gyeol-blob { position: absolute; border-radius: 50%; }' +
-    '.gyeol-sparkle { position: absolute; font-size: 40px; opacity: 0.85; }' +
-    '.gyeol-kicker { position: absolute; top: 56px; left: 56px; padding: 12px 26px; ' +
-    '  background: rgba(255,255,255,0.22); border-radius: 999px; color: #fff; ' +
-    '  font-size: 26px; font-weight: 700; letter-spacing: 0.02em; }' +
-    '.gyeol-panel { position: absolute; left: 64px; right: 64px; top: 220px; bottom: 176px; ' +
-    '  background: rgba(253,247,240,0.96); border-radius: 44px; ' +
-    '  display: flex; flex-direction: column; align-items: center; justify-content: center; ' +
-    '  padding: 60px 56px; text-align: center; }' +
-    '.gyeol-emoji { font-size: 128px; line-height: 1; margin-bottom: 12px; }' +
-    '.gyeol-type { font-family: "Black Han Sans", sans-serif; font-size: 68px; color: #6B4460; ' +
-    '  line-height: 1.25; margin-bottom: 18px; }' +
-    '.gyeol-names { font-family: "Black Han Sans", sans-serif; font-size: 54px; color: #6B4460; ' +
-    '  line-height: 1.3; margin-bottom: 20px; }' +
-    '.gyeol-tagline { font-size: 32px; color: #57524a; line-height: 1.6; margin-bottom: 22px; }' +
-    '.gyeol-chip { display: inline-block; padding: 12px 24px; margin: 0 6px 10px; ' +
-    '  background: rgba(139,94,131,0.12); border: 2px solid rgba(139,94,131,0.35); ' +
-    '  border-radius: 999px; font-size: 26px; color: #6B4460; font-weight: 700; }' +
-    '.gyeol-score-row { display: flex; align-items: flex-end; justify-content: center; gap: 10px; margin-bottom: 14px; }' +
-    '.gyeol-score { font-family: "Black Han Sans", sans-serif; font-size: 168px; color: #E8735B; line-height: 0.9; }' +
-    '.gyeol-score-unit { font-size: 40px; color: #57524a; font-weight: 700; padding-bottom: 22px; }' +
-    '.gyeol-gauge-track { width: 100%; max-width: 620px; height: 28px; border-radius: 999px; ' +
-    '  background: rgba(139,94,131,0.16); margin: 6px 0 22px; overflow: hidden; }' +
-    '.gyeol-gauge-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #8B5E83, #E8735B); }' +
-    '.gyeol-level { display: inline-block; padding: 14px 32px; border-radius: 999px; ' +
-    '  background: #6B4460; color: #fbf3e9; font-size: 30px; font-weight: 700; margin-bottom: 20px; }' +
-    '.gyeol-footer { position: absolute; left: 0; right: 0; bottom: 56px; text-align: center; }' +
-    '.gyeol-footer-cta { font-size: 32px; font-weight: 700; color: #fff; margin-bottom: 10px; }' +
-    '.gyeol-footer-brand { font-size: 24px; color: rgba(255,255,255,0.85); }';
-
-  function decorBlobs() {
-    return '' +
-      '<div class="gyeol-blob" style="width:460px;height:460px;top:-160px;right:-140px;' +
-      '  background:radial-gradient(circle, rgba(255,255,255,0.30), transparent 70%);"></div>' +
-      '<div class="gyeol-blob" style="width:520px;height:520px;bottom:-200px;left:-160px;' +
-      '  background:radial-gradient(circle, rgba(255,255,255,0.20), transparent 70%);"></div>' +
-      '<span class="gyeol-sparkle" style="top:190px; left:96px;">✨</span>' +
-      '<span class="gyeol-sparkle" style="top:170px; right:110px; font-size:30px;">✨</span>';
-  }
-
-  function buildCompatCardHTML(state) {
-    var compat = state.compat;
-    var nameA = escapeHtml(state.nameA || 'A');
-    var nameB = escapeHtml(state.nameB || 'B');
-    var note = truncate(compat.notes[0] || '', 50);
-
-    return '' +
-      '<div class="gyeol-card">' +
-        decorBlobs() +
-        '<div class="gyeol-kicker">결 · 궁합 리포트</div>' +
-        '<div class="gyeol-panel">' +
-          '<div class="gyeol-names">' + nameA + ' 💘 ' + nameB + '</div>' +
-          '<div class="gyeol-score-row">' +
-            '<span class="gyeol-score">' + compat.score + '</span>' +
-            '<span class="gyeol-score-unit">점</span>' +
-          '</div>' +
-          '<div class="gyeol-gauge-track"><div class="gyeol-gauge-fill" style="width:' + compat.score + '%;"></div></div>' +
-          '<div class="gyeol-level">' + escapeHtml(compat.levelLabel) + '</div>' +
-          '<div class="gyeol-tagline">' + escapeHtml(note) + '</div>' +
-        '</div>' +
-        '<div class="gyeol-footer">' +
-          '<div class="gyeol-footer-cta">우리 궁합도 봐볼까? 👉</div>' +
-          '<div class="gyeol-footer-brand">결 · 사주로 보는 우리의 궁합</div>' +
-        '</div>' +
-      '</div>';
-  }
 
   function fontsReady() {
     if (!document.fonts || !document.fonts.ready) return Promise.resolve();
@@ -459,19 +400,6 @@
       document.fonts.load('700 40px "Gowun Dodum"'),
       document.fonts.load('400 60px "Black Han Sans"')
     ]).catch(function () {}).then(function () { return document.fonts.ready; });
-  }
-
-  // 화면 밖에 HTML 문자열 카드를 실제로 렌더링해서 html2canvas가 캡처할 수 있게 함
-  // (display:none이면 캡처 불가). 궁합 카드(buildCompatCardHTML)처럼 CARD_CSS를
-  // 함께 주입해야 하는 "문자열로 만든" 카드용입니다.
-  function mountOffscreen(html) {
-    var host = document.createElement('div');
-    host.style.position = 'absolute';
-    host.style.top = '0';
-    host.style.left = '-10000px';
-    host.innerHTML = '<style>' + CARD_CSS + '</style>' + html;
-    document.body.appendChild(host);
-    return host;
   }
 
   function siteShareUrl() {
@@ -533,50 +461,23 @@
     previewBox.appendChild(actions);
   }
 
-  function renderCompatShareCard(previewBox, state) {
-    previewBox.innerHTML = '';
-    previewBox.appendChild(txt('div', 'hint', '카드를 만드는 중…'));
-
-    if (!window.html2canvas) {
-      previewBox.innerHTML = '';
-      previewBox.appendChild(txt('div', 'hint', '카드 생성 기능을 불러오지 못했어요. 새로고침 후 다시 시도해 주세요.'));
-      return;
-    }
-
-    var html = buildCompatCardHTML(state);
-
-    fontsReady().then(function () {
-      var host = mountOffscreen(html);
-      var target = host.querySelector('.gyeol-card');
-
-      return window.html2canvas(target, { backgroundColor: null, scale: 1, useCORS: true })
-        .then(function (canvas) {
-          document.body.removeChild(host);
-          presentCanvasResult(canvas, previewBox, 'gyeol-compat-card.png', {
-            title: '결 — 궁합 리포트 공유 카드',
-            text: '우리 궁합 점수 나왔어! 너도 확인해볼래?',
-            url: siteShareUrl()
-          });
-        });
-    }).catch(function () {
-      previewBox.innerHTML = '';
-      previewBox.appendChild(txt('div', 'hint', '카드를 만드는 중 문제가 생겼어요. 다시 시도해 주세요.'));
-    });
-  }
-
   /* ============================================================
-   * 연애 캐릭터 카드(love-character.js가 그린 .lc-card) 자체를 공유.
-   * 별도 카드를 새로 만들지 않고 실제 온페이지 카드를 그대로 캡처해서(내용 이중 관리 방지),
-   * 캡처본에만 사이트 유입 문구를 덧붙입니다(온페이지 카드는 그대로 둠).
+   * 연애 캐릭터 카드(love-character.js) / 궁합 유형 카드(compat-character.js)가 그린
+   * .lc-card 자체를 공유. 별도 카드를 새로 만들지 않고 실제 온페이지 카드를 그대로
+   * 캡처해서(내용 이중 관리 방지), 캡처본에만 사이트 유입 문구를 덧붙입니다(온페이지
+   * 카드는 그대로 둠).
    * ============================================================ */
 
-  function attachCardShare(cardEl, container) {
+  // meta(선택): { footerCta, filename, title, text } — 연애 캐릭터 카드/궁합 유형 카드처럼
+  // 같은 캡처 로직을 쓰지만 카드 종류마다 다른 문구를 쓰고 싶을 때. 생략하면 기존(연애
+  // 캐릭터 카드) 기본값을 그대로 씁니다.
+  function attachCardShare(cardEl, container, meta) {
     var row = el('div', { class: 'lc-share-row' });
     var shareBtn = el('button', { type: 'button', class: 'btn outline' }, [document.createTextNode('이 카드 공유하기')]);
     var previewBox = el('div', { class: 'share-preview' });
 
     shareBtn.addEventListener('click', function () {
-      renderCharacterCardShare(cardEl, previewBox);
+      renderCharacterCardShare(cardEl, previewBox, meta);
     });
 
     row.appendChild(shareBtn);
@@ -584,13 +485,21 @@
     container.appendChild(row);
   }
 
+  var DEFAULT_SHARE_META = {
+    footerCta: '나도 내 연애 캐릭터 뽑아보기 👉',
+    filename: 'gyeol-love-character-card.png',
+    title: '결 — 나의 연애 캐릭터 카드',
+    text: '내 사주로 나온 연애 캐릭터 카드! 너도 확인해볼래?'
+  };
+
   // 화면에 실제로 그려진 카드(cardEl)를 그대로 캡처합니다 — 예전처럼 카드를 복제해서
   // 화면 밖 고정 폭(440px) 컨테이너에 다시 그리면, 실제 화면 폭(반응형 레이아웃에 따라
   // 다름)과 달라져서 "너비가 줄어들면서 볼품없어지는" 문제가 생겼습니다.
   // html2canvas의 onclone 옵션을 쓰면 html2canvas가 캡처용으로 만드는 내부 사본에만
   // 유입 문구 푸터를 추가할 수 있어서, 실제 페이지의 카드는 전혀 건드리지 않고도
   // (깜빡임 없이) 화면에 보이는 그대로의 크기/모양으로 캡처할 수 있습니다.
-  function renderCharacterCardShare(cardEl, previewBox) {
+  function renderCharacterCardShare(cardEl, previewBox, meta) {
+    meta = meta || DEFAULT_SHARE_META;
     previewBox.innerHTML = '';
     previewBox.appendChild(txt('div', 'hint', '카드 이미지를 만드는 중…'));
 
@@ -624,7 +533,7 @@
           shareFooter.className = 'lc-share-footer';
           var cta = clonedDoc.createElement('div');
           cta.className = 'lc-share-footer-cta';
-          cta.textContent = '나도 내 연애 캐릭터 뽑아보기 👉';
+          cta.textContent = meta.footerCta;
           var hostLine = clonedDoc.createElement('div');
           hostLine.className = 'lc-share-footer-host';
           hostLine.textContent = siteShareHost();
@@ -635,9 +544,9 @@
       });
     }).then(function (canvas) {
       restore();
-      presentCanvasResult(canvas, previewBox, 'gyeol-love-character-card.png', {
-        title: '결 — 나의 연애 캐릭터 카드',
-        text: '내 사주로 나온 연애 캐릭터 카드! 너도 확인해볼래?',
+      presentCanvasResult(canvas, previewBox, meta.filename, {
+        title: meta.title,
+        text: meta.text,
         url: siteShareUrl()
       });
     }).catch(function () {
@@ -650,6 +559,7 @@
   window.YeonbunReports = {
     attachSingleCTA: attachSingleCTA,
     attachCompatCTA: attachCompatCTA,
-    attachCardShare: attachCardShare
+    attachCardShare: attachCardShare,
+    buildTocPreview: buildTocPreview
   };
 })();

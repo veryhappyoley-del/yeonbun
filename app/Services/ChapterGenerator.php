@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ChapterPreview;
 use App\Models\ReportChapter;
 use App\ReportTypes\ChapterSpec;
 use Illuminate\Http\Client\Response;
@@ -187,6 +188,133 @@ class ChapterGenerator
 
             Log::warning('결 챕터 리포트: 도구 호출 스키마 검증 실패', [
                 'report_chapter_id' => $row->id,
+                'chapter_key' => $row->chapter_key,
+                'stop_reason' => $stopReason,
+                'has_tool_use' => $toolUse !== null,
+                'missing_keys' => $missingKeys,
+                'type_mismatch_keys' => $typeMismatchKeys,
+            ]);
+
+            return;
+        }
+
+        $row->update([
+            'status' => 'ready',
+            'content' => $decoded,
+            'stop_reason' => $stopReason,
+            'output_tokens' => $outputTokens,
+            'last_error' => null,
+        ]);
+    }
+
+    /**
+     * (2026-08-24 추가) 결제 전 "무료 미리보기"(App\Models\ChapterPreview) 캐시 조회/저장에
+     * 쓰는 키. 같은 입력(그 챕터가 실제로 쓰는 inputKeys만 필터링한 값)이면 같은 해시가
+     * 나오므로, 같은 두 사람 조합으로 다시 요청해도 API를 다시 부르지 않고 캐시를 그대로
+     * 씁니다. 해시에 챕터의 schema/promptGuidance/maxTokens까지 함께 섞어 넣어서, 나중에
+     * ChapterSpec 정의를 고치면(이번 세션에서도 여러 번 그랬듯) 해시가 자동으로 달라져
+     * 옛 캐시가 저절로 무효화됩니다 — 별도 버전 번호를 관리할 필요가 없습니다.
+     *
+     * 무료 티저 요청(app.js)과 결제 후 실제 생성(GenerateReportJob) 양쪽에서 이 메서드를
+     * 호출하는데, 두 호출부가 $input을 만드는 순서(연관 배열의 키 순서)가 서로 다를 수
+     * 있습니다(예: 결제 시점 input은 personA/personB가 앞에 붙지만 티저 요청은 그 챕터가
+     * 실제 쓰는 필드만 보냅니다). json_encode는 키 순서에 따라 다른 문자열을 만들어서
+     * 해시가 어긋나면 캐시를 못 찾고 조용히 다시 생성해버리므로(오류는 아니지만 재사용
+     * 효과가 사라짐), sortKeysRecursively()로 순서를 정규화한 뒤 해시를 계산합니다.
+     */
+    public function previewInputHash(ChapterSpec $chapter, array $input): string
+    {
+        $filtered = $this->filterInput($chapter, $input);
+
+        $fingerprint = json_encode([
+            'input' => $this->sortKeysRecursively($filtered),
+            'schema' => $this->sortKeysRecursively($chapter->schema),
+            'promptGuidance' => $chapter->promptGuidance,
+            'maxTokens' => $chapter->maxTokens,
+        ], JSON_UNESCAPED_UNICODE);
+
+        return hash('sha256', $fingerprint ?: '');
+    }
+
+    /**
+     * previewInputHash()가 쓰는 정규화 도우미. 연관 배열(문자열 키)만 키 순서로 정렬하고,
+     * 리스트(순번 키, 예: paragraphs 같은 배열)는 항목 순서가 의미를 가지므로 순서를
+     * 건드리지 않습니다 — 순서를 바꾸면 안 되는 값까지 정렬해버리면 오히려 다른 해시가
+     * 나와야 할 입력이 같은 해시로 뭉개질 수 있기 때문입니다.
+     */
+    private function sortKeysRecursively(mixed $value): mixed
+    {
+        if (! is_array($value)) {
+            return $value;
+        }
+
+        $sorted = array_map($this->sortKeysRecursively(...), $value);
+
+        if (! array_is_list($sorted)) {
+            ksort($sorted);
+        }
+
+        return $sorted;
+    }
+
+    /**
+     * saveResponse()의 미리보기(ChapterPreview) 버전. 저장 대상 모델과 로그 컨텍스트만
+     * 다를 뿐 파싱/검증 로직(Tool Use 응답 추출, checkContent()로 누락/타입불일치 검사)은
+     * saveResponse()와 완전히 동일합니다 — 두 모델(ReportChapter/ChapterPreview)이 서로
+     * 다른 Eloquent 클래스라 $row->update() 호출 자체는 공유할 수 없어 별도 메서드로 둡니다.
+     */
+    public function savePreviewResponse(ChapterPreview $row, ChapterSpec $chapter, Response|Throwable $response): void
+    {
+        $row->increment('attempts');
+
+        if ($response instanceof Throwable) {
+            $row->update(['status' => 'failed', 'last_error' => $response->getMessage()]);
+
+            Log::warning('결 챕터 미리보기: 요청 예외', [
+                'chapter_preview_id' => $row->id,
+                'chapter_key' => $row->chapter_key,
+                'message' => $response->getMessage(),
+            ]);
+
+            return;
+        }
+
+        if ($response->failed()) {
+            $row->update(['status' => 'failed', 'last_error' => 'http_'.$response->status()]);
+
+            Log::warning('결 챕터 미리보기: API 실패', [
+                'chapter_preview_id' => $row->id,
+                'chapter_key' => $row->chapter_key,
+                'status' => $response->status(),
+            ]);
+
+            return;
+        }
+
+        $stopReason = $response->json('stop_reason');
+        $outputTokens = $response->json('usage.output_tokens');
+
+        $toolUse = collect($response->json('content', []))->firstWhere('type', 'tool_use');
+        $decoded = is_array($toolUse) ? ($toolUse['input'] ?? null) : null;
+
+        ['missing_keys' => $missingKeys, 'type_mismatch_keys' => $typeMismatchKeys] = $this->checkContent($chapter->schema, $decoded);
+
+        if (! is_array($decoded) || ! empty($missingKeys) || ! empty($typeMismatchKeys)) {
+            $lastError = match (true) {
+                $stopReason === 'max_tokens' => 'max_tokens_truncated',
+                ! empty($typeMismatchKeys) => 'schema_type_mismatch',
+                default => 'schema_mismatch',
+            };
+
+            $row->update([
+                'status' => 'failed',
+                'stop_reason' => $stopReason,
+                'output_tokens' => $outputTokens,
+                'last_error' => $lastError,
+            ]);
+
+            Log::warning('결 챕터 미리보기: 도구 호출 스키마 검증 실패', [
+                'chapter_preview_id' => $row->id,
                 'chapter_key' => $row->chapter_key,
                 'stop_reason' => $stopReason,
                 'has_tool_use' => $toolUse !== null,

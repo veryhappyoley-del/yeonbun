@@ -2,7 +2,10 @@
 
 namespace App\Jobs;
 
+use App\Models\ChapterPreview;
 use App\Models\Report;
+use App\Models\ReportChapter;
+use App\ReportTypes\ReportType;
 use App\ReportTypes\ReportTypeRegistry;
 use App\Services\ChapterGenerator;
 use App\Services\ReportGenerator;
@@ -12,6 +15,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Http\Client\Pool;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -113,6 +117,14 @@ class GenerateReportJob implements ShouldQueue
             // 챕터만 다시 시도하게 되어, "전부 다시 생성"이 아니라 "안 된 것만 재시도"가 됨.
             $pending = $report->chapters()->whereIn('status', ['pending', 'failed'])->get();
 
+            // (2026-08-24 추가) freePreviewChapterKey가 지정된 타입(예: 궁합분석의
+            // compat_overview)은 결제 전 무료 티저 화면에서 이미 같은 입력으로 생성해 둔
+            // App\Models\ChapterPreview가 있을 수 있다 — 있으면 API를 다시 부르지 않고
+            // 그 content를 그대로 복사해서 ready로 저장하고, 이 챕터는 아래 Http::pool
+            // 배치에서 제외한다(무료 티저와 결제 후 리포트가 100% 같은 내용을 보여줘야
+            // 하므로, 새로 생성하면 안 됨 — 사용자가 미리 본 것과 다른 내용이 나오면 이상함).
+            $pending = $this->reuseFreePreview($report, $type, $pending, $generator, $input);
+
             foreach ($pending->chunk($concurrency) as $batch) {
                 $rows = $batch->keyBy('chapter_key');
                 $rows->each(fn ($row) => $row->update(['status' => 'generating']));
@@ -166,5 +178,68 @@ class GenerateReportJob implements ShouldQueue
         } finally {
             $lock->release();
         }
+    }
+
+    /**
+     * $type->freePreviewChapterKey가 지정돼 있고, 그 챕터가 아직 pending/failed로 이번
+     * 배치에 걸려있다면 같은 입력 해시로 만들어진 ready 상태의 App\Models\ChapterPreview가
+     * 있는지 찾아서, 있으면 그 content를 그대로 복사해 저장하고 $pending에서 제외합니다.
+     * 없으면(무료 티저를 아예 안 봤거나, 아직 생성 중/실패한 경우) 손대지 않고 그대로
+     * 반환해서 평소처럼 Http::pool로 새로 생성됩니다.
+     *
+     * @param  Collection<int, ReportChapter>  $pending
+     * @return Collection<int, ReportChapter>
+     */
+    private function reuseFreePreview(
+        Report $report,
+        ReportType $type,
+        Collection $pending,
+        ChapterGenerator $generator,
+        array $input,
+    ): Collection {
+        if (! $type->freePreviewChapterKey) {
+            return $pending;
+        }
+
+        $row = $pending->firstWhere('chapter_key', $type->freePreviewChapterKey);
+
+        if (! $row) {
+            return $pending;
+        }
+
+        $chapterSpec = $type->findChapter($type->freePreviewChapterKey);
+
+        if (! $chapterSpec) {
+            return $pending;
+        }
+
+        $hash = $generator->previewInputHash($chapterSpec, $input);
+
+        $cached = ChapterPreview::query()
+            ->where('report_type', $type->key)
+            ->where('chapter_key', $chapterSpec->key)
+            ->where('input_hash', $hash)
+            ->where('status', 'ready')
+            ->first();
+
+        if (! $cached) {
+            return $pending;
+        }
+
+        $row->update([
+            'status' => 'ready',
+            'content' => $cached->content,
+            'stop_reason' => $cached->stop_reason,
+            'output_tokens' => $cached->output_tokens,
+            'last_error' => null,
+        ]);
+
+        Log::info('결 챕터 리포트: 무료 미리보기 캐시를 재사용해 API 호출을 건너뜀', [
+            'report_id' => $report->id,
+            'chapter_key' => $chapterSpec->key,
+            'chapter_preview_id' => $cached->id,
+        ]);
+
+        return $pending->reject(fn ($r) => $r->is($row));
     }
 }

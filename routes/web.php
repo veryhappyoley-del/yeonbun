@@ -4,12 +4,21 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\ChapterPreviewController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('saju');
 })->middleware('track.view')->name('home');
+
+// 결제 전 "무료 미리보기" 챕터 생성/폴링. 무료 궁합 결과 화면이 로그인 없이도 쓰이므로
+// auth 미들웨어 밖에 둡니다 — 대신 throttle로 남용을 막습니다(1분에 20회, 정상적인
+// 폴링 패턴엔 충분하고 무한 반복 호출은 막는 수준). ChapterPreviewController가 실제로
+// 허용된 (type, chapter) 조합인지 한 번 더 확인합니다.
+Route::post('/chapter-previews', [ChapterPreviewController::class, 'store'])
+    ->middleware('throttle:20,1')
+    ->name('chapter-previews.store');
 
 // auth 미들웨어가 비로그인 사용자를 리다이렉트할 때 route('login')을 찾다가
 // 에러 나지 않도록 이름만 있는 안전장치용 라우트. 실제 로그인 폼은 없고 홈으로 보냄

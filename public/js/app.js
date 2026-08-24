@@ -821,6 +821,12 @@
   // "현재 관계 단계"/"지금 가장 궁금한 것"/자유 입력 궁금증. 둘 다 선택 사항이라 null일 수
   // 있음. reports.js buildTwoPersonInput()이 이 값을 그대로 프리미엄 리포트 input에 담아
   // CompatibilityReportType의 프롬프트가 톤/강조 챕터를 조정하는 데 쓴다.
+  //
+  // (2026-08-24 추가) 화면 구성을 결제 유도가 자연스럽게 이어지도록 재배치:
+  //   점수 → 궁합 유형 카드(무료, 공유 가능) → 풀이 텍스트(기존 무료 콘텐츠) →
+  //   무료 티저(compat_overview 챕터를 실제로 미리 생성 — 일부는 완전 공개, 일부는
+  //   진짜 콘텐츠를 그대로 둔 채 시각적으로만 블러 처리) → 12개 챕터 목차 미리보기
+  //   (이탈 지점에 가깝게 위로 당김) → 구매 버튼+신뢰 배지(attachCompatCTA).
   function renderCompatResult(sajuA, sajuB, nameA, nameB, relationshipStage, primaryConcern, concernDetail) {
     var out = document.getElementById('c-result');
     out.innerHTML = '';
@@ -841,11 +847,39 @@
     ]);
     card.appendChild(badgeRow);
 
+    // "궁합 유형 카드" — 룰 기반(AI 호출 없음, 비용 0원)이라 계산 즉시 바로 보여줄 수 있고,
+    // 연애 캐릭터 카드와 같은 공유 캡처 방식(attachCardShare)을 그대로 재사용한다.
+    if (window.YeonbunCompatType && window.YeonbunReports) {
+      var typeState = { sajuA: sajuA, sajuB: sajuB, nameA: nameA, nameB: nameB, compat: compat };
+      var typeCard = window.YeonbunCompatType.buildCard(typeState);
+      card.appendChild(typeCard);
+      window.YeonbunReports.attachCardShare(typeCard, card, {
+        footerCta: '나도 우리 궁합 유형 확인하기 👉',
+        filename: 'gyeol-compat-type-card.png',
+        title: '결 — 궁합 유형 카드',
+        text: '우리 궁합 유형 나왔어! 너도 확인해볼래?'
+      });
+    }
+
     var result = el('div', { class: 'result-block' });
     compat.notes.forEach(function (n, i) {
       result.appendChild(block('풀이 ' + (i + 1), n));
     });
     card.appendChild(result);
+
+    // 무료 티저(compat_overview 실제 생성) — 결제 안내를 클릭하기 전, 가장 궁금할 시점에
+    // "점수가 왜 이렇게 나왔는지"에 대한 진짜 답 일부를 미리 보여준다.
+    var teaserHost = el('div', { class: 'compat-teaser' });
+    card.appendChild(teaserHost);
+    startCompatPreview(teaserHost, compat, relationshipStage, primaryConcern, concernDetail);
+
+    // 12개 챕터 목차 미리보기를 CTA 버튼보다 위(무료 티저 바로 아래)로 당겨서, 이탈하기
+    // 전에 "이런 챕터가 더 있다"는 걸 보여준다(정적 데이터라 비용 0원).
+    if (window.YeonbunReports && window.YeonbunReports.buildTocPreview) {
+      var toc = window.YeonbunReports.buildTocPreview('compatibility');
+      if (toc) card.appendChild(toc);
+    }
+
     out.appendChild(card);
 
     currentCompat = {
@@ -856,6 +890,133 @@
     };
 
     if (window.YeonbunReports) window.YeonbunReports.attachCompatCTA(card, currentCompat);
+  }
+
+  // "지금 가장 궁금한 것" 카드(4종)의 한글 라벨 — resources/views/reports/partials/blocks/
+  // concern_answer.blade.php의 $concernLabels와 반드시 같은 문구를 유지해야, 결제 전
+  // 무료 티저와 결제 후 리포트에서 같은 질문 문구가 보인다.
+  var CONCERN_LABELS = {
+    continuity: '지속 가능성 — 잘 맞는지, 이대로 이어질 수 있는지',
+    growth: '관계 발전 — 연애·결혼 등 다음 단계로 갈 수 있을지',
+    flow: '앞으로의 흐름 — 가까워질 시기·멀어질 시기가 궁금할 때',
+    friction: '충돌 완화 — 싸움·오해·마찰이 반복되는 이유'
+  };
+
+  function csrfToken() {
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute('content') : '';
+  }
+
+  function renderTeaserLoading(host) {
+    host.innerHTML = '';
+    host.appendChild(txt('div', 'compat-teaser-label', '🔍 이 궁합, 더 자세히 보면'));
+    host.appendChild(txt('div', 'compat-teaser-loading', '실제 리포트 내용 일부를 미리 만들고 있어요…'));
+  }
+
+  // 결제 전에도 실제로 생성된 콘텐츠를 그대로 보여준다(더미 텍스트 아님) — 1문단은 완전
+  // 공개, 나머지는 진짜 텍스트를 그대로 둔 채 CSS로만 블러 처리(.compat-teaser-fade)해서
+  // "읽다가 흐려지는" 느낌을 준다. 결제 후에도 같은 내용이 그대로 이어지므로(GenerateReportJob
+  // 이 같은 입력 해시로 이 캐시를 재사용) 미리 본 것과 다른 내용이 나올 걱정이 없다.
+  function renderTeaserContent(host, content, primaryConcern, concernDetail) {
+    host.innerHTML = '';
+    host.appendChild(txt('div', 'compat-teaser-label', '🔍 이 궁합, 더 자세히 보면'));
+
+    var trimmedDetail = concernDetail ? String(concernDetail).trim() : '';
+    var question = trimmedDetail !== '' ? trimmedDetail : (CONCERN_LABELS[primaryConcern] || null);
+    var answer = content && typeof content.concern_answer === 'string' ? content.concern_answer.trim() : '';
+
+    if (question && answer !== '') {
+      var answerCard = el('div', { class: 'rpt-concern-answer' });
+      answerCard.appendChild(txt('div', 'rpt-concern-answer-label', '🔍 회원님이 가장 궁금해하신 것'));
+      answerCard.appendChild(txt('div', 'rpt-concern-answer-question', question));
+      answerCard.appendChild(txt('div', 'rpt-concern-answer-body', answer));
+      host.appendChild(answerCard);
+    }
+
+    var paragraphs = (content && Array.isArray(content.paragraphs))
+      ? content.paragraphs.filter(function (p) { return typeof p === 'string' && p !== ''; })
+      : [];
+
+    if (paragraphs.length) {
+      host.appendChild(txt('p', 'rpt-p', paragraphs[0]));
+
+      if (paragraphs.length > 1) {
+        var fadeWrap = el('div', { class: 'compat-teaser-fade' });
+        paragraphs.slice(1).forEach(function (p) {
+          fadeWrap.appendChild(txt('p', 'rpt-p', p));
+        });
+        host.appendChild(fadeWrap);
+      }
+    }
+
+    if (question && answer !== '' || paragraphs.length) {
+      host.appendChild(txt('div', 'compat-teaser-cta', '전체 내용은 궁합분석 리포트에서 이어져요 — 아래 12개 챕터도 함께 준비돼 있어요.'));
+    } else {
+      // 콘텐츠가 비정상적으로 비어있으면(스키마 검증 실패 등) 조용히 숨김 — 무료 화면 흐름을 방해하지 않음.
+      host.innerHTML = '';
+    }
+  }
+
+  function renderTeaserHidden(host) {
+    // 생성 실패/타임아웃이면 조용히 숨김 — 에러 문구로 무료 화면 흐름을 방해하지 않는다.
+    host.innerHTML = '';
+  }
+
+  // 결제 전 compat_overview 미리보기를 요청/폴링한다. 서버(ChapterPreviewController)가
+  // 같은 입력 해시로 이미 만든 게 있으면 API를 다시 안 부르고 바로 돌려주므로, 같은
+  // 조합을 다시 계산해도(예: 뒤로 갔다 다시 계산) 비용이 중복으로 들지 않는다.
+  function startCompatPreview(host, compat, relationshipStage, primaryConcern, concernDetail) {
+    if (!window.YeonbunBilling || !window.YeonbunBilling.chapterPreviewsUrl) return;
+
+    renderTeaserLoading(host);
+
+    var input = {
+      score: compat.score,
+      levelLabel: compat.levelLabel,
+      notes: compat.notes,
+      relation: compat.rel,
+      relationshipStage: relationshipStage || null,
+      primaryConcern: primaryConcern || null,
+      concernDetail: concernDetail || null
+    };
+
+    var attempts = 0;
+    var maxAttempts = 20; // 20 * 1.5초 ≈ 30초
+
+    function poll() {
+      attempts += 1;
+
+      fetch(window.YeonbunBilling.chapterPreviewsUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken()
+        },
+        body: JSON.stringify({ type: 'compatibility', chapter: 'compat_overview', input: input })
+      })
+        .then(function (res) { return res.ok ? res.json() : Promise.reject(new Error('preview request failed')); })
+        .then(function (data) {
+          if (data.status === 'ready') {
+            renderTeaserContent(host, data.content, primaryConcern, concernDetail);
+            return;
+          }
+          if (data.status === 'failed' || attempts >= maxAttempts) {
+            renderTeaserHidden(host);
+            return;
+          }
+          setTimeout(poll, 1500);
+        })
+        .catch(function () {
+          if (attempts < maxAttempts) {
+            setTimeout(poll, 1500);
+          } else {
+            renderTeaserHidden(host);
+          }
+        });
+    }
+
+    poll();
   }
 
   function renderGuideResult(concernKey) {

@@ -311,7 +311,11 @@
     reportsSuccessUrl: @json(route('reports.success')),
     reportsFailUrl: @json(route('reports.fail')),
     kakaoLoginUrl: @json(route('auth.redirect', 'kakao')),
-    naverLoginUrl: @json(route('auth.redirect', 'naver'))
+    naverLoginUrl: @json(route('auth.redirect', 'naver')),
+    // (2026-08-24 추가) 결제 전 "무료 미리보기" 챕터 생성/폴링 엔드포인트. 로그인 없이도
+    // 쓸 수 있음(routes/web.php에서 auth 미들웨어 밖에 등록) — app.js의 궁합 결과 화면이
+    // 씀. 자세한 설계는 App\Http\Controllers\ChapterPreviewController 주석 참고.
+    chapterPreviewsUrl: @json(route('chapter-previews.store'))
   };
   // 공유 카드(연애 캐릭터 카드 등)에 사이트 유입 유도 문구/링크를 넣을 때 씀 — 정적 JS 파일은
   // Blade의 route()/url() 헬퍼를 직접 못 쓰기 때문에 여기서 서버가 렌더링해서 넘겨줌.
@@ -325,6 +329,7 @@
   window.YeonbunReportPreview = @json($reportTypePreviews);
 </script>
 <script src="{{ asset('js/love-character.js') }}"></script>
+<script src="{{ asset('js/compat-character.js') }}"></script>
 <script src="{{ asset('js/app.js') }}"></script>
 <script src="{{ asset('js/reports.js') }}"></script>
 <script src="{{ asset('js/chat.js') }}"></script>

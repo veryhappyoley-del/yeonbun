@@ -28,6 +28,12 @@ final readonly class ReportType
      *                             previewChapters()가 $chapters 전체를 그대로 반환합니다 — 예를
      *                             들어 궁합분석(20챕터)은 전부 보여주면 구매 전 콘텐츠가 다
      *                             드러나 버리니 대표성 있는 12개만 골라서 지정합니다.
+     * @param  ?string  $freePreviewChapterKey  (2026-08-24 추가) 결제 전에 이 챕터 하나만
+     *                             실제로 AI가 생성해서(App\Models\ChapterPreview 캐시 경유)
+     *                             "일부는 진짜로 공개하고 나머지는 블러 처리"하는 무료 티저에
+     *                             쓸 챕터 key. null(기본값)이면 이 기능을 쓰지 않는 타입(예:
+     *                             연애운분석)입니다 — checkout 전에 결제 유도용 실제 콘텐츠를
+     *                             하나도 노출하지 않던 기존 동작 그대로.
      */
     public function __construct(
         public string $key,
@@ -37,6 +43,7 @@ final readonly class ReportType
         public array $chapters,
         public int $schemaVersion = 2,
         public array $previewChapterKeys = [],
+        public ?string $freePreviewChapterKey = null,
     ) {
     }
 
