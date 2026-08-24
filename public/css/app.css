@@ -1110,6 +1110,121 @@
 
   .rpt-final { background: var(--gold-tint); border-radius: 14px; padding: 18px; border-top: none; margin-top: 26px; }
 
+  /* (2026-08-24 추가) 시각 블록 4종 — score_bars/step_flow/paragraphs 같은 기존 데이터
+     모양을 그대로 쓰거나(radar_chart, timeline) 새 필드를 더한(keyword_chips,
+     compare_cards) 블록들. "27,000원인데 글만 있다"는 지적에 대응해 연애운분석 20챕터
+     중 표현력/안정감/궁합 지표(점수 3개), 반복 패턴(타임라인 1개), 리포트 요약형
+     챕터(키워드 칩 2개), 대비형 챕터(비교 카드 3개) — 총 9개 챕터를 이 블록들로
+     전환했습니다(21단계 노트 참고).
+
+     RADAR CHART — score_bars와 같은 scores/scores_note 데이터를 SVG 방사형 차트로. */
+  .rpt-radar-wrap { display: flex; justify-content: center; margin-top: 6px; }
+  .rpt-radar-svg { display: block; width: 100%; max-width: 300px; height: auto; overflow: visible; }
+  .rpt-radar-ring { fill: none; stroke: var(--line); stroke-width: 1; }
+  .rpt-radar-axis { stroke: var(--line); stroke-width: 1; }
+  .rpt-radar-shape { fill: var(--seal-tint); stroke: var(--seal); stroke-width: 2; stroke-linejoin: round; }
+  .rpt-radar-dot { fill: var(--seal); }
+  .rpt-radar-label {
+    font-size: 9.5px;
+    fill: var(--ink-soft);
+    font-family: inherit;
+  }
+  .rpt-radar-value {
+    font-size: 11px;
+    font-weight: 700;
+    fill: var(--seal);
+    font-variant-numeric: tabular-nums;
+    font-family: inherit;
+  }
+
+  /* TIMELINE — step_flow와 같은 steps/key_point 데이터를 연결선 + 오행 색 순환 노드로. */
+  .rpt-timeline { position: relative; margin-top: 4px; padding-left: 34px; }
+  .rpt-timeline::before {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: 4px;
+    bottom: 4px;
+    width: 2px;
+    background: var(--line);
+  }
+  .rpt-timeline-step { position: relative; padding-bottom: 16px; }
+  .rpt-timeline-step:last-child { padding-bottom: 0; }
+  .rpt-timeline-num {
+    position: absolute;
+    left: -34px;
+    top: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #fff;
+  }
+  .rpt-timeline-text { font-size: 0.88rem; line-height: 1.65; color: var(--ink-soft); padding-top: 3px; }
+  .rpt-timeline-key-point {
+    margin-top: 14px;
+    background: var(--gold-tint);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 0.88rem;
+    color: var(--ink);
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  /* KEYWORD CHIPS — love_profile/final_verdict의 keywords 배열을 태그 pill로. */
+  .rpt-chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .rpt-chip-row--tight { margin-top: 8px; gap: 6px; }
+  .rpt-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .rpt-chip-row--tight .rpt-chip { padding: 4px 11px; font-size: 0.74rem; }
+  .rpt-chip--seal { background: var(--seal-tint); color: var(--seal); }
+  .rpt-chip--indigo { background: var(--indigo-tint); color: var(--indigo); }
+  .rpt-chip--gold { background: var(--gold-tint); color: var(--gold); }
+
+  /* COMPARE CARDS — who_attracts_you/opposite_type/compatibility_match의 compare.left/
+     right를 VS 구분선을 사이에 둔 세로 스택으로. 폰 프레임 폭(~440px)에서 좌우 2열보다
+     세로 스택이 한글 문장 줄바꿈에 훨씬 안전해서 이 레이아웃을 택함. */
+  .rpt-compare {
+    display: flex;
+    flex-direction: column;
+    margin-top: 6px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .rpt-compare-side { padding: 14px 16px; background: var(--paper); }
+  .rpt-compare-side--left { border-left: 4px solid var(--indigo); }
+  .rpt-compare-side--right { border-left: 4px solid var(--gold); }
+  .rpt-compare-label { font-size: 0.76rem; font-weight: 700; letter-spacing: 0.03em; margin-bottom: 6px; }
+  .rpt-compare-side--left .rpt-compare-label { color: var(--indigo); }
+  .rpt-compare-side--right .rpt-compare-label { color: var(--gold); }
+  .rpt-compare-text { font-size: 0.88rem; line-height: 1.65; color: var(--ink-soft); }
+  .rpt-compare-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 0;
+    background: var(--paper-2);
+    font-family: 'Song Myung', serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--ink-faint);
+    letter-spacing: 0.08em;
+  }
+
   /* (2026-08-24 삭제) 예전엔 화면이 560px 이상이면 이 카드들을 2열로 배치했는데, 18단계에서
      소비자 화면 전체에 "폰 프레임"(body.phone-app, 640px 이상에서 .wrap을 440px로 고정)을
      도입한 뒤로는 이 미디어쿼리가 뷰포트 폭 기준이라 여전히 켜져서, 실제 사용 가능한 폭은

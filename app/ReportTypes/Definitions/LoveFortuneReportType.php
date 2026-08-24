@@ -28,6 +28,24 @@ use App\ReportTypes\ReportTypeDefinition;
  * 가격에 맞는 분량감을 확보했습니다. ④ 목차 제목도 더 구체적이고 궁금증을 유발하는
  * 문구로 다듬었습니다(챕터 key는 이미 생성된 report_chapters와의 호환을 위해 그대로
  * 유지 — 제목/스키마/지침만 바뀝니다).
+ *
+ * (시각 블록 확장 — 2026-08-24, 21단계) "27,000원인데 그냥 글만 있다"는 지적에 대응해
+ * 새 블록 4종(radar_chart/timeline/keyword_chips/compare_cards, resources/views/
+ * reports/partials/blocks/ 참고)을 만들고 아래 9개 챕터에 배정했습니다:
+ *   - expression_scores/stability_scores/compatibility_scores: score_bars(막대 목록)
+ *     → radar_chart(방사형 차트). scores/scores_note 데이터 모양은 그대로라 스키마/
+ *     프롬프트 변경 없이 blocks만 교체.
+ *   - recurring_pattern: step_flow(번호 목록) → timeline(연결선 + 오행 색 순환 노드).
+ *     steps/key_point 데이터 모양도 그대로라 blocks만 교체.
+ *   - love_profile/final_verdict: 문단 속에 자연어로 풀어 쓰던 키워드를 keywords
+ *     배열로 분리해서 keyword_chips(태그 pill)로 렌더링. paragraphs는 그만큼 1개로
+ *     줄임(기존 둘째 문단 내용만 유지).
+ *   - who_attracts_you: stage_grid(2칸 카드) → compare_cards(VS 구분선 세로 비교).
+ *     기존 "설명"+"특징" 줄을 compare.{side}.text + compare.{side}.tags(짧은 특징
+ *     키워드 3개)로 재구성.
+ *   - opposite_type/compatibility_match: 기존 문단들 중 명백히 대비되는 두 항목(초반
+ *     매력 vs 장기 마찰, 잘 맞는 상대 vs 조심할 상대)을 compare_cards로 분리하고,
+ *     나머지는 paragraphs로 유지(compatibility_match는 4문단 → compare 1쌍 + 문단 2개).
  */
 class LoveFortuneReportType implements ReportTypeDefinition
 {
@@ -98,15 +116,16 @@ class LoveFortuneReportType implements ReportTypeDefinition
                 key: 'love_profile',
                 title: '이 사람의 연애를 한 문장으로 압축하면',
                 teaser: '이 리포트 전체를 관통하는 핵심 요약과 키워드 3가지.',
-                schema: ['quote' => '', 'paragraphs' => ['', '']],
+                schema: ['quote' => '', 'keywords' => ['', '', ''], 'paragraphs' => ['']],
                 promptGuidance: "이 사람의 연애를 한 문장(quote)으로 압축해서 표현하세요(예: '무모하게 뜨겁다', ".
-                    "'천천히 스며든다' 같은 인상적인 표현). paragraphs 첫 문단에는 그 문장을 뒷받침하는 키워드 ".
-                    '정확히 3개를 자연스러운 한 문장으로 풀어 설명하고, 둘째 문단에는 이 키워드들이 앞으로 이어질 '.
-                    '리포트 전반(연애 단계별 패턴, 궁합, 조언)에서 구체적으로 어떻게 드러나는지 미리 짚어주세요 '.
-                    '(각 문단 2~3문장, 140자 이내). '.$baseGuidance,
+                    "'천천히 스며든다' 같은 인상적인 표현). keywords에는 그 문장을 뒷받침하는 키워드를 정확히 ".
+                    "3개, 각 8자 이내의 짧은 명사형(예: '직진러', '몰입형', '밀당 없음')으로 쓰세요(문장이 아니라 ".
+                    '태그처럼 화면에 그대로 보여집니다). paragraphs 문단에는 이 키워드들이 앞으로 이어질 리포트 '.
+                    '전반(연애 단계별 패턴, 궁합, 조언)에서 구체적으로 어떻게 드러나는지 미리 짚어주세요(2~3문장, '.
+                    '140자 이내). '.$baseGuidance,
                 maxTokens: 1500,
                 inputKeys: ['dayElement', 'dayYinYang', 'deep', 'loveStyle', 'loveCharm'],
-                blocks: ['quote', 'paragraphs'],
+                blocks: ['quote', 'keyword_chips', 'paragraphs'],
             ),
             new ChapterSpec(
                 key: 'expression_scores',
@@ -129,7 +148,7 @@ class LoveFortuneReportType implements ReportTypeDefinition
                     '2~3문장으로 요약하세요(빈 문자열로 두지 마세요).',
                 maxTokens: 1300,
                 inputKeys: ['dayElement', 'dayYinYang', 'deep'],
-                blocks: ['score_bars'],
+                blocks: ['radar_chart'],
             ),
             new ChapterSpec(
                 key: 'stability_scores',
@@ -151,7 +170,7 @@ class LoveFortuneReportType implements ReportTypeDefinition
                     '으로 구체적으로 쓰세요(빈 문자열로 두지 마세요).',
                 maxTokens: 1300,
                 inputKeys: ['dayElement', 'dayYinYang', 'deep'],
-                blocks: ['score_bars'],
+                blocks: ['radar_chart'],
             ),
             new ChapterSpec(
                 key: 'attraction_stage',
@@ -259,30 +278,19 @@ class LoveFortuneReportType implements ReportTypeDefinition
                 title: '나를 강하게 끌어당기는 사람 vs 처음만 강렬한 사람',
                 teaser: '강하게 끌리는 사람과, 처음엔 강하지만 오래가긴 어려운 상대의 차이.',
                 schema: [
-                    'stages' => [
-                        'strongly_attracted' => [
-                            'title' => '강하게 끌리는 사람',
-                            'lines' => [
-                                ['label' => '설명', 'text' => ''],
-                                ['label' => '특징', 'text' => ''],
-                            ],
-                        ],
-                        'short_term_attraction' => [
-                            'title' => '처음엔 강하지만 오래가긴 어려운 사람',
-                            'lines' => [
-                                ['label' => '설명', 'text' => ''],
-                                ['label' => '특징', 'text' => ''],
-                            ],
-                        ],
+                    'compare' => [
+                        'left' => ['label' => '강하게 끌리는 사람', 'text' => '', 'tags' => ['', '', '']],
+                        'right' => ['label' => '처음엔 강하지만 오래가긴 어려운 사람', 'text' => '', 'tags' => ['', '', '']],
                     ],
                 ],
                 promptGuidance: "'어떤 사람에게 강하게/일시적으로 끌리는가'(끌림 그 자체)만 다루세요. '장기적으로 잘 ".
-                    "맞는 사람'은 compatibility_match 챕터에서 다루니 여기서 언급하지 마세요. '특징' 줄은 짧은 ".
-                    "특징 2~3개를 쉼표로 이어서 한 줄(60자 이내)로 쓰세요. '설명' 줄은 1~2문장, 140자 이내로 ".
-                    '구체적인 상황 예시를 들어 쓰세요.',
+                    "맞는 사람'은 compatibility_match 챕터에서 다루니 여기서 언급하지 마세요. compare.left/right의 ".
+                    "text에는 구체적인 상황 예시를 들어 1~2문장(140자 이내)으로 쓰세요. tags에는 짧은 특징 정확히 ".
+                    '3개를 각 10자 이내의 단어/짧은 구로 쓰세요(화면에 태그처럼 그대로 보여지므로 문장이 아니라 '.
+                    "'다정함', '눈맞춤이 진함' 같은 짧은 표현으로).",
                 maxTokens: 1900,
                 inputKeys: ['dayElement', 'dayYinYang', 'deep'],
-                blocks: ['stage_grid'],
+                blocks: ['compare_cards'],
             ),
             new ChapterSpec(
                 key: 'strength_weakness',
@@ -306,7 +314,7 @@ class LoveFortuneReportType implements ReportTypeDefinition
                     '포인트이자 이걸 알아차렸을 때 바꿀 수 있는 것을 1~2문장(140자 이내)으로 쓰세요.',
                 maxTokens: 1900,
                 inputKeys: ['dayElement', 'dayYinYang', 'deep'],
-                blocks: ['step_flow'],
+                blocks: ['timeline'],
             ),
             new ChapterSpec(
                 key: 'partner_view_early',
@@ -387,19 +395,25 @@ class LoveFortuneReportType implements ReportTypeDefinition
                     '이내)으로 요약하세요(라벨 텍스트는 절대 바꾸지 말고 value만 채우세요).',
                 maxTokens: 1300,
                 inputKeys: ['dayElement', 'dayYinYang', 'deep'],
-                blocks: ['score_bars'],
+                blocks: ['radar_chart'],
             ),
             new ChapterSpec(
                 key: 'compatibility_match',
                 title: '잘 맞는 상대, 반드시 조심할 상대, 이상적인 관계의 모습',
                 teaser: '구체적인 상대 유형과 이상적인 관계, 그리고 오래가는 조건까지.',
-                schema: ['paragraphs' => ['잘 맞는 상대', '조심할 상대', '이상적인 관계', '오래가기 위한 핵심 조건']],
-                promptGuidance: '정확히 4문단(순서 고정): 1) 잘 맞는 상대 유형, 2) 조심해야 할 상대 유형, 3) 이 '.
-                    '사람에게 이상적인 관계의 모습, 4) 이 관계를 오래 지속시키기 위해 꼭 필요한 핵심 조건. 각 문단은 '.
-                    '정확히 2~3문장, 140자 이내로 구체적으로.',
+                schema: [
+                    'compare' => [
+                        'left' => ['label' => '잘 맞는 상대', 'text' => ''],
+                        'right' => ['label' => '조심할 상대', 'text' => ''],
+                    ],
+                    'paragraphs' => ['이상적인 관계', '오래가기 위한 핵심 조건'],
+                ],
+                promptGuidance: 'compare.left/right(잘 맞는 상대 vs 조심할 상대)의 text는 각각 구체적인 상대 유형을 '.
+                    '1~2문장(140자 이내)으로. paragraphs는 정확히 2문단(순서 고정): 1) 이 사람에게 이상적인 관계의 '.
+                    '모습, 2) 이 관계를 오래 지속시키기 위해 꼭 필요한 핵심 조건 — 각 2~3문장, 140자 이내로 구체적으로.',
                 maxTokens: 2000,
                 inputKeys: ['dayElement', 'dayYinYang', 'deep'],
-                blocks: ['paragraphs'],
+                blocks: ['compare_cards', 'paragraphs'],
             ),
             new ChapterSpec(
                 key: 'relationship_advice',
@@ -417,27 +431,36 @@ class LoveFortuneReportType implements ReportTypeDefinition
                 key: 'opposite_type',
                 title: '나와 정반대인 사람을 만나면 벌어지는 일',
                 teaser: '비슷한 사람 vs 정반대 사람, 실제로 어떤 차이가 있을지.',
-                schema: ['paragraphs' => ['', '', '']],
-                promptGuidance: '이 사람의 오행/음양과 정반대되는 성향의 상대를 만났을 때 실제로 어떤 역학이 생기는지'.
-                    '(초반 매력 vs 장기적 마찰 지점)를 정확히 3문단(문단당 2~3문장, 140자 이내)으로 구체적으로 '.
-                    "서술하세요. 앞선 compatibility_match 챕터와 겹치지 않게, '비슷한 유형 vs 반대 유형'이라는 새로운 ".
-                    '각도로 쓰세요.',
+                schema: [
+                    'compare' => [
+                        'left' => ['label' => '초반엔 이런 매력', 'text' => ''],
+                        'right' => ['label' => '장기적으론 이런 마찰', 'text' => ''],
+                    ],
+                    'paragraphs' => [''],
+                ],
+                promptGuidance: '이 사람의 오행/음양과 정반대되는 성향의 상대를 만났을 때 실제로 어떤 역학이 생기는지를 '.
+                    "compare로 대비해서 쓰세요. compare.left(초반의 매력)/right(장기적 마찰)의 text는 각 1~2문장 ".
+                    "(140자 이내), 구체적인 상황 예시 포함. paragraphs는 정확히 1문단으로, 이 초반 매력과 장기 마찰을 ".
+                    "종합했을 때 이 관계가 실제로 어떻게 흘러가는지 결론(2~3문장, 140자 이내)을 쓰세요. 앞선 ".
+                    "compatibility_match 챕터와 겹치지 않게, '비슷한 유형 vs 반대 유형'이라는 새로운 각도로 쓰세요.",
                 maxTokens: 1900,
                 inputKeys: ['dayElement', 'dayYinYang', 'deep'],
-                blocks: ['paragraphs'],
+                blocks: ['compare_cards', 'paragraphs'],
             ),
             new ChapterSpec(
                 key: 'final_verdict',
                 title: '이 리포트의 결론 — 이 사람의 연애를 한 문장으로',
                 teaser: '리포트 전체를 압축한 최종 결론과 연애 키워드 5가지.',
-                schema: ['quote' => '', 'quote_variant' => 'final', 'paragraphs' => ['', '']],
+                schema: ['quote' => '', 'quote_variant' => 'final', 'keywords' => ['', '', '', '', ''], 'paragraphs' => ['']],
                 promptGuidance: 'quote에는 이 리포트 전체를 관통하는 결론을 감성적이면서도 확신 있는 한 문장으로 '.
                     "쓰세요. quote_variant는 항상 정확히 'final'이라는 문자열 그대로 두세요(바꾸지 마세요). ".
-                    'paragraphs 첫 문단에는 연애 키워드 정확히 5개를 자연스러운 한 문장으로 나열하고, 둘째 문단에는 '.
-                    '이 사람에게 마지막으로 전하고 싶은 따뜻한 응원의 메시지를 2~3문장(160자 이내)으로 쓰세요.',
+                    "keywords에는 이 리포트를 압축하는 연애 키워드를 정확히 5개, 각 8자 이내의 짧은 명사형으로 ".
+                    '쓰세요(문장이 아니라 태그처럼 화면에 그대로 보여집니다, 앞선 love_profile의 3개 키워드와 '.
+                    '겹치지 않게). paragraphs 문단에는 이 사람에게 마지막으로 전하고 싶은 따뜻한 응원의 메시지를 '.
+                    '2~3문장(160자 이내)으로 쓰세요.',
                 maxTokens: 1700,
                 inputKeys: ['dayElement', 'dayYinYang', 'deep'],
-                blocks: ['quote', 'paragraphs'],
+                blocks: ['quote', 'keyword_chips', 'paragraphs'],
             ),
         ];
     }
