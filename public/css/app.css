@@ -311,6 +311,31 @@
 
   .btn.secondary:hover { background: var(--indigo-tint); }
 
+  /* (2026-08-24 추가) 리포트 결제 버튼 전용 — 다른 곳의 .btn(공유하기/폼 제출 등)과 크기가
+     같아서 화면에서 눈에 잘 안 띈다는 피드백에 대응. 가로 폭을 꽉 채우고, 글자/여백을 키우고,
+     그라데이션 + 은은하게 커졌다 작아졌다 하는 그림자 펄스로 "지금 눌러야 할 버튼"이라는
+     걸 시각적으로 확실히 구분해준다. */
+  .btn-buy {
+    display: block;
+    width: 100%;
+    padding: 15px 20px;
+    font-size: 1.02rem;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--seal), var(--seal-deep));
+    box-shadow: 0 10px 24px -8px var(--seal);
+    animation: btn-buy-pulse 2.6s ease-in-out infinite;
+  }
+  .btn-buy:hover { background: linear-gradient(135deg, var(--seal), var(--seal-deep)); filter: brightness(1.05); }
+
+  @keyframes btn-buy-pulse {
+    0%, 100% { box-shadow: 0 10px 24px -8px var(--seal); }
+    50% { box-shadow: 0 12px 30px -6px var(--seal-deep); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn-buy { animation: none; }
+  }
+
   .btn-center {
     display: block;
     width: fit-content;
@@ -1001,17 +1026,25 @@
   }
 
   /* ---------- 심층/궁합 프리미엄 리포트 ---------- */
+  /* (2026-08-24 수정) 결제 버튼이 다른 버튼들과 똑같은 크기/색이라 눈에 잘 안 띈다는
+     피드백에 대응해, CTA 영역 전체를 점선 구분선짜리 텍스트 블록에서 은은한 카드형
+     "구매존"으로 바꿨다 — 배경 틴트 + 라운드 보더 + 그림자로 화면에서 시선이 멈추는
+     지점을 만든다. */
   .report-cta {
-    margin-top: 18px;
-    padding-top: 16px;
-    border-top: 1px dashed var(--line);
+    margin-top: 20px;
+    padding: 22px 18px 20px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, var(--seal-tint), transparent 65%);
+    border: 1px solid var(--seal-tint);
+    box-shadow: 0 12px 28px -18px var(--seal);
     text-align: center;
   }
 
-  .report-cta p {
-    margin: 0 0 12px;
-    font-size: 0.86rem;
-    color: var(--ink-soft);
+  .report-cta-headline {
+    margin: 0 0 14px;
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: var(--ink);
   }
 
   /* (2026-08-24 추가) 결제 버튼 바로 아래 붙는 신뢰 배지 4칸 그리드 — 경쟁사(명사도)가

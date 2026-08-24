@@ -313,7 +313,7 @@
     var includeToc = opts.includeToc !== false;
     var info = TYPE_INFO[typeKey];
     var wrap = el('div', { class: 'report-cta' });
-    wrap.appendChild(txt('p', '', '더 깊은 해석이 궁금하다면?'));
+    wrap.appendChild(txt('p', 'report-cta-headline', '더 깊은 해석이 궁금하다면?'));
 
     var row = el('div', { class: 'share-card-actions' });
     var statusBox = txt('div', 'hint', '');
@@ -321,7 +321,9 @@
     statusBox.style.marginTop = '10px';
     statusBox.style.marginBottom = '0';
 
-    var buyBtn = el('button', { type: 'button', class: 'btn' }, [document.createTextNode(info.label + ' 보기 · ' + info.priceLabel)]);
+    // (2026-08-24 추가) 결제 버튼이 다른 버튼들과 똑같이 생겨서 눈에 잘 안 띈다는 피드백에
+    // 대응해 btn-buy로 크기/그라데이션/은은한 펄스를 준 전용 스타일을 얹었다(app.css 참고).
+    var buyBtn = el('button', { type: 'button', class: 'btn btn-buy' }, [document.createTextNode(info.label + ' 전체 보기 · ' + info.priceLabel)]);
     buyBtn.addEventListener('click', function () {
       startCheckout(typeKey, buildTitle.input, buildTitle.title, statusBox);
     });
