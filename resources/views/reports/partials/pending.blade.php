@@ -32,8 +32,9 @@
     var isSingle = @json($report->type !== 'compat');
 
     // 게이지바가 "몇 초 만에 96%까지 찰지" 기준이 되는 예상 소요 시간(초).
-    // single(심층 연애 리포트)은 최대 120초, compat(궁합 리포트)은 최대 30초 정도를 기준으로 잡음.
-    var estimatedSeconds = isSingle ? 120 : 30;
+    // single(심층 연애 리포트)은 max_tokens를 14000으로 올리면서 실제로 더 오래 걸릴 수 있어서
+    // 180초, compat(궁합 리포트)은 최대 30초 정도를 기준으로 잡음.
+    var estimatedSeconds = isSingle ? 180 : 30;
     var capPercent = 96; // 실제 완료 전에는 여기서 멈춰서 대기(100%는 완료 신호를 받은 순간에만 채움)
     var tickMs = 300;
     var incrementPerTick = capPercent / (estimatedSeconds * 1000 / tickMs);
@@ -52,7 +53,9 @@
     var percent = 0;
     var done = false;
     var pollIntervalMs = 3000;
-    var maxPollAttempts = 40; // 약 2분
+    // single은 GenerateReportJob의 타임아웃(300초)보다 여유 있게 잡아야, 정상적으로
+    // 처리 중인데 너무 일찍 "다시 생성하기" 버튼을 보여주는 일이 없음. compat은 원래도 짧음.
+    var maxPollAttempts = isSingle ? 110 : 30; // 약 5.5분 / 약 1.5분
     var pollAttempts = 0;
     var barTimer = null;
     var pollTimer = null;

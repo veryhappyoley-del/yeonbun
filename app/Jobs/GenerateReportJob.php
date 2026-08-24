@@ -28,9 +28,9 @@ class GenerateReportJob implements ShouldQueue
     public int $tries = 2;
 
     // 이 job 자체(큐 워커 프로세스)가 허용되는 최대 실행 시간(초). ReportGenerator 내부의
-    // Http 타임아웃(single 170초)보다 넉넉하게 잡아서, API 호출이 끝나기 전에 워커가
-    // job을 강제 종료하지 않도록 함.
-    public int $timeout = 200;
+    // Http 타임아웃(single 260초, max_tokens를 14000으로 올리면서 함께 늘림)보다 넉넉하게
+    // 잡아서, API 호출이 끝나기 전에 워커가 job을 강제 종료하지 않도록 함.
+    public int $timeout = 300;
 
     public function __construct(public Report $report)
     {

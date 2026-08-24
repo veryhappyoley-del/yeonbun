@@ -152,11 +152,10 @@
     </div>
   @endif
 
-  {{-- WHO ATTRACTS YOU --}}
+  {{-- WHO ATTRACTS YOU (장기적으로 잘 맞는 사람은 아래 COMPATIBILITY에서 다룸 — 여기선 순수 "끌림"만) --}}
   @php
     $attractLabels = [
       'strongly_attracted' => '강하게 끌리는 사람', 'short_term_attraction' => '처음엔 강하지만 오래가긴 어려운 사람',
-      'long_term_match' => '장기적으로 잘 맞는 사람',
     ];
     $attracts = $data['who_attracts_you'] ?? [];
   @endphp
@@ -237,11 +236,11 @@
     </div>
   @endif
 
-  {{-- COMPATIBILITY --}}
+  {{-- COMPATIBILITY (emotional_expression/relationship_leadership/stability는 위 LOVE SCORE와
+       겹쳐서 뺐음 — "나 자신의 연애 성향"은 LOVE SCORE, "상대와 함께일 때의 궁합"은 여기) --}}
   @php
     $compatLabels = [
-      'independence' => '독립성', 'emotional_expression' => '감정 표현', 'realism' => '현실 감각',
-      'responsibility' => '책임감', 'stability' => '안정 추구', 'relationship_leadership' => '관계 주도력',
+      'independence' => '독립성', 'realism' => '현실 감각', 'responsibility' => '책임감',
       'dependency' => '의존도', 'emotional_volatility' => '감정 기복', 'communication' => '소통력',
       'lifestyle_compatibility' => '생활 방식',
     ];
