@@ -66,7 +66,9 @@ class GenerateReportChapterJob implements ShouldQueue
         try {
             $row->update(['status' => 'generating']);
 
-            $payload = $generator->requestPayload($chapterSpec, $report->input ?? []);
+            // 개별 재시도도 이전 시도가 max_tokens로 실패했다면 예산을 자동으로 올린다.
+            $maxTokens = $generator->effectiveMaxTokens($chapterSpec, $row);
+            $payload = $generator->requestPayload($chapterSpec, $report->input ?? [], $maxTokens);
 
             $response = Http::withHeaders([
                 'x-api-key' => config('services.anthropic.key'),

@@ -125,7 +125,11 @@ class GenerateReportJob implements ShouldQueue
                             continue;
                         }
 
-                        $payload = $generator->requestPayload($chapter, $input);
+                        // 이전 시도가 max_tokens 때문에 실패한 채로 재시도되는 chapter라면
+                        // (whereIn(['pending','failed'])에 걸려 다시 이 배치에 들어온 경우),
+                        // 같은 예산을 또 주는 대신 자동으로 올려서 재요청한다 — "재시도해도
+                        // 어차피 또 잘리는" 문제를 구조적으로 막기 위함(ChapterGenerator 참고).
+                        $payload = $generator->requestPayload($chapter, $input, $generator->effectiveMaxTokens($chapter, $row));
 
                         // 챕터 하나의 Http 타임아웃은 90초 — 레거시 단일 호출(260초)보다
                         // 훨씬 짧고 안전하다(챕터 스키마가 작아 실제로 그렇게 오래 안 걸림).

@@ -1110,9 +1110,14 @@
 
   .rpt-final { background: var(--gold-tint); border-radius: 14px; padding: 18px; border-top: none; margin-top: 26px; }
 
-  @media (min-width: 560px) {
-    .rpt-os-grid, .rpt-attract-grid, .rpt-partner-grid { grid-template-columns: 1fr 1fr; }
-  }
+  /* (2026-08-24 삭제) 예전엔 화면이 560px 이상이면 이 카드들을 2열로 배치했는데, 18단계에서
+     소비자 화면 전체에 "폰 프레임"(body.phone-app, 640px 이상에서 .wrap을 440px로 고정)을
+     도입한 뒤로는 이 미디어쿼리가 뷰포트 폭 기준이라 여전히 켜져서, 실제 사용 가능한 폭은
+     440px 안팎인데 그 안에 억지로 2열을 우겨넣는 상태가 됐다 — 카드 한 개짜리 챕터(호감이
+     생길 때 등)는 그 카드가 왼쪽 절반에만 놓이고 오른쪽 절반이 통째로 빈 공간으로 남는 버그가
+     여기서 비롯됨. 폰 프레임 도입 이후로는 이 카드들이 놓이는 실제 폭이 항상 모바일 수준이라
+     2열이 다시 필요할 일이 없어서, 아예 삭제하고 1열(위에서 이미 지정된 grid-template-columns:
+     1fr)로 고정했다. */
 
   /* ---------- 챕터형(schema_version=2) 리포트 목차/리더(chapter-toc, chapter-reader) ----------
      LoveFortune/Compatibility 등 20챕터+ 리포트 타입 전용. 레거시(schema_version=1)
