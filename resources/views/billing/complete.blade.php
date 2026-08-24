@@ -6,7 +6,7 @@
   <title>결제 완료 — 결</title>
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
-<body>
+<body class="phone-app">
 
 <div class="wrap wrap-narrow">
 

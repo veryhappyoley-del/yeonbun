@@ -107,6 +107,37 @@
     padding: 40px 20px 100px;
   }
 
+  /* ---------- 폰 프레임 레이아웃(PC/태블릿에서도 모바일 폭으로 고정) ----------
+     소비자용 화면(홈/코인 충전/결제 완료/리포트함/리포트 상세)에만 붙는 <body class="phone-app">
+     한정 적용. 관리자 대시보드(/admin)는 표/그래프가 많아 넓은 화면이 유리해서 이 클래스를
+     의도적으로 붙이지 않았고, 기존 .wrap(780px, 좌우 중앙 정렬)이 그대로 적용됩니다.
+
+     640px 미만(실제 폰 화면)에서는 지금까지와 완전히 동일하게 보입니다 — 이 프레임 연출은
+     화면이 넓을 때만 켜지는 장식이라, 이미 좁은 화면에서는 아무 변화도 주지 않습니다. */
+  @media (min-width: 640px) {
+    body.phone-app {
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px;
+      min-height: 100vh;
+      /* body 기본 배경(위 radial-gradient 장식)과 같은 결을 유지하되, 마지막 색만 한 톤
+         더 짙은 --paper-3로 바꿔서 그 위에 얹히는 .wrap(카드)이 배경과 구분돼 보이게 함. */
+      background:
+        radial-gradient(circle at 12% 8%, rgba(0, 0, 0, 0.035) 0, transparent 40%),
+        radial-gradient(circle at 85% 92%, rgba(0, 0, 0, 0.035) 0, transparent 40%),
+        var(--paper-3);
+    }
+
+    body.phone-app .wrap {
+      max-width: 440px;
+      width: 100%;
+      margin: 0;
+      background: var(--paper);
+      border-radius: 28px;
+      box-shadow: 0 30px 70px -24px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--line);
+    }
+  }
+
   /* ---------- Hero ---------- */
   .hero {
     display: flex;
