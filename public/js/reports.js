@@ -395,12 +395,13 @@
    * 서버 호출이 없어서 로그인하지 않아도 만들 수 있어요(바이럴 유입용).
    * ============================================================ */
 
+  // (2026-08-24 수정) 카드 타이틀 폰트가 Black Han Sans → Song Myung으로 바뀌면서(사이트
+  // 결에 맞춘 디자인 개정) 캡처 전에 미리 로드해둘 폰트 목록에서도 뺐다.
   function fontsReady() {
     if (!document.fonts || !document.fonts.ready) return Promise.resolve();
     return Promise.all([
       document.fonts.load('400 40px "Song Myung"'),
-      document.fonts.load('700 40px "Gowun Dodum"'),
-      document.fonts.load('400 60px "Black Han Sans"')
+      document.fonts.load('700 40px "Gowun Dodum"')
     ]).catch(function () {}).then(function () { return document.fonts.ready; });
   }
 

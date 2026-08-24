@@ -30,25 +30,17 @@
     return node;
   }
 
-  // 오행 상생/비화/상극/중립 관계별 테마 — love-character.js의 ELEMENT_THEME과 같은
-  // 형태(그라디언트/강조색/글로우)로 맞춰서 같은 .lc-card CSS 변수를 그대로 씀.
+  // 오행 상생/비화/상극/중립 관계별 테마 — love-character.js의 ELEMENT_THEME과 같은 방식
+  // (2026-08-24 수정)으로 사이트 전역 색상 변수를 그대로 참조한다: 상생은 "돕는" 관계라
+  // 오행의 목(성장)과 같은 결의 --wood, 비화(같은 오행)는 사이트의 시그니처 색인 --seal,
+  // 상극은 부딪히는 긴장감이라 --fire, 중립은 사이트의 세 번째 보조색 --indigo. 예전처럼
+  // 카드마다 따로 진한 네온 그라디언트를 하드코딩하지 않아서 사이트 나머지와 톤이 맞고,
+  // 라이트/다크 테마 전환에도 자동으로 따라간다.
   var REL_THEME = {
-    generate: {
-      icon: '🌊', label: '오행 상생 관계',
-      gradient: ['#2f6b52', '#5fae8a'], accent: '#8be3bd', glow: 'rgba(95,174,138,0.45)'
-    },
-    same: {
-      icon: '🪞', label: '오행 비화 관계',
-      gradient: ['#5a3f7a', '#9a72c7'], accent: '#cba9f2', glow: 'rgba(154,114,199,0.45)'
-    },
-    control: {
-      icon: '⚡', label: '오행 상극 관계',
-      gradient: ['#7a2b3f', '#e0603c'], accent: '#ff9166', glow: 'rgba(224,96,60,0.45)'
-    },
-    neutral: {
-      icon: '🧭', label: '오행 중립 관계',
-      gradient: ['#33505f', '#6f9aab'], accent: '#a9d7e3', glow: 'rgba(111,154,171,0.45)'
-    }
+    generate: { icon: '🌊', label: '오행 상생 관계', accent: 'var(--wood)' },
+    same: { icon: '🪞', label: '오행 비화 관계', accent: 'var(--seal)' },
+    control: { icon: '⚡', label: '오행 상극 관계', accent: 'var(--fire)' },
+    neutral: { icon: '🧭', label: '오행 중립 관계', accent: 'var(--indigo)' }
   };
 
   // rel × band(high/mid/low) = 12가지 궁합 유형. self 캐릭터 카드와 톤을 맞추되(짧고 재미있는
@@ -251,10 +243,7 @@
     var type = getCompatType(compat.rel, compat.score);
 
     var card = el('div', { class: 'lc-card' });
-    card.style.setProperty('--lc-bg-1', theme.gradient[0]);
-    card.style.setProperty('--lc-bg-2', theme.gradient[1]);
     card.style.setProperty('--lc-accent', theme.accent);
-    card.style.setProperty('--lc-glow', theme.glow);
 
     var topline = el('div', { class: 'lc-topline' });
     topline.appendChild(txt('span', 'lc-kicker', 'COMPAT TYPE CARD'));

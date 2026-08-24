@@ -28,34 +28,17 @@
     return node;
   }
 
-  // 오행별 테마 — 색상/아이콘/키워드. 금(金)은 요청대로 "단단함/차가움/날카로움/세련됨"을
-  // 시각적으로 담은 차갑고 세련된 금속 톤으로 구성. 나머지 4개 오행도 같은 구조로 확장.
+  // 오행별 테마 — 아이콘/키워드 + 사이트 전역 오행 색상 변수(:root의 --wood/--fire/--earth/
+  // --metal/--water, 오행 차트·명식표 등 사이트 곳곳에서 이미 쓰는 바로 그 색). 예전엔 이
+  // 카드만 따로 진한 게임 카드풍 그라디언트/네온 글로우를 하드코딩해서 사이트 나머지와
+  // 톤이 어긋났는데(2026-08-24 피드백), 이제 같은 CSS 변수를 참조하게 해서 라이트/다크
+  // 테마 전환에도 자동으로 맞고, 다른 오행 시각화와도 색이 통일된다.
   var ELEMENT_THEME = {
-    목: {
-      icon: '🌱', label: '목(木) 속성',
-      gradient: ['#2f6b4f', '#5fae7a'], accent: '#7bd39a', glow: 'rgba(95,174,122,0.45)',
-      keywords: ['생동감', '유연함', '성장', '신선함']
-    },
-    화: {
-      icon: '🔥', label: '화(火) 속성',
-      gradient: ['#7a2b2b', '#e0603c'], accent: '#ff9166', glow: 'rgba(224,96,60,0.45)',
-      keywords: ['열정', '속도감', '뜨거움', '폭발력']
-    },
-    토: {
-      icon: '⛰️', label: '토(土) 속성',
-      gradient: ['#6b4d26', '#c99a52'], accent: '#e0b872', glow: 'rgba(185,133,63,0.4)',
-      keywords: ['안정감', '묵직함', '포용력', '신뢰']
-    },
-    금: {
-      icon: '⚙️', label: '금(金) 속성',
-      gradient: ['#333f4a', '#8fa3b3'], accent: '#cfe0ea', glow: 'rgba(140,163,179,0.5)',
-      keywords: ['단단함', '차가움', '날카로움', '세련됨']
-    },
-    수: {
-      icon: '💧', label: '수(水) 속성',
-      gradient: ['#1a3252', '#3f6fa8'], accent: '#8fc4ff', glow: 'rgba(63,111,168,0.45)',
-      keywords: ['깊이감', '유동성', '신비로움', '고요함']
-    }
+    목: { icon: '🌱', label: '목(木) 속성', accent: 'var(--wood)', keywords: ['생동감', '유연함', '성장', '신선함'] },
+    화: { icon: '🔥', label: '화(火) 속성', accent: 'var(--fire)', keywords: ['열정', '속도감', '뜨거움', '폭발력'] },
+    토: { icon: '⛰️', label: '토(土) 속성', accent: 'var(--earth)', keywords: ['안정감', '묵직함', '포용력', '신뢰'] },
+    금: { icon: '⚙️', label: '금(金) 속성', accent: 'var(--metal)', keywords: ['단단함', '차가움', '날카로움', '세련됨'] },
+    수: { icon: '💧', label: '수(水) 속성', accent: 'var(--water)', keywords: ['깊이감', '유동성', '신비로움', '고요함'] }
   };
 
   // 오행(일간) × 음양 10가지 조합 = 10가지 연애 캐릭터 유형.
@@ -224,10 +207,7 @@
     if (!character) return el('div', {});
 
     var card = el('div', { class: 'lc-card' });
-    card.style.setProperty('--lc-bg-1', theme.gradient[0]);
-    card.style.setProperty('--lc-bg-2', theme.gradient[1]);
     card.style.setProperty('--lc-accent', theme.accent);
-    card.style.setProperty('--lc-glow', theme.glow);
 
     var topline = el('div', { class: 'lc-topline' });
     topline.appendChild(txt('span', 'lc-kicker', 'LOVE TYPE CARD'));
