@@ -28,7 +28,7 @@
   var REPORT_FAQ = [
     {
       q: '어떤 방식으로 리포트를 만드나요?',
-      a: '사주 명식(연월일시), 오행, 십신, 신강신약 같은 명리학 데이터를 AI가 20개의 주제로 나눠서 각각 따로 깊이 있게 분석해요. 하나의 글로 뭉뚱그리지 않고 챕터마다 독립적으로 생성해서 내용이 겹치지 않고 깊이도 유지돼요.'
+      a: '고전 명리학 이론을 폭넓게 학습한 AI가 사주 명식(연월일시), 오행, 십신, 신강신약 같은 명리학 데이터를 바탕으로 20개의 주제로 나눠서 각각 따로 깊이 있게 분석해요. 하나의 글로 뭉뚱그리지 않고 챕터마다 독립적으로 생성해서 내용이 겹치지 않고 깊이도 유지돼요.'
     },
     {
       q: '생성하는 데 얼마나 걸리나요?',
@@ -58,8 +58,17 @@
     }
     if (!previewData || !previewData.chapters || !previewData.chapters.length) return null;
 
+    // (2026-08-24 수정) ReportType::$previewChapterKeys로 일부만 골라 보여주는 타입(예:
+    // 궁합분석)은 "20개 챕터 중 12개 미리보기"처럼 전체 개수도 함께 알려준다. 전체를
+    // 그대로 보여주는 타입(previewData.totalChapters === chapters.length)은 기존처럼
+    // "챕터 N개 전체 보기"로 표시.
+    var total = previewData.totalChapters || previewData.chapters.length;
+    var summaryText = total > previewData.chapters.length
+      ? '목차 미리보기 · 전체 ' + total + '개 챕터 중 ' + previewData.chapters.length + '개'
+      : '목차 미리보기 · 챕터 ' + previewData.chapters.length + '개 전체 보기';
+
     var details = el('details', { class: 'report-toc-toggle' });
-    details.appendChild(txt('summary', '', '목차 미리보기 · 챕터 ' + previewData.chapters.length + '개 전체 보기'));
+    details.appendChild(txt('summary', '', summaryText));
 
     var list = el('ul', { class: 'report-toc-list' });
     previewData.chapters.forEach(function (ch, idx) {
@@ -79,6 +88,29 @@
     });
     details.appendChild(list);
     return details;
+  }
+
+  // (2026-08-24 추가) 결제 버튼 바로 아래 붙는 신뢰 배지 4칸 — 경쟁사(명사도)의 "4대 학파
+  // 교차판독/6중 멀티 엔진 검증" 같은 과장된 방법론 문구 대신, 우리가 실제로 만들어서 검증한
+  // 기능만 정직하게 나열한다(20단계: Tool Use 전환+적응형 재시도로 챕터 생성 신뢰성을 실제로
+  // 개선했고, 21단계: 실패 챕터는 항상 재시도 가능, 리포트함에 영구 저장됨 — 전부 사실).
+  var TRUST_BADGES = [
+    { icon: '📖', head: '20개 챕터', desc: '주제별로 나눠 깊이 있게 분석해요' },
+    { icon: '⏱️', head: '1~2분 완성', desc: '결제 즉시 여러 챕터가 동시에 생성돼요' },
+    { icon: '🔄', head: '실패해도 안심', desc: '일부만 실패해도 그 챕터만 다시 생성돼요' },
+    { icon: '♾️', head: '평생 소장', desc: '리포트함에 저장돼 언제든 다시 볼 수 있어요' }
+  ];
+
+  function buildTrustBadges() {
+    var grid = el('div', { class: 'report-trust-grid' });
+    TRUST_BADGES.forEach(function (b) {
+      var item = el('div', { class: 'report-trust-item' });
+      item.appendChild(txt('div', 'report-trust-icon', b.icon));
+      item.appendChild(txt('div', 'report-trust-head', b.head));
+      item.appendChild(txt('div', 'report-trust-desc', b.desc));
+      grid.appendChild(item);
+    });
+    return grid;
   }
 
   function buildFaqSection() {
@@ -251,7 +283,13 @@
       score: c.score,
       levelLabel: c.levelLabel,
       notes: c.notes,
-      relation: c.rel
+      relation: c.rel,
+      // (2026-08-24 추가) 궁합 폼의 "현재 관계"/"지금 가장 궁금한 것" 선택값(둘 다 선택
+      // 사항이라 null일 수 있음) — CompatibilityReportType의 프롬프트가 이 값에 맞춰
+      // 톤/시제와 강조할 챕터를 조정한다.
+      relationshipStage: state.relationshipStage || null,
+      primaryConcern: state.primaryConcern || null,
+      concernDetail: state.concernDetail || null
     };
   }
 
@@ -279,6 +317,10 @@
       startCheckout(typeKey, buildTitle.input, buildTitle.title, statusBox);
     });
     row.appendChild(buyBtn);
+    wrap.appendChild(row);
+
+    // 결제 버튼 바로 아래 신뢰 배지 4칸(실제로 만든 기능만 정직하게 나열).
+    wrap.appendChild(buildTrustBadges());
 
     var previewBox = el('div', { class: 'share-preview' });
     if (showShare) {
@@ -289,7 +331,6 @@
       row.appendChild(shareBtn);
     }
 
-    wrap.appendChild(row);
     wrap.appendChild(statusBox);
     wrap.appendChild(previewBox);
 

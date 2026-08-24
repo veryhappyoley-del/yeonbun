@@ -1,11 +1,15 @@
 @php
   // 결제 CTA(public/js/reports.js buildCTA)의 "목차 미리보기"에 쓸 정적 데이터.
   // AI 콘텐츠는 전혀 포함하지 않고, 이미 코드로 정의된 챕터 제목/티저만 그대로 노출한다.
+  // (2026-08-24 수정) previewChapters()를 써서 ReportType::$previewChapterKeys가 지정된
+  // 타입(예: 궁합분석)은 전체가 아니라 고른 일부만 노출하고, totalChapters로 실제 전체
+  // 개수를 함께 내려줘서 프론트가 "20개 챕터 중 12개 미리보기" 같은 문구를 만들 수 있게 함.
   $reportTypePreviews = collect(\App\ReportTypes\ReportTypeRegistry::all())->map(function ($type) {
       return [
           'key' => $type->key,
           'label' => $type->label,
-          'chapters' => collect($type->chapters)->map(function ($chapter) {
+          'totalChapters' => $type->chapterCount(),
+          'chapters' => collect($type->previewChapters())->map(function ($chapter) {
               return ['title' => $chapter->title, 'teaser' => $chapter->teaser];
           })->values(),
       ];
@@ -180,7 +184,52 @@
           </div>
         </div>
       </div>
-      <button class="btn btn-center" id="c-submit">궁합 보기</button>
+
+      <!-- (2026-08-24 추가) 관계 단계/관심사 선택 — 프리미엄 궁합분석 리포트가 이 값에 맞춰
+           톤과 강조 챕터를 조정한다(public/js/app.js가 단일 선택 토글, reports.js
+           buildTwoPersonInput이 relationshipStage/primaryConcern/concernDetail로 전송,
+           App\ReportTypes\Definitions\CompatibilityReportType가 프롬프트에 반영).
+           둘 다 선택 안 해도 궁합 보기는 그대로 동작한다(선택 사항). -->
+      <div class="compat-context">
+        <div class="compat-context-label">현재 관계</div>
+        <div class="compat-context-hint">두 사람이 지금 어떤 사이인지에 따라 리포트가 읽는 톤이 달라져요.</div>
+        <div class="compat-stage-row" id="c-stage-row">
+          <button type="button" class="compat-stage-chip" data-stage="seom">썸</button>
+          <button type="button" class="compat-stage-chip" data-stage="couple">커플</button>
+          <button type="button" class="compat-stage-chip" data-stage="married">부부</button>
+          <button type="button" class="compat-stage-chip" data-stage="breakup">헤어짐</button>
+        </div>
+
+        <div class="compat-context-label">지금 가장 궁금한 것은?</div>
+        <div class="compat-context-hint">선택하신 내용에 맞춰 프리미엄 리포트의 분석 방향이 달라져요.</div>
+        <div class="compat-concern-grid" id="c-concern-grid">
+          <button type="button" class="compat-concern-card" data-concern="continuity">
+            <span class="compat-concern-icon">♾️</span>
+            <span class="compat-concern-title">지속 가능성</span>
+            <span class="compat-concern-desc">잘 맞는지, 이대로 이어질 수 있는지</span>
+          </button>
+          <button type="button" class="compat-concern-card" data-concern="growth">
+            <span class="compat-concern-icon">📈</span>
+            <span class="compat-concern-title">관계 발전</span>
+            <span class="compat-concern-desc">연애·결혼 등 다음 단계로 갈 수 있을지</span>
+          </button>
+          <button type="button" class="compat-concern-card" data-concern="flow">
+            <span class="compat-concern-icon">📅</span>
+            <span class="compat-concern-title">앞으로의 흐름</span>
+            <span class="compat-concern-desc">가까워질 시기·멀어질 시기가 궁금할 때</span>
+          </button>
+          <button type="button" class="compat-concern-card" data-concern="friction">
+            <span class="compat-concern-icon">🛡️</span>
+            <span class="compat-concern-title">충돌 완화</span>
+            <span class="compat-concern-desc">싸움·오해·마찰이 반복되는 이유</span>
+          </button>
+        </div>
+
+        <label for="c-concern-detail" class="compat-context-label">가장 궁금한 1가지는 무엇인가요? <span class="compat-context-optional">(선택, 최대 40자)</span></label>
+        <input type="text" id="c-concern-detail" maxlength="40" placeholder="예) 이 사람과 결혼까지 갈 수 있을까요">
+      </div>
+
+      <button class="btn btn-center" id="c-submit" style="margin-top:18px;">궁합 보기</button>
     </div>
 
     <div id="c-result"></div>
@@ -245,7 +294,7 @@
   </section>
 
   <footer>
-    사주는 태양의 움직임(절기)을 기준으로 한 전통 역법 계산에 성격 해석을 더한 것으로, 통계적·문화적 참고용 콘텐츠입니다. 연애의 실제 결과를 보장하지 않으며, 중요한 결정은 실제 관계와 대화를 통해 내리시길 권해요. 절기 경계(입춘 등) 부근 출생은 계산이 실제 만세력과 몇 분 이내로 달라질 수 있어요. 연애 코치 탭의 답변은 AI가 생성한 것으로, 전문 심리상담이나 법률·의료 조언을 대체하지 않아요.
+    사주는 태양의 움직임(절기)을 기준으로 한 전통 역법 계산에 성격 해석을 더한 것으로, 통계적·문화적 참고용 콘텐츠입니다. 연애의 실제 결과를 보장하지 않으며, 중요한 결정은 실제 관계와 대화를 통해 내리시길 권해요. 절기 경계(입춘 등) 부근 출생은 계산이 실제 만세력과 몇 분 이내로 달라질 수 있어요. 연애 코치 탭과 프리미엄 리포트(연애운분석·궁합분석)의 답변은 고전 명리학 이론을 폭넓게 학습한 AI가 생성한 것으로, 전문 심리상담이나 법률·의료 조언을 대체하지 않아요.
     @include('partials.business-footer')
   </footer>
 </div>

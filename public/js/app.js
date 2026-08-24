@@ -669,6 +669,28 @@
   }
   function txt(tag, cls, text) { return el(tag, { class: cls }, [document.createTextNode(text)]); }
 
+  // (2026-08-24 추가) 궁합 폼의 "현재 관계"/"지금 가장 궁금한 것" 칩·카드는 컨테이너 안에서
+  // 최대 1개만 선택되는 단일 선택 토글이다(라디오 버튼과 같은 동작이지만 버튼 UI로).
+  // 같은 걸 다시 누르면 선택 해제(선택 사항이라 "고르지 않음"도 유효한 상태).
+  function wireSingleSelect(containerId, itemClass) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+    container.querySelectorAll('.' + itemClass).forEach(function (item) {
+      item.addEventListener('click', function () {
+        var wasActive = item.classList.contains('active');
+        container.querySelectorAll('.' + itemClass).forEach(function (el2) { el2.classList.remove('active'); });
+        if (!wasActive) item.classList.add('active');
+      });
+    });
+  }
+
+  function getSingleSelectValue(containerId, dataAttr) {
+    var container = document.getElementById(containerId);
+    if (!container) return null;
+    var activeEl = container.querySelector('.active');
+    return activeEl ? activeEl.getAttribute('data-' + dataAttr) : null;
+  }
+
   function renderMyeongsik(saju) {
     var grid = el('div', { class: 'myeongsik' });
     var roles = [
@@ -795,7 +817,11 @@
     renderGuideEmptyOrKeep();
   }
 
-  function renderCompatResult(sajuA, sajuB, nameA, nameB) {
+  // (2026-08-24 추가) relationshipStage/primaryConcern/concernDetail — 궁합 폼에서 선택한
+  // "현재 관계 단계"/"지금 가장 궁금한 것"/자유 입력 궁금증. 둘 다 선택 사항이라 null일 수
+  // 있음. reports.js buildTwoPersonInput()이 이 값을 그대로 프리미엄 리포트 input에 담아
+  // CompatibilityReportType의 프롬프트가 톤/강조 챕터를 조정하는 데 쓴다.
+  function renderCompatResult(sajuA, sajuB, nameA, nameB, relationshipStage, primaryConcern, concernDetail) {
     var out = document.getElementById('c-result');
     out.innerHTML = '';
     var compat = calcCompat(sajuA, sajuB);
@@ -822,7 +848,12 @@
     card.appendChild(result);
     out.appendChild(card);
 
-    currentCompat = { sajuA: sajuA, sajuB: sajuB, nameA: nameA, nameB: nameB, compat: compat };
+    currentCompat = {
+      sajuA: sajuA, sajuB: sajuB, nameA: nameA, nameB: nameB, compat: compat,
+      relationshipStage: relationshipStage || null,
+      primaryConcern: primaryConcern || null,
+      concernDetail: concernDetail || null
+    };
 
     if (window.YeonbunReports) window.YeonbunReports.attachCompatCTA(card, currentCompat);
   }
@@ -940,6 +971,9 @@
   }
 
   function bindEvents() {
+    wireSingleSelect('c-stage-row', 'compat-stage-chip');
+    wireSingleSelect('c-concern-grid', 'compat-concern-card');
+
     document.querySelectorAll('.tab-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
         document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
@@ -990,7 +1024,12 @@
         hour: unknownB ? null : hb, minute: unknownB ? null : nb,
         unknownTime: unknownB, longitude: isNaN(lonB) ? 126.978 : lonB
       });
-      renderCompatResult(sajuA, sajuB, nameA, nameB);
+
+      var stage = getSingleSelectValue('c-stage-row', 'stage');
+      var concern = getSingleSelectValue('c-concern-grid', 'concern');
+      var concernDetail = document.getElementById('c-concern-detail').value.trim().slice(0, 40);
+
+      renderCompatResult(sajuA, sajuB, nameA, nameB, stage, concern, concernDetail);
     });
 
     var grid = document.getElementById('concern-grid');
