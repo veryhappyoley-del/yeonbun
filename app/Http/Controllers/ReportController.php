@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\GenerateReportChapterJob;
 use App\Jobs\GenerateReportJob;
 use App\Models\Report;
+use App\ReportTypes\ReportTypeRegistry;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -14,7 +15,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /**
- * "심층 개인 리포트"(single) / "프리미엄 궁합 리포트"(compat) 단건 결제 + AI 리포트 생성.
+ * 프리미엄 사주 리포트(연애운분석/궁합분석 등, 단건 결제) + AI 리포트 생성.
  *
  * 흐름은 BillingController와 거의 동일합니다: checkout()이 pending 리포트를 만들고,
  * 토스 결제창에서 결제가 끝나면 success()가 /v1/payments/confirm으로 승인을 검증한
@@ -22,26 +23,32 @@ use Illuminate\Validation\Rule;
  *
  * AI 리포트 생성은 이 컨트롤러가 직접 하지 않고 GenerateReportJob(큐)에 맡깁니다 —
  * success()가 결제 확인 직후 job을 dispatch만 하고 바로 리다이렉트하고, reports.show
- * 화면(reports/partials/pending.blade.php)이 /reports/{report}/status를 주기적으로
- * 폴링해서 완료되면 새로고침합니다. 예전엔 결제 확인과 생성을 한 요청 안에서 하다가
- * 게이트웨이 타임아웃을 겪었고, 그다음엔 두 요청으로 나눴지만 생성 자체가 여전히
- * "regenerate 요청 하나가 끝날 때까지 동기로 기다리는" 구조라 스키마가 커지면서 또
- * 타임아웃이 났습니다 — 이번엔 생성을 아예 큐(백그라운드)로 옮겨서, 웹 요청이 생성
- * 소요 시간과 완전히 무관해지도록 구조 자체를 바꿨습니다.
+ * 화면이 /reports/{report}/status를 주기적으로 폴링해서 완료되면 새로고침합니다.
  *
- * single(심층 연애 리포트)은 HTML이 아니라 고정 스키마의 JSON을 content에 저장하고
- * resources/views/reports/partials/single-report.blade.php가 섹션별로 렌더링합니다.
- * compat(프리미엄 궁합 리포트)은 기존처럼 제한된 태그만 쓰는 HTML 조각을 저장합니다.
+ * **새 구매(schema_version=2, 챕터형)**: `App\ReportTypes\ReportTypeRegistry`에 등록된
+ * 타입(현재 love_fortune=연애운분석, compatibility=궁합분석)만 checkout()에서 허용합니다.
+ * 리포트 하나가 챕터(`report_chapters`) 여러 개로 구성되고, `App\Jobs\GenerateReportJob`이
+ * `Http::pool()`로 병렬 생성합니다(자세한 아키텍처는 App\Services\ChapterGenerator 참고).
+ *
+ * **예전 구매(schema_version=1, 레거시)**: 예전에 팔던 single(심층 연애 리포트)/compat
+ * (프리미엄 궁합 리포트)은 더 이상 checkout()에서 판매하지 않지만, 이미 결제한 고객의
+ * 리포트는 self::LEGACY_TYPES 매핑 + 기존 App\Services\ReportGenerator(리포트 전체를 한
+ * 번의 Anthropic 호출로 생성) 경로로 영구히 그대로 서비스됩니다 — single은 content에
+ * JSON을 저장해 partials/single-report.blade.php가 렌더링하고, compat은 제한된 태그만
+ * 쓰는 HTML 조각을 그대로 저장합니다.
  *
  * 이 컨트롤러는 사주 계산 로직을 전혀 모릅니다 — 프론트(app.js/reports.js)가 이미
- * 계산해 둔 사주/궁합 요약(JSON, single은 십신·지장간·합충형파해·신강신약·용신 포함)을
- * input으로 받아서 그걸 그대로 프롬프트에 녹일 뿐입니다(프롬프트/실제 생성 로직은
- * App\Services\ReportGenerator에 있습니다).
- * 가격은 항상 서버(self::TYPES)가 결정하고, 클라이언트가 보내는 값은 절대 신뢰하지 않습니다.
+ * 계산해 둔 사주/궁합 요약(JSON)을 input으로 받아서 그걸 그대로 프롬프트에 녹일 뿐입니다.
+ * 가격은 항상 서버(ReportTypeRegistry/self::LEGACY_TYPES)가 결정하고, 클라이언트가
+ * 보내는 값은 절대 신뢰하지 않습니다.
  */
 class ReportController extends Controller
 {
-    private const TYPES = [
+    /**
+     * 더 이상 판매하지 않는 예전 타입의 라벨/가격 — 이미 결제한 고객의 리포트를
+     * index()/show()에서 표시하기 위해서만 남겨둡니다(checkout()은 이 배열을 쓰지 않음).
+     */
+    private const LEGACY_TYPES = [
         'single' => [
             'label' => '심층 연애 리포트',
             'price' => 8900,
@@ -54,14 +61,22 @@ class ReportController extends Controller
 
     public function index(Request $request): View
     {
+        $types = self::LEGACY_TYPES;
+
+        foreach (ReportTypeRegistry::all() as $key => $type) {
+            $types[$key] = ['label' => $type->label, 'price' => $type->price];
+        }
+
         return view('reports.index', [
             'reports' => $request->user()->reports()->where('status', 'paid')->get(),
-            'types' => self::TYPES,
+            'types' => $types,
         ]);
     }
 
     /**
      * 결제창을 띄우기 직전, pending 리포트 건을 만들고 주문 정보를 내려줍니다.
+     * ReportTypeRegistry에 등록된 챕터형 타입만 새로 구매할 수 있습니다(예전 단일호출형
+     * single/compat은 더 이상 checkout 대상이 아님 — self::LEGACY_TYPES 참고).
      */
     public function checkout(Request $request): JsonResponse
     {
@@ -70,18 +85,19 @@ class ReportController extends Controller
         }
 
         $data = $request->validate([
-            'type' => ['required', Rule::in(array_keys(self::TYPES))],
+            'type' => ['required', Rule::in(ReportTypeRegistry::keys())],
             'input' => ['required', 'array'],
             'title' => ['nullable', 'string', 'max:120'],
         ]);
 
-        $type = self::TYPES[$data['type']];
+        $type = ReportTypeRegistry::get($data['type']);
 
         $report = Report::create([
             'user_id' => $request->user()->id,
             'type' => $data['type'],
+            'schema_version' => $type->schemaVersion,
             'order_id' => 'gyeol_report_'.Str::uuid()->toString(),
-            'amount' => $type['price'],
+            'amount' => $type->price,
             'status' => 'pending',
             'title' => $data['title'] ?? null,
             'input' => $data['input'],
@@ -90,7 +106,7 @@ class ReportController extends Controller
         return response()->json([
             'order_id' => $report->order_id,
             'amount' => $report->amount,
-            'order_name' => "결 {$type['label']}",
+            'order_name' => "결 {$type->label}",
             'customer_name' => $request->user()->name,
         ]);
     }
@@ -172,6 +188,11 @@ class ReportController extends Controller
 
     /**
      * 결제 완료된 리포트 열람 페이지. 본인 소유 + paid 상태인 리포트만 볼 수 있어요.
+     *
+     * schema_version=2(챕터형)는 챕터를 미리 로드해서, 아직 pending/generating 챕터가
+     * 남아있으면 chapter-progress 화면을, 전부 끝났으면(일부 실패해도 됨) chapter-toc+
+     * chapter-reader 화면을 보여줍니다. schema_version=1(레거시)은 예전 그대로
+     * single-report/pending 분기입니다.
      */
     public function show(Request $request, Report $report): View
     {
@@ -179,13 +200,33 @@ class ReportController extends Controller
             abort(404);
         }
 
-        // "심층 연애 리포트"(single)는 content에 JSON을 저장하므로, 뷰에서 다루기 쉽게
-        // 여기서 미리 배열로 디코딩해서 넘깁니다. compat(궁합)은 기존처럼 HTML 그대로 씁니다.
+        if ($report->isChaptered()) {
+            $report->load('chapters');
+
+            $reportType = ReportTypeRegistry::get($report->type);
+            $chaptersReady = $reportType !== null
+                && $report->chapters->isNotEmpty()
+                && $report->chapters->whereIn('status', ['pending', 'generating'])->isEmpty();
+
+            return view('reports.show', [
+                'report' => $report,
+                'type' => $reportType ? ['label' => $reportType->label, 'price' => $reportType->price] : null,
+                'reportType' => $reportType,
+                'chaptersReady' => $chaptersReady,
+                'data' => null,
+            ]);
+        }
+
+        // "심층 연애 리포트"(single, 레거시)는 content에 JSON을 저장하므로, 뷰에서 다루기
+        // 쉽게 여기서 미리 배열로 디코딩해서 넘깁니다. compat(궁합, 레거시)은 기존처럼
+        // HTML 그대로 씁니다.
         $data = $report->type !== 'compat' ? $this->decodeSingleContent($report) : null;
 
         return view('reports.show', [
             'report' => $report,
-            'type' => self::TYPES[$report->type] ?? null,
+            'type' => self::LEGACY_TYPES[$report->type] ?? null,
+            'reportType' => null,
+            'chaptersReady' => false,
             'data' => $data,
         ]);
     }
@@ -281,6 +322,15 @@ class ReportController extends Controller
      */
     private function hasUsableContent(Report $report): bool
     {
+        if ($report->isChaptered()) {
+            // 챕터형은 content 컬럼을 쓰지 않으므로(항상 null), 챕터들이 더 이상
+            // pending/generating이 아니면(일부 실패해도 됨) "쓸 수 있는 상태"로 본다 —
+            // 안 그러면 regenerate()가 이미 완료된 챕터형 리포트에도 매번 불필요하게
+            // GenerateReportJob을 다시 dispatch하게 된다.
+            return $report->chapters()->exists()
+                && $report->chapters()->whereIn('status', ['pending', 'generating'])->doesntExist();
+        }
+
         if ($report->type === 'compat') {
             return (bool) $report->content;
         }

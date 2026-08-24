@@ -24,7 +24,20 @@
       <span>{{ $report->updated_at->format('Y.m.d H:i') }}</span>
     </div>
 
-    @if ($report->type === 'compat')
+    @if ($report->isChaptered())
+      @if (! $reportType)
+        {{-- 데이터 정합성 문제(등록되지 않은 타입)로만 발생할 수 있는 방어적 분기 —
+             정상적인 흐름에서는 도달하지 않습니다. --}}
+        <div class="placeholder-note" style="border-color: var(--seal); margin-top:0;">
+          리포트 정보를 불러오는 중 문제가 있었어요. 잠시 후 다시 시도해 주세요.
+        </div>
+      @elseif ($chaptersReady)
+        @include('reports.partials.chapter-toc', ['report' => $report, 'type' => $reportType])
+        @include('reports.partials.chapter-reader', ['report' => $report, 'type' => $reportType])
+      @else
+        @include('reports.partials.chapter-progress', ['report' => $report])
+      @endif
+    @elseif ($report->type === 'compat')
       @if ($report->content)
         <div class="report-body">
           {!! $report->content !!}

@@ -12,10 +12,14 @@
 (function () {
   'use strict';
 
-  // 화면 표시용 가격 안내일 뿐, 실제 결제 금액은 항상 서버(ReportController::TYPES)가 결정합니다.
+  // 화면 표시용 가격 안내일 뿐, 실제 결제 금액은 항상 서버(App\ReportTypes\ReportTypeRegistry)가
+  // 결정합니다. 예전 single(심층 연애 리포트)/compat(프리미엄 궁합 리포트, 각각 13개 섹션 단일
+  // 생성)은 챕터형 20챕터 상품인 love_fortune(연애운분석)/compatibility(궁합분석)로 대체됐습니다
+  // — 새 구매는 이 두 타입키만 쓰고, 예전 타입키는 이미 구매한 고객의 리포트를 보여줄 때만
+  // 서버 쪽(ReportController)에서 계속 인식합니다.
   var TYPE_INFO = {
-    single: { label: '심층 연애 리포트', priceLabel: '8,900원' },
-    compat: { label: '프리미엄 궁합 리포트', priceLabel: '3,900원' }
+    love_fortune: { label: '연애운분석', priceLabel: '16,900원' },
+    compatibility: { label: '궁합분석', priceLabel: '21,900원' }
   };
 
   function csrfToken() {
@@ -222,14 +226,14 @@
 
   function attachSingleCTA(card, state) {
     var input = buildSingleInput(state);
-    var title = (state.name ? state.name + '님의 ' : '') + '심층 연애 리포트';
-    card.appendChild(buildCTA('single', { input: input, title: title }, null, { showShare: false }));
+    var title = (state.name ? state.name + '님의 ' : '') + '연애운분석';
+    card.appendChild(buildCTA('love_fortune', { input: input, title: title }, null, { showShare: false }));
   }
 
   function attachCompatCTA(card, state) {
     var input = buildTwoPersonInput(state);
-    var title = (state.nameA || 'A') + ' × ' + (state.nameB || 'B') + ' 프리미엄 궁합 리포트';
-    card.appendChild(buildCTA('compat', { input: input, title: title }, function (previewBox) {
+    var title = (state.nameA || 'A') + ' × ' + (state.nameB || 'B') + ' 궁합분석';
+    card.appendChild(buildCTA('compatibility', { input: input, title: title }, function (previewBox) {
       renderCompatShareCard(previewBox, state);
     }));
   }

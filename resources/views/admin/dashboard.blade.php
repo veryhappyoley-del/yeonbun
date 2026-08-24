@@ -138,7 +138,7 @@
               <tr>
                 <td>{{ $report->created_at->format('Y-m-d H:i') }}</td>
                 <td>{{ $report->user->name ?? '탈퇴한 사용자' }}</td>
-                <td>{{ $report->type === 'compat' ? '프리미엄 궁합' : '심층 개인' }}</td>
+                <td>{{ ['single' => '심층 연애 리포트', 'compat' => '프리미엄 궁합 리포트', 'love_fortune' => '연애운분석', 'compatibility' => '궁합분석'][$report->type] ?? $report->type }}</td>
                 <td>{{ $report->title ?? '-' }}</td>
                 <td>{{ number_format($report->amount) }}원</td>
               </tr>
