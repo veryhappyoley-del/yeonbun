@@ -19,6 +19,28 @@ use App\ReportTypes\ReportTypeDefinition;
  * 가격(price)은 계획 문서의 제안 범위(19,900~24,900원) 중 임시로 잡은 값입니다 —
  * ReportTypeRegistry에 실제로 등록해서 판매를 시작하는 5단계(컷오버) 시점에 최종
  * 확정합니다(아직 등록 전이라 이 값은 어디에도 영향을 주지 않습니다).
+ *
+ * (2026-08-24 개정) 20챕터 중 12개가 그냥 paragraphs(글 문단)만 쓰고 있어서, 연애운분석
+ * 20단계에서 만든 radar_chart/timeline/keyword_chips/compare_cards 4종 시각 블록이
+ * 궁합분석에는 하나도 안 쓰이던 걸 이번에 재배치:
+ *   - compat_scores_a/b: score_bars → radar_chart(스키마 동일, blocks만 교체).
+ *   - long_term_outlook: step_flow → timeline(스키마 동일, blocks만 교체).
+ *   - two_people_profile/why_attracted/communication_style_gap: 원래 두 사람 각자를
+ *     따로 설명하는 구조라 compare_cards(VS 비교 카드)가 자연스럽게 맞아서 paragraphs
+ *     → compare(label은 실제 이름으로, text는 각자의 내용)로 재구성.
+ *   - final_verdict: 연애운분석의 final_verdict와 같은 패턴으로 keywords 필드를
+ *     분리해서 keyword_chips 추가(기존엔 "키워드 5개를 한 문장으로" 지침만 있고 실제
+ *     태그 UI는 없었음).
+ * elemental_dynamic처럼 "두 사람의 상호작용" 자체를 다루는 챕터(둘을 나란히 비교하는
+ * 구조가 아님)나 이미 구조형 블록(strength_weakness/stage_grid/advice_cards)을 쓰는
+ * 챕터는 이번엔 그대로 뒀다.
+ *
+ * (2026-08-24 추가) compat_overview에 concern_answer 필드/블록을 새로 추가 — 궁합 폼의
+ * "지금 가장 궁금한 것"(primaryConcern/concernDetail)에 대해, 여러 챕터에 지침으로
+ * 흩어서 "언급하며 답하라"고 하는 대신 리포트 맨 앞에서 질문 그대로 + 직접적인 답을
+ * 눈에 띄게 보여준다(resources/views/reports/partials/blocks/concern_answer.blade.php
+ * 참고). 이 필드가 새로 생기면서 이 챕터의 legacy report_chapters는
+ * chapters:revalidate로 재검증이 필요하다.
  */
 class CompatibilityReportType implements ReportTypeDefinition
 {
@@ -61,40 +83,55 @@ class CompatibilityReportType implements ReportTypeDefinition
                 key: 'compat_overview',
                 title: '이 궁합, 숫자로 보면 어떤 관계일까',
                 teaser: '이미 본 궁합 점수가 왜 이렇게 나왔는지 훨씬 구체적으로 풀어봅니다.',
-                schema: ['paragraphs' => ['', '', '']],
+                schema: ['concern_answer' => '', 'paragraphs' => ['', '', '']],
                 promptGuidance: '이미 계산된 궁합 점수(score)와 등급(levelLabel), 그리고 무료로 보여준 짧은 '.
                     '풀이(notes)를 그대로 반복하지 말고, 그 점수가 왜 이렇게 나왔는지 두 사람의 관계(relation, '.
                     '오행 상생상극 등)를 근거로 정확히 3문단(각 1~2문장, 90자 이내)으로 훨씬 구체적으로 설명하세요. '.
                     "relationshipStage가 있으면 그 단계에 맞는 톤으로(seom/couple/married/breakup에 따라 ".
-                    '설렘/현재진행형/장기 관점/회고 톤). concernDetail(사용자가 직접 적은 궁금증)이 있으면 셋째 '.
-                    '문단에서 그 내용을 직접 언급하며 짧게라도 답을 실마리로 던져주세요(자세한 답은 뒤 챕터에서 '.
-                    '다루니 여기선 맛보기로).',
-                maxTokens: 900,
+                    '설렘/현재진행형/장기 관점/회고 톤). primaryConcern 또는 concernDetail(사용자가 직접 고르거나 '.
+                    '적은 궁금증)이 있으면 concern_answer 필드에 그 질문에 대한 직접적인 답을 정확히 2~4문장(180자 '.
+                    "이내)으로 명확하게 쓰세요 — 뒤 챕터에서 더 자세히 다루더라도 여기서 핵심 답은 분명하게 줘야 ".
+                    "합니다('자세한 건 뒤에서' 식으로 미루지 마세요). primaryConcern/concernDetail이 둘 다 없으면 ".
+                    'concern_answer는 정확히 빈 문자열로 두세요(질문을 지어내지 마세요).',
+                maxTokens: 1000,
                 inputKeys: ['score', 'levelLabel', 'notes', 'relation', 'relationshipStage', 'primaryConcern', 'concernDetail'],
-                blocks: ['paragraphs'],
+                blocks: ['concern_answer', 'paragraphs'],
             ),
             new ChapterSpec(
                 key: 'two_people_profile',
                 title: '두 사람은 각각 어떤 사주를 가진 사람들일까',
                 teaser: '궁합을 논하기 전에, 각자가 어떤 사람인지부터.',
-                schema: ['paragraphs' => ['', '']],
-                promptGuidance: '두 사람 각자의 일간 오행/음양과 신강신약을 근거로, 궁합을 논하기 전에 각자가 '.
-                    '어떤 사람인지 정확히 2문단(문단 하나당 한 사람, 각 1~2문장·90자 이내)으로 요약하세요. 두 '.
-                    '사람을 비교하지 말고 각자 독립적으로 설명하세요.',
+                schema: [
+                    'compare' => [
+                        'left' => ['label' => 'A', 'text' => ''],
+                        'right' => ['label' => 'B', 'text' => ''],
+                    ],
+                ],
+                promptGuidance: "compare.left/right의 label은 실제 이름(personA.name/personB.name, 없으면 ".
+                    "'A'/'B')으로 바꿔 쓰세요. text에는 각자의 일간 오행/음양과 신강신약을 근거로, 궁합을 논하기 ".
+                    '전에 이 사람이 어떤 사람인지 1~2문장(90자 이내)으로 요약하세요. 두 사람을 비교하지 말고 각자 '.
+                    '독립적으로 설명하세요.',
                 maxTokens: 900,
                 inputKeys: ['personA', 'personB', 'relationshipStage'],
-                blocks: ['paragraphs'],
+                blocks: ['compare_cards'],
             ),
             new ChapterSpec(
                 key: 'why_attracted',
                 title: '두 사람은 왜 서로에게 끌렸을까',
                 teaser: '서로에게 매력을 느끼는 구체적인 지점.',
-                schema: ['paragraphs' => ['', '']],
-                promptGuidance: '두 사람의 사주 데이터를 근거로, 서로의 어떤 점에 끌리는지 정확히 2문단(각 1~2문장, '.
-                    '90자 이내)으로 구체적으로 쓰세요. '.$baseGuidance,
+                schema: [
+                    'compare' => [
+                        'left' => ['label' => 'A가 끌리는 지점', 'text' => ''],
+                        'right' => ['label' => 'B가 끌리는 지점', 'text' => ''],
+                    ],
+                ],
+                promptGuidance: "compare.left/right의 label은 실제 이름을 넣어 'OO가 끌리는 지점' 형태로 바꿔 ".
+                    "쓰세요(이름이 없으면 'A가 끌리는 지점'/'B가 끌리는 지점' 그대로). text에는 두 사람의 사주 ".
+                    '데이터를 근거로, 그 사람이 상대의 어떤 점에 끌리는지 1~2문장(90자 이내)으로 구체적으로 쓰세요. '.
+                    $baseGuidance,
                 maxTokens: 900,
                 inputKeys: ['personA', 'personB', 'relationshipStage'],
-                blocks: ['paragraphs'],
+                blocks: ['compare_cards'],
             ),
             new ChapterSpec(
                 key: 'elemental_dynamic',
@@ -123,12 +160,18 @@ class CompatibilityReportType implements ReportTypeDefinition
                 key: 'communication_style_gap',
                 title: '대화할 때 스타일 차이, 오해가 생기는 지점',
                 teaser: '같은 말도 다르게 받아들이는 이유.',
-                schema: ['paragraphs' => ['', '']],
-                promptGuidance: '두 사람의 소통 방식 차이가 어디서 비롯되는지, 그로 인해 어떤 오해가 생기기 쉬운지 '.
-                    '정확히 2문단(각 1~2문장, 90자 이내)으로 쓰세요. '.$baseGuidance,
+                schema: [
+                    'compare' => [
+                        'left' => ['label' => 'A의 대화 스타일', 'text' => ''],
+                        'right' => ['label' => 'B의 대화 스타일', 'text' => ''],
+                    ],
+                ],
+                promptGuidance: "compare.left/right의 label은 실제 이름을 넣어 'OO의 대화 스타일' 형태로 바꿔 ".
+                    '쓰세요. text에는 그 사람의 소통 방식과, 그 방식이 상대에게 어떻게 오해를 살 수 있는지 1~2문장'.
+                    '(90자 이내)으로 쓰세요. '.$baseGuidance,
                 maxTokens: 900,
                 inputKeys: ['personA', 'personB', 'relationshipStage'],
-                blocks: ['paragraphs'],
+                blocks: ['compare_cards'],
             ),
             new ChapterSpec(
                 key: 'conflict_pattern',
@@ -179,7 +222,7 @@ class CompatibilityReportType implements ReportTypeDefinition
                     '텍스트는 절대 바꾸지 말고 value만 채우세요). scores_note는 1~2문장(90자 이내) 또는 빈 문자열.',
                 maxTokens: 700,
                 inputKeys: ['personA', 'personB', 'relationshipStage'],
-                blocks: ['score_bars'],
+                blocks: ['radar_chart'],
             ),
             new ChapterSpec(
                 key: 'compat_scores_b',
@@ -198,7 +241,7 @@ class CompatibilityReportType implements ReportTypeDefinition
                     '절대 바꾸지 말고 value만 채우세요). scores_note는 1~2문장(90자 이내) 또는 빈 문자열.',
                 maxTokens: 700,
                 inputKeys: ['personA', 'personB', 'relationshipStage'],
-                blocks: ['score_bars'],
+                blocks: ['radar_chart'],
             ),
             new ChapterSpec(
                 key: 'long_term_outlook',
@@ -212,7 +255,7 @@ class CompatibilityReportType implements ReportTypeDefinition
                     '직접 답하듯 마무리하세요.',
                 maxTokens: 800,
                 inputKeys: ['personA', 'personB', 'relationshipStage', 'primaryConcern'],
-                blocks: ['step_flow'],
+                blocks: ['timeline'],
             ),
             new ChapterSpec(
                 key: 'crisis_moments',
@@ -322,16 +365,18 @@ class CompatibilityReportType implements ReportTypeDefinition
                 key: 'final_verdict',
                 title: '결론: 이 두 사람의 궁합을 한 문장으로 말한다면',
                 teaser: '리포트 전체를 압축한 최종 결론과 관계 키워드 5가지.',
-                schema: ['quote' => '', 'quote_variant' => 'final', 'paragraphs' => ['']],
+                schema: ['quote' => '', 'quote_variant' => 'final', 'keywords' => ['', '', '', '', ''], 'paragraphs' => ['']],
                 promptGuidance: 'quote에는 이 두 사람의 궁합을 관통하는 결론을 감성적이면서도 확신 있는 한 문장으로 '.
                     "쓰세요. quote_variant는 항상 정확히 'final'이라는 문자열 그대로 두세요(바꾸지 마세요). ".
-                    'paragraphs에는 이 관계를 표현하는 키워드 정확히 5개를 자연스러운 한 문장으로 나열하세요. '.
-                    'concernDetail(사용자가 직접 적은 궁금증)이 있으면 quote 또는 paragraphs 중 자연스러운 쪽에서 '.
-                    '그 궁금증에 대한 결론을 분명히 담아 마무리하세요(리포트를 다 읽고 나서 그 질문에 답을 얻었다는 '.
-                    '느낌을 주는 게 목적).',
-                maxTokens: 800,
+                    'keywords에는 이 관계를 압축하는 키워드를 정확히 5개, 각 8자 이내의 짧은 명사형으로 쓰세요'.
+                    '(문장이 아니라 태그처럼 화면에 그대로 보여집니다). paragraphs에는 정확히 1문단(2~3문장, 140자 '.
+                    '이내)으로 이 리포트를 마무리하는 따뜻한 메시지를 쓰세요. concernDetail(사용자가 직접 적은 '.
+                    '궁금증)이 있으면 — 이미 compat_overview에서 그 질문에 직접 답을 줬으니 여기서 다시 답을 '.
+                    '반복하지 말고, 그 답을 알고 난 뒤 두 사람이 앞으로 어떻게 나아가면 좋을지로 자연스럽게 '.
+                    '이어가며 마무리하세요.',
+                maxTokens: 900,
                 inputKeys: ['personA', 'personB', 'score', 'levelLabel', 'relationshipStage', 'concernDetail'],
-                blocks: ['quote', 'paragraphs'],
+                blocks: ['quote', 'keyword_chips', 'paragraphs'],
             ),
         ];
     }

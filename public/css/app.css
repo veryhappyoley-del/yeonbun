@@ -1161,6 +1161,35 @@
   }
   .rpt-quote--final { border-left-color: var(--gold); font-weight: 600; }
 
+  /* concern_answer 블록 — 궁합 폼에서 사용자가 직접 선택/입력한 "가장 궁금한 것"에
+     대한 직접적인 답을 강조하는 카드. compat_overview(첫 챕터) 맨 위에서만 쓰인다. */
+  .rpt-concern-answer {
+    background: var(--gold-tint);
+    border: 1px solid var(--gold);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .rpt-concern-answer-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+  .rpt-concern-answer-question {
+    font-family: 'Song Myung', serif;
+    font-size: 0.92rem;
+    color: var(--ink);
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+  .rpt-concern-answer-body {
+    font-size: 0.88rem;
+    line-height: 1.7;
+    color: var(--ink-soft);
+  }
+
   .rpt-character-link { background: var(--seal-tint); border-radius: 14px; padding: 16px; border-top: none; margin-top: 20px; }
   .rpt-character-link .rpt-p { color: var(--ink); }
 
