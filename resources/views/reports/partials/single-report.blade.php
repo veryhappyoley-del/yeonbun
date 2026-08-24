@@ -1,11 +1,17 @@
 {{--
   "심층 연애 리포트"(type=single) 본문. ReportController::show()가 content(JSON)를
-  미리 배열로 디코딩해서 $data로 넘겨준다. 스키마는 ReportController::singlePrompt()의
+  미리 배열로 디코딩해서 $data로 넘겨준다. 스키마는 ReportGenerator::singlePrompt()의
   $schema와 1:1로 대응한다 — 프롬프트를 바꾸면 이 파일의 data_get 경로도 함께 확인할 것.
 
   구조: 사주 데이터 → 명리학적 특징 → (있다면) 캐릭터 연결 → LOVE PROFILE → LOVE SCORE →
-  LOVE OS → WHO ATTRACTS YOU → LOVE SIGNAL → STRENGTH/WEAKNESS → RECURRING PATTERN →
+  LOVE OS → WHO ATTRACTS YOU → STRENGTH/WEAKNESS → RECURRING PATTERN →
   PARTNER'S VIEW → COMPATIBILITY → RELATIONSHIP ADVICE → FINAL VERDICT
+
+  (분량 축소로 스키마가 바뀐 이력) 예전엔 LOVE OS(6단계)/PARTNER'S VIEW(5단계)/
+  LOVE SIGNAL(별도 5개 섹션)이 따로 있었는데, 셋 다 사실상 같은 "연애 단계별 흐름"을
+  반복하고 있어서 LOVE OS·PARTNER'S VIEW를 동일한 4단계(attraction/relationship_start/
+  relationship_stage/conflict_crisis)로 합치고, LOVE SIGNAL은 LOVE OS 각 단계의
+  signal 줄로 흡수했다. 별도 LOVE SIGNAL 섹션은 더 이상 없음.
 --}}
 @php
   $pillars = $input['pillars'] ?? [];
@@ -116,12 +122,13 @@
     </div>
   @endif
 
-  {{-- LOVE OS --}}
+  {{-- LOVE OS (예전 LOVE SIGNAL 섹션이 각 단계의 signal 줄로 흡수됨) --}}
   @php
     $osLabels = [
-      'attraction_stage' => '① 호감이 생길 때', 'attraction_growth' => '② 호감이 커질 때',
-      'relationship_start' => '③ 관계가 시작될 때', 'relationship_stage' => '④ 관계를 이어갈 때',
-      'conflict_stage' => '⑤ 갈등이 생길 때', 'relationship_crisis' => '⑥ 위기가 올 때',
+      'attraction' => '① 호감이 생기고 커질 때',
+      'relationship_start' => '② 관계가 시작될 때',
+      'relationship_stage' => '③ 관계를 이어갈 때',
+      'conflict_crisis' => '④ 갈등·위기가 올 때',
     ];
     $os = $data['love_os'] ?? [];
   @endphp
@@ -137,6 +144,7 @@
               @if (!empty($stage['emotion']))<div class="rpt-os-line"><span>감정</span>{{ $stage['emotion'] }}</div>@endif
               @if (!empty($stage['thought']))<div class="rpt-os-line"><span>생각</span>{{ $stage['thought'] }}</div>@endif
               @if (!empty($stage['behavior']))<div class="rpt-os-line"><span>행동</span>{{ $stage['behavior'] }}</div>@endif
+              @if (!empty($stage['signal']))<div class="rpt-os-line"><span>신호</span>{{ $stage['signal'] }}</div>@endif
             </div>
           @endif
         @endforeach
@@ -174,30 +182,6 @@
     </div>
   @endif
 
-  {{-- LOVE SIGNAL --}}
-  @php
-    $signalLabels = [
-      'early_interest' => '관심이 막 생겼을 때', 'growing_interest' => '호감이 커지는 중일 때',
-      'serious_interest' => '진지하게 좋아할 때', 'commitment' => '확신이 섰을 때', 'warning_signal' => '조심해야 할 신호',
-    ];
-    $signal = $data['love_signal'] ?? [];
-  @endphp
-  @if ($signal)
-    <div class="rpt-section">
-      <div class="rpt-section-title">LOVE SIGNAL · 좋아하면 이렇게 행동해요</div>
-      @foreach ($signalLabels as $key => $label)
-        @if (!empty($signal[$key]))
-          <div class="rpt-signal-row">
-            <div class="rpt-signal-label">{{ $label }}</div>
-            <div class="badge-row" style="margin:4px 0 0;">
-              @foreach ($signal[$key] as $behavior)<span class="badge indigo">{{ $behavior }}</span>@endforeach
-            </div>
-          </div>
-        @endif
-      @endforeach
-    </div>
-  @endif
-
   {{-- STRENGTH / WEAKNESS --}}
   @if (!empty($data['strength_weakness']))
     <div class="rpt-section">
@@ -227,11 +211,11 @@
     </div>
   @endif
 
-  {{-- PARTNER'S VIEW --}}
+  {{-- PARTNER'S VIEW (LOVE OS와 동일한 4단계 키를 씀 — 나의 내면 vs 상대가 보는 나) --}}
   @php
     $partnerLabels = [
-      'first_impression' => '첫인상', 'early_relationship' => '초반', 'middle_relationship' => '중반',
-      'conflict' => '갈등 상황', 'deep_relationship' => '깊어졌을 때',
+      'attraction' => '① 처음 만났을 때', 'relationship_start' => '② 관계가 시작됐을 때',
+      'relationship_stage' => '③ 관계가 깊어질 때', 'conflict_crisis' => '④ 갈등·위기가 왔을 때',
     ];
     $partner = $data['partner_view'] ?? [];
   @endphp

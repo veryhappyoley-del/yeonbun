@@ -640,12 +640,38 @@
     margin-top: 18px;
   }
 
-  /* 리포트 생성 대기 화면(pending.blade.php)의 게이지바 — 실제 진행률이 아니라
-     예상 소요 시간을 기준으로 한 시각적 진행 표시(가짜 진행률)입니다. */
-  .rpt-progress { margin-top: 16px; }
-  .rpt-progress-track { height: 10px; border-radius: 999px; background: var(--paper-3); overflow: hidden; }
-  .rpt-progress-fill { height: 100%; border-radius: 999px; background: var(--seal); transition: width 0.3s ease; }
-  .rpt-progress-percent { margin-top: 8px; text-align: center; font-size: 0.82rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+  /* 리포트 생성 대기 화면(pending.blade.php)의 원형 게이지 — 실제 진행률이 아니라
+     예상 소요 시간을 기준으로 한 시각적 진행 표시(가짜 진행률)입니다. 원 전체가 천천히
+     계속 회전(rpt-gauge-spin)하면서, 안쪽 링(rpt-gauge-fill)은 진행률만큼 키컬러로
+     채워져서 "차오르는 원이 빙글빙글 도는" 느낌을 줍니다. */
+  .rpt-gauge { position: relative; width: 128px; height: 128px; margin: 18px auto 0; }
+  .rpt-gauge-spin { width: 100%; height: 100%; animation: rpt-gauge-spin 3.2s linear infinite; }
+  @keyframes rpt-gauge-spin { to { transform: rotate(360deg); } }
+  .rpt-gauge-svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
+  .rpt-gauge-track { fill: none; stroke: var(--paper-3); stroke-width: 9; }
+  .rpt-gauge-fill {
+    fill: none;
+    stroke: var(--seal);
+    stroke-width: 9;
+    stroke-linecap: round;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 0.3s ease;
+  }
+  .rpt-gauge-percent {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rpt-gauge-spin { animation: none; }
+  }
 
   .empty-state {
     color: var(--ink-faint);
@@ -880,9 +906,6 @@
   }
 
   /* LOVE SIGNAL */
-  .rpt-signal-row { margin-top: 12px; }
-  .rpt-signal-row:first-child { margin-top: 4px; }
-  .rpt-signal-label { font-size: 0.84rem; font-weight: 700; color: var(--ink); }
 
   /* STRENGTH / WEAKNESS */
   .rpt-sw-card {

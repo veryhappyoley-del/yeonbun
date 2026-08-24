@@ -3,20 +3,24 @@
      리포트 생성은 큐(백그라운드 워커)가 처리합니다 — 이 화면은 새로고침 없이
      /reports/{report}/status 를 몇 초 간격으로 폴링하다가 준비되면 스스로 새로고침합니다.
 
-     텍스트로 "30~90초 정도 걸려요"라고만 안내하는 대신, 예상 소요 시간을 기준으로
-     조금씩 차오르는 게이지바를 보여줍니다. 실제 진행률을 서버가 알려줄 방법은 없어서
-     (AI가 한 번에 응답을 만들기 때문에 "몇 % 완료" 같은 중간 상태가 없음) 이 게이지는
-     "예상 소요 시간 기준의 가짜 진행률"입니다 — 그래서 실제 완료 전에 100%를 찍어버리면
-     "다 됐는데 왜 안 넘어가지?"처럼 보일 수 있어, 96%에서 멈춰 기다리다가 실제로 완료
-     신호(status API의 ready:true)를 받는 순간에만 100%를 채우고 새로고침합니다. --}}
+     텍스트로 "30~90초 정도 걸려요"라고만 안내하거나 숫자만 올라가는 대신, 우리 키컬러
+     (--seal)로 차오르는 원형 게이지 + 그 원이 천천히 계속 도는 연출을 씁니다. 실제
+     진행률을 서버가 알려줄 방법은 없어서(AI가 한 번에 응답을 만들기 때문에 "몇 % 완료"
+     같은 중간 상태가 없음) 이 게이지는 "예상 소요 시간 기준의 가짜 진행률"입니다 —
+     그래서 실제 완료 전에 100%를 찍어버리면 "다 됐는데 왜 안 넘어가지?"처럼 보일 수
+     있어, 96%에서 멈춰 기다리다가 실제로 완료 신호(status API의 ready:true)를 받는
+     순간에만 100%를 채우고 새로고침합니다. --}}
 <div id="report-pending-note" class="placeholder-note" style="border-color: var(--seal); margin-top:0;">
   리포트를 만들고 있어요 — 결제는 이미 정상적으로 완료됐으니 이 화면을 열어둔 채로 잠시만 기다려 주세요. 완료되면 자동으로 새로고침돼요.
 </div>
-<div class="rpt-progress" id="report-progress">
-  <div class="rpt-progress-track">
-    <div class="rpt-progress-fill" id="report-progress-fill" style="width:0%"></div>
+<div class="rpt-gauge" id="report-progress">
+  <div class="rpt-gauge-spin">
+    <svg class="rpt-gauge-svg" viewBox="0 0 120 120">
+      <circle class="rpt-gauge-track" cx="60" cy="60" r="52" />
+      <circle class="rpt-gauge-fill" id="report-gauge-fill" cx="60" cy="60" r="52" />
+    </svg>
   </div>
-  <div class="rpt-progress-percent" id="report-progress-percent">0%</div>
+  <div class="rpt-gauge-percent" id="report-progress-percent">0%</div>
 </div>
 <form id="regenerate-form" method="POST" action="{{ route('reports.regenerate', $report) }}" style="margin-top:14px; text-align:center; display:none;">
   @csrf
@@ -37,8 +41,13 @@
     var noteEl = document.getElementById('report-pending-note');
     var formEl = document.getElementById('regenerate-form');
     var progressWrap = document.getElementById('report-progress');
-    var fillEl = document.getElementById('report-progress-fill');
+    var fillEl = document.getElementById('report-gauge-fill');
     var percentEl = document.getElementById('report-progress-percent');
+
+    // 원형 게이지의 둘레(SVG circle의 r=52 기준, 2πr). stroke-dashoffset을
+    // "둘레 - (둘레 × 진행률)"로 바꿔주면 원이 채워지는 것처럼 보임.
+    var circumference = 2 * Math.PI * 52;
+    fillEl.style.strokeDasharray = circumference.toFixed(2);
 
     var percent = 0;
     var done = false;
@@ -50,7 +59,7 @@
 
     function renderPercent(p) {
       var shown = Math.min(100, Math.round(p));
-      fillEl.style.width = shown + '%';
+      fillEl.style.strokeDashoffset = (circumference * (1 - shown / 100)).toFixed(2);
       percentEl.textContent = shown + '%';
     }
 
