@@ -907,10 +907,28 @@
     return meta ? meta.getAttribute('content') : '';
   }
 
+  // 로딩 상태를 스피너+스켈레톤으로 눈에 띄게 보여준다 — 아무 표시 없이 텍스트만 있으면
+  // "멈춘 건가?" 싶다가 콘텐츠가 갑자기 튀어나와 놀라게 되므로, 지금 뭔가 만들어지고
+  // 있다는 걸 계속 티내고 스켈레톤 높이로 레이아웃 점프도 줄인다.
   function renderTeaserLoading(host) {
     host.innerHTML = '';
     host.appendChild(txt('div', 'compat-teaser-label', '🔍 이 궁합, 더 자세히 보면'));
-    host.appendChild(txt('div', 'compat-teaser-loading', '실제 리포트 내용 일부를 미리 만들고 있어요…'));
+
+    var loading = el('div', { class: 'compat-teaser-loading' });
+
+    var row = el('div', { class: 'compat-teaser-loading-row' });
+    row.appendChild(el('span', { class: 'compat-teaser-spinner' }));
+    row.appendChild(el('span', null, [document.createTextNode('실제 리포트 내용 일부를 미리 만들고 있어요…')]));
+    loading.appendChild(row);
+
+    var skeleton = el('div', { class: 'compat-teaser-skeleton' });
+    skeleton.appendChild(el('div', { class: 'compat-teaser-skel-block' }));
+    skeleton.appendChild(el('div', { class: 'compat-teaser-skel-line', style: 'width:100%' }));
+    skeleton.appendChild(el('div', { class: 'compat-teaser-skel-line', style: 'width:92%' }));
+    skeleton.appendChild(el('div', { class: 'compat-teaser-skel-line', style: 'width:68%' }));
+    loading.appendChild(skeleton);
+
+    host.appendChild(loading);
   }
 
   // 결제 전에도 실제로 생성된 콘텐츠를 그대로 보여준다(더미 텍스트 아님) — 1문단은 완전
