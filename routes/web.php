@@ -49,6 +49,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
     Route::get('/reports/{report}/status', [ReportController::class, 'status'])->name('reports.status');
     Route::post('/reports/{report}/regenerate', [ReportController::class, 'regenerate'])->name('reports.regenerate');
+    // 챕터형(schema_version=2) 리포트에서 챕터 하나만 재시도. 레거시(schema_version=1)
+    // 리포트에는 챕터가 없으므로 이 라우트를 쓰지 않습니다(regenerate가 그대로 담당).
+    Route::post('/reports/{report}/chapters/{chapterKey}/regenerate', [ReportController::class, 'regenerateChapter'])->name('reports.chapters.regenerate');
 });
 
 // 관리자 대시보드(방문자/전환율/매출) + 상담 내용 열람. users.is_admin = true 인 계정만 접근 가능.

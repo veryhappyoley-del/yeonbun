@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\GenerateReportChapterJob;
 use App\Jobs\GenerateReportJob;
 use App\Models\Report;
 use Illuminate\Contracts\View\View;
@@ -190,8 +191,13 @@ class ReportController extends Controller
     }
 
     /**
-     * reports/partials/pending.blade.php가 몇 초 간격으로 폴링하는 가벼운 상태 확인
-     * 엔드포인트. 화면 새로고침 없이 "리포트가 준비됐는지"만 확인합니다.
+     * reports/partials/pending.blade.php(레거시)나 chapter-progress.blade.php(챕터형)가
+     * 몇 초 간격으로 폴링하는 가벼운 상태 확인 엔드포인트.
+     *
+     * 레거시(schema_version=1)는 예전처럼 {ready} 하나만 내려줍니다(가짜 시간 기반
+     * 게이지로 표현). 챕터형(schema_version=2)은 실제 챕터 진행 상황을 그대로 내려줘서,
+     * 화면이 "몇 초 지났으니 몇 %"가 아니라 "20개 중 몇 개 완료"라는 진짜 진행률을
+     * 보여줄 수 있습니다.
      */
     public function status(Request $request, Report $report): JsonResponse
     {
@@ -199,7 +205,54 @@ class ReportController extends Controller
             abort(404);
         }
 
+        if ($report->isChaptered()) {
+            $chapters = $report->chapters()->get(['chapter_key', 'title', 'status']);
+
+            $total = $chapters->count();
+            $ready = $chapters->where('status', 'ready')->count();
+            $failed = $chapters->where('status', 'failed')->count();
+
+            return response()->json([
+                // 챕터 하나라도 실패해도(나머지가 다 ready라면) 사용자는 일단 리포트를
+                // 열람할 수 있어야 하므로, ready는 "전체가 다 끝났는지"가 아니라
+                // "더 이상 pending/generating이 없는지"로 판단합니다.
+                'ready' => $total > 0 && ($ready + $failed) === $total,
+                'total' => $total,
+                'completed' => $ready,
+                'failed' => $failed,
+                'chapters' => $chapters->map(fn ($c) => [
+                    'key' => $c->chapter_key,
+                    'title' => $c->title,
+                    'status' => $c->status,
+                ]),
+            ]);
+        }
+
         return response()->json(['ready' => $this->hasUsableContent($report)]);
+    }
+
+    /**
+     * 챕터형(schema_version=2) 리포트에서 챕터 하나만 재시도합니다. 리포트 전체를
+     * 다시 생성하는 regenerate()와 달리, 이미 ready인 나머지 챕터는 그대로 두고
+     * 실패한(또는 아직 생성 안 된) 챕터 하나만 큐에 다시 올립니다.
+     */
+    public function regenerateChapter(Request $request, Report $report, string $chapterKey): JsonResponse
+    {
+        if ($report->user_id !== $request->user()->id || $report->status !== 'paid' || ! $report->isChaptered()) {
+            abort(404);
+        }
+
+        $chapter = $report->chapters()->where('chapter_key', $chapterKey)->first();
+
+        if (! $chapter) {
+            abort(404);
+        }
+
+        if (! $chapter->isReady()) {
+            GenerateReportChapterJob::dispatch($chapter);
+        }
+
+        return response()->json(['status' => $chapter->fresh()->status]);
     }
 
     /**

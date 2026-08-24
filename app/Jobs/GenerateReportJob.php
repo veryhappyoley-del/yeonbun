@@ -3,12 +3,18 @@
 namespace App\Jobs;
 
 use App\Models\Report;
+use App\ReportTypes\ReportTypeRegistry;
+use App\Services\ChapterGenerator;
 use App\Services\ReportGenerator;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Http\Client\Pool;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
  * "심층 연애 리포트" / "프리미엄 궁합 리포트" 본문을 백그라운드에서 생성합니다.
@@ -20,6 +26,14 @@ use Illuminate\Queue\SerializesModels;
  * 로컬(Herd)에서 큐가 동작하려면 .env의 QUEUE_CONNECTION=database(기본값)인 상태에서
  * 터미널에 `php artisan queue:work`를 띄워둬야 합니다 — 안 띄워두면 job이 계속
  * "대기 중"으로만 쌓이고 리포트가 영영 생성되지 않으니 꼭 확인해 주세요.
+ *
+ * schema_version=1(레거시 single/compat)은 기존처럼 ReportGenerator가 리포트 전체를
+ * 한 번의 Anthropic 호출로 생성합니다. schema_version=2(챕터형, ReportTypeRegistry에
+ * 등록된 새 리포트 타입)는 이 job이 직접 report_chapters를 채우는 오케스트레이터
+ * 역할을 합니다 — Bus::batch() 대신 Http::pool()을 쓰는 이유는, 지금 배포가
+ * QUEUE_CONNECTION=database + 워커 프로세스 1개 전제라서 여러 워커가 있어야 이득을
+ * 보는 batch보다 "한 잡 안에서 여러 HTTP 요청을 동시에 쏘는" pool이 지금 인프라에
+ * 더 맞기 때문입니다.
  */
 class GenerateReportJob implements ShouldQueue
 {
@@ -27,16 +41,18 @@ class GenerateReportJob implements ShouldQueue
 
     public int $tries = 2;
 
-    // 이 job 자체(큐 워커 프로세스)가 허용되는 최대 실행 시간(초). ReportGenerator 내부의
-    // Http 타임아웃(single 260초, max_tokens를 14000으로 올리면서 함께 늘림)보다 넉넉하게
-    // 잡아서, API 호출이 끝나기 전에 워커가 job을 강제 종료하지 않도록 함.
-    public int $timeout = 300;
+    // 이 job 자체(큐 워커 프로세스)가 허용되는 최대 실행 시간(초). 레거시(schema_version=1)
+    // 경로는 ReportGenerator 내부의 Http 타임아웃(single 260초)보다 넉넉하게 잡은 300초.
+    // 챕터형(schema_version=2) 경로는 챕터당 Http 타임아웃(90초) × 배치 수를 감안해
+    // handle()에서 더 긴 값을 쓸 수 있도록 releaseAfterEachChapterBatch 없이 한 번에
+    // 처리하되, 20챕터/동시성 4 기준 최대 5배치 × 90초 ≈ 450초라 여유 있게 500초로 둠.
+    public int $timeout = 500;
 
     public function __construct(public Report $report)
     {
     }
 
-    public function handle(ReportGenerator $generator): void
+    public function handle(ChapterGenerator $chapterGenerator, ReportGenerator $legacyGenerator): void
     {
         // 큐에 쌓여있는 동안 상태가 바뀌었을 수 있으니(예: 결제 취소) 최신 상태로 다시 확인.
         $report = $this->report->fresh();
@@ -45,6 +61,106 @@ class GenerateReportJob implements ShouldQueue
             return;
         }
 
-        $generator->generate($report);
+        if ($report->isChaptered()) {
+            $this->generateChapters($report, $chapterGenerator);
+
+            return;
+        }
+
+        $legacyGenerator->generate($report);
+    }
+
+    /**
+     * schema_version=2 리포트의 챕터들을 채웁니다. GenerateReportChapterJob(단일 챕터
+     * 재시도)과 동시에 돌 수 있으니, 같은 report에 대해서는 짧게 잠금을 걸어 겹치지
+     * 않게 합니다(ReportGenerator::generate()와 동일한 패턴).
+     */
+    private function generateChapters(Report $report, ChapterGenerator $generator): void
+    {
+        $lock = Cache::lock('report-generate:'.$report->id, 480);
+
+        if (! $lock->get()) {
+            return;
+        }
+
+        try {
+            $type = ReportTypeRegistry::get($report->type);
+
+            if (! $type) {
+                Log::warning('결 챕터 리포트: 등록되지 않은 타입', ['report_id' => $report->id, 'type' => $report->type]);
+
+                return;
+            }
+
+            // 아직 report_chapters 행이 없으면(최초 생성) 정의된 챕터 전체를 pending으로
+            // 미리 만들어 둔다 — 진행률 UI가 처음부터 "N개 중 몇 개 완료"를 보여줄 수 있음.
+            if ($report->chapters()->count() === 0) {
+                foreach ($type->chapters as $index => $chapter) {
+                    $report->chapters()->create([
+                        'chapter_key' => $chapter->key,
+                        'sort_order' => $index,
+                        'title' => $chapter->title,
+                        'status' => 'pending',
+                    ]);
+                }
+            }
+
+            $concurrency = max(1, (int) config('services.anthropic.chapter_concurrency', 4));
+            $input = $report->input ?? [];
+
+            // pending(아직 시도 안 함) + failed(이전 배치/재시도에서 실패)를 한 번에 대상으로
+            // 삼는다 — job이 재시도(tries=2)될 때 이미 ready인 챕터는 건너뛰고 실패한
+            // 챕터만 다시 시도하게 되어, "전부 다시 생성"이 아니라 "안 된 것만 재시도"가 됨.
+            $pending = $report->chapters()->whereIn('status', ['pending', 'failed'])->get();
+
+            foreach ($pending->chunk($concurrency) as $batch) {
+                $rows = $batch->keyBy('chapter_key');
+                $rows->each(fn ($row) => $row->update(['status' => 'generating']));
+
+                $responses = Http::pool(function (Pool $pool) use ($rows, $type, $generator, $input) {
+                    foreach ($rows as $key => $row) {
+                        $chapter = $type->findChapter($key);
+
+                        if (! $chapter) {
+                            continue;
+                        }
+
+                        $payload = $generator->requestPayload($chapter, $input);
+
+                        // 챕터 하나의 Http 타임아웃은 90초 — 레거시 단일 호출(260초)보다
+                        // 훨씬 짧고 안전하다(챕터 스키마가 작아 실제로 그렇게 오래 안 걸림).
+                        $pool->as($key)
+                            ->withHeaders([
+                                'x-api-key' => config('services.anthropic.key'),
+                                'anthropic-version' => '2023-06-01',
+                                'content-type' => 'application/json',
+                            ])
+                            ->timeout(90)
+                            ->post('https://api.anthropic.com/v1/messages', $payload);
+                    }
+                });
+
+                foreach ($responses as $key => $response) {
+                    $row = $rows->get($key);
+                    $chapter = $type->findChapter($key);
+
+                    if (! $row || ! $chapter) {
+                        continue;
+                    }
+
+                    // 풀 응답이 오는 즉시 그 챕터 행에 바로 저장 — 전부 끝나고 한꺼번에
+                    // 저장하지 않는다. job이 이 배치 도중에 죽어도 재시도 시 이미 ready인
+                    // 챕터는 건너뛰고, generating으로 멈춰있던 챕터만 다시 pending 취급되어
+                    // 재시도된다(위 whereIn(['pending','failed'])는 generating을 포함하지
+                    // 않으므로, job이 중간에 죽어 generating으로 남은 행은 다음 재시도에서
+                    // 자동으로 다시 집히지 않는다는 점은 알려진 한계 — GenerateReportChapterJob
+                    // 의 개별 재시도(ReportController::regenerateChapter)로 사용자가 직접
+                    // 복구할 수 있다).
+                    $generator->saveResponse($row, $chapter, $response);
+                }
+            }
+        } finally {
+            $lock->release();
+        }
     }
 }

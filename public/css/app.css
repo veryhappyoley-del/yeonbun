@@ -79,6 +79,13 @@
     padding: 0;
   }
 
+  /* 챕터형 리포트 목차(chapter-toc.blade.php)의 탭/목록 클릭이 자연스럽게 스크롤되도록.
+     prefers-reduced-motion 사용자를 위한 처리는 아래 별도 미디어 쿼리에서 끔. */
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+
   body {
     background:
       radial-gradient(circle at 12% 8%, rgba(0,0,0,0.035) 0, transparent 40%),
@@ -960,6 +967,151 @@
   @media (min-width: 560px) {
     .rpt-os-grid, .rpt-attract-grid, .rpt-partner-grid { grid-template-columns: 1fr 1fr; }
   }
+
+  /* ---------- 챕터형(schema_version=2) 리포트 목차/리더(chapter-toc, chapter-reader) ----------
+     LoveFortune/Compatibility 등 20챕터+ 리포트 타입 전용. 레거시(schema_version=1)
+     single/compat 리포트에는 쓰이지 않습니다. */
+
+  .chapter-toc-wrap {
+    margin-top: 4px;
+  }
+
+  /* 상단에 붙는 가로 번호 탭 스트립. report-toc.js(IntersectionObserver)가 스크롤에 따라
+     .active를 토글합니다. 기존 .tabs/.tab-btn과 같은 시각 언어(밑줄 강조)를 쓰되,
+     sticky로 화면 상단에 계속 붙어있는다는 점이 다릅니다. */
+  .chapter-tab-strip {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    background: var(--paper);
+    padding: 8px 0;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+  }
+
+  .chapter-tab {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 26px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .chapter-tab:hover { color: var(--ink); background: var(--paper-2); }
+
+  .chapter-tab.active {
+    color: var(--seal);
+    background: var(--seal-tint);
+  }
+
+  /* 전체 챕터를 세로로 나열하는 목차 목록. */
+  .chapter-toc-list {
+    list-style: none;
+    margin: 0 0 26px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .chapter-toc-item a {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 11px 8px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.15s ease;
+  }
+
+  .chapter-toc-item a:hover { background: var(--paper-2); }
+
+  .chapter-toc-num {
+    flex: none;
+    width: 26px;
+    padding-top: 1px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--seal);
+  }
+
+  .chapter-toc-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .chapter-toc-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .chapter-toc-teaser {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    line-height: 1.5;
+  }
+
+  .chapter-toc-badge {
+    flex: none;
+    align-self: center;
+    font-size: 0.68rem;
+  }
+
+  .chapter-toc-badge--ready { background: var(--seal-tint); color: var(--seal); }
+  .chapter-toc-badge--failed { background: var(--gold-tint); color: var(--gold); }
+  .chapter-toc-badge--pending, .chapter-toc-badge--generating { background: var(--paper-3); color: var(--ink-faint); }
+
+  /* 챕터 리더(chapter-reader.blade.php)에서 아직 준비 안 됐거나 실패한 챕터의 안내. */
+  .chapter-pending-note {
+    background: var(--paper);
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.86rem;
+    color: var(--ink-faint);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .chapter-retry-btn {
+    flex: none;
+    padding: 8px 14px;
+    font-size: 0.82rem;
+  }
+
+  /* 챕터형 진행 화면(chapter-progress.blade.php)의 "N / 총 챕터 완료" 카운터.
+     원형 게이지(.rpt-gauge)는 레거시 pending.blade.php와 동일한 컴포넌트를 재사용합니다. */
+  .chapter-progress-count {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 12개월 흐름/대운·세운 타임라인 등은 4단계(연간전략/인생전략)에서 실제로 쓰일 때
+     구현합니다(지금은 연애운분석/궁합분석만 다루므로 아직 필요 없음). */
 
   footer {
     margin-top: 44px;

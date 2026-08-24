@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Report;
+use App\Services\Concerns\ExtractsJsonFromAiResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -24,6 +25,8 @@ use Illuminate\Support\Facades\Log;
  */
 class ReportGenerator
 {
+    use ExtractsJsonFromAiResponse;
+
     private const ALLOWED_TAGS = '<h3><p><ul><li><strong><em>';
 
     private const MAX_INPUT_JSON_LENGTH = 4000;
@@ -166,27 +169,6 @@ class ReportGenerator
         $report->update([
             'content' => json_encode($decoded, JSON_UNESCAPED_UNICODE),
         ]);
-    }
-
-    /**
-     * Claude 응답은 프롬프트에서 "JSON만 출력"을 강하게 요구하지만, 혹시 앞뒤에
-     * ```json 코드펜스나 설명 문구가 섞여 와도 견고하게 뽑아내기 위한 방어 로직.
-     */
-    private function extractJson(string $text): ?string
-    {
-        $text = trim($text);
-        $text = preg_replace('/^```(?:json)?/i', '', $text) ?? $text;
-        $text = preg_replace('/```\s*$/', '', $text) ?? $text;
-        $text = trim($text);
-
-        $start = strpos($text, '{');
-        $end = strrpos($text, '}');
-
-        if ($start === false || $end === false || $end <= $start) {
-            return null;
-        }
-
-        return substr($text, $start, $end - $start + 1);
     }
 
     private function inputJson(array $input): string

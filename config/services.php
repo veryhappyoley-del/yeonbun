@@ -42,6 +42,10 @@ return [
         // https://platform.claude.com/docs/en/about-claude/models/overview 참고.
         'model' => env('ANTHROPIC_MODEL', 'claude-sonnet-5'),
         'max_tokens' => (int) env('ANTHROPIC_MAX_TOKENS', 1024),
+        // 챕터형(schema_version=2) 리포트에서 Http::pool()로 한 번에 동시 요청할 챕터 수.
+        // 너무 크면 Anthropic 쪽 rate limit에 걸릴 수 있고, 너무 작으면 병렬 이득이 줄어듭니다 —
+        // 실측 후(report_chapters.output_tokens/생성 총 소요 시간) 튜닝하세요.
+        'chapter_concurrency' => (int) env('ANTHROPIC_CHAPTER_CONCURRENCY', 4),
     ],
 
     // 카카오 개발자(developers.kakao.com)에서 발급. "카카오 로그인" 활성화 + Redirect URI 등록 필요.

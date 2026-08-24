@@ -144,13 +144,35 @@
     };
   }
 
-  function buildCompatInput(state) {
+  // 한 사람의 사주 요약(계산 결과 saju 객체 하나) — buildSingleInput의 pillars/dayElement/
+  // dayYinYang/wuxingCount/deep과 동일한 모양으로 맞춰서, "궁합분석"의 챕터형 리포트가
+  // 연애운분석과 같은 방식으로 각자의 deep(십신/지장간/합충형파해/신강신약/용신) 데이터를
+  // 그대로 활용할 수 있게 한다.
+  function personSummary(saju, name) {
+    return {
+      name: name || null,
+      pillars: {
+        year: pillarSummary(saju.year), month: pillarSummary(saju.month),
+        day: pillarSummary(saju.day), hour: pillarSummary(saju.hour)
+      },
+      dayElement: saju.day.stemElement,
+      dayYinYang: saju.day.stemYinYang,
+      wuxingCount: saju.wuxingCount,
+      deep: saju.deep || null
+    };
+  }
+
+  // (예전 buildCompatInput) 원래는 두 사람의 일간(day)과 궁합 점수 요약만 보냈는데,
+  // 그 정도 정보로는 20챕터짜리 "궁합분석" 프리미엄 리포트를 채울 재료가 부족해서
+  // 두 사람 각자의 전체 deep 사주 데이터(calcSaju가 이미 계산해 둔 값, 별도 계산 불필요)를
+  // 함께 보내도록 확장했다. 레거시 compat 타입의 ReportGenerator::compatPrompt()는
+  // input의 특정 키에 의존하지 않고 JSON 전체를 그대로 프롬프트에 넣을 뿐이라, 이 변경이
+  // 기존 프리미엄 궁합 리포트 생성 로직을 깨뜨리지 않는다(오히려 더 풍부한 근거를 준다).
+  function buildTwoPersonInput(state) {
     var a = state.sajuA, b = state.sajuB, c = state.compat;
     return {
-      nameA: state.nameA || 'A',
-      nameB: state.nameB || 'B',
-      dayA: { stem: a.day.stem, branch: a.day.branch, element: a.day.stemElement },
-      dayB: { stem: b.day.stem, branch: b.day.branch, element: b.day.stemElement },
+      personA: personSummary(a, state.nameA),
+      personB: personSummary(b, state.nameB),
       score: c.score,
       levelLabel: c.levelLabel,
       notes: c.notes,
@@ -205,7 +227,7 @@
   }
 
   function attachCompatCTA(card, state) {
-    var input = buildCompatInput(state);
+    var input = buildTwoPersonInput(state);
     var title = (state.nameA || 'A') + ' × ' + (state.nameB || 'B') + ' 프리미엄 궁합 리포트';
     card.appendChild(buildCTA('compat', { input: input, title: title }, function (previewBox) {
       renderCompatShareCard(previewBox, state);
