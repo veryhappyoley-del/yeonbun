@@ -131,7 +131,7 @@ class ReportController extends Controller
             ->first();
 
         if (! $report || $report->status !== 'pending' || $report->amount !== $amount) {
-            return redirect()->route('home')->with('billing_error', '리포트 결제 정보를 확인할 수 없어요. 이미 처리됐거나 금액이 일치하지 않아요.');
+            return redirect()->route('calculator.index')->with('billing_error', '리포트 결제 정보를 확인할 수 없어요. 이미 처리됐거나 금액이 일치하지 않아요.');
         }
 
         $secretKey = config('services.toss.secret_key');
@@ -148,7 +148,7 @@ class ReportController extends Controller
         if ($response->failed()) {
             $report->update(['status' => 'failed']);
 
-            return redirect()->route('home')->with(
+            return redirect()->route('calculator.index')->with(
                 'billing_error',
                 '리포트 결제 승인에 실패했어요: '.($response->json('message') ?? '알 수 없는 오류')
             );
@@ -183,7 +183,7 @@ class ReportController extends Controller
 
         $message = $request->query('message', '결제가 취소됐어요.');
 
-        return redirect()->route('home')->with('billing_error', $message);
+        return redirect()->route('calculator.index')->with('billing_error', $message);
     }
 
     /**

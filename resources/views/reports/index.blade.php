@@ -2,17 +2,15 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>내 리포트함 — 결</title>
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
-<body class="phone-app">
+<body class="phone-app has-bottom-nav">
 
 <div class="wrap wrap-narrow">
 
-  <div class="topbar">
-    <a class="chip-link" href="{{ route('home') }}">&larr; 결로 돌아가기</a>
-  </div>
+  @include('partials.site-header')
 
   <div class="hero">
     <svg class="seal-mark" viewBox="0 0 64 64" aria-hidden="true">
@@ -49,6 +47,8 @@
   </div>
 
 </div>
+
+@include('partials.site-bottom-nav')
 
 </body>
 </html>

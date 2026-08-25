@@ -8,9 +8,41 @@ use App\Http\Controllers\ChapterPreviewController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
+// (2026-08-25 수정) "/"는 이제 진짜 홈 랜딩페이지(home.blade.php)다. 예전엔 계산기 화면이
+// 홈을 겸했는데(로드맵 3번 이전), 헤더/하단탭 구조가 자리잡으면서 "홈" 탭이 가리킬 전용
+// 마케팅 페이지가 필요해졌다. 명사도(myeongsado.com) 구성을 참고해 히어로+차별점 소개+
+// 종목 미리보기 순서로 만들었고, 색/타이포는 전부 결의 종이/먹색/인주색 palette 그대로.
 Route::get('/', function () {
-    return view('saju');
+    return view('home');
 })->middleware('track.view')->name('home');
+
+// (2026-08-25 신설) 계산기 화면(사주 입력 폼+궁합 입력 폼+연애 코치) — 원래 "/"가 겸하던
+// 역할을 분리했다. /sagu의 카드나 홈의 CTA가 ?tab=single|compat|chat으로 넘어온다.
+Route::get('/calculator', function () {
+    return view('saju');
+})->middleware('track.view')->name('calculator.index');
+
+// (2026-08-24 신설) 하단 탭바 "사주"의 목적지 — 계산기로 바로 들어가지 않고 종목(나의 연애
+// 사주/궁합 보기/연애 코치, 앞으로는 재회전략 등도)을 카테고리별로 먼저 고르는 페이지.
+// 로그인 여부와 무관하게 누구나 볼 수 있어야 해서(궁합/연애사주 자체가 로그인 없이도 되는
+// 기능이므로) auth 미들웨어 밖에 둔다.
+Route::get('/sagu', function () {
+    return view('sagu');
+})->name('sagu.index');
+
+// (2026-08-24 신설) 하단 탭바 "사전" — 명리학 기초 용어를 쉬운 말로 풀어둔 정적 페이지.
+// 리포트 안에 남을 수 있는 전문 용어에 대한 보조 안전장치이자, 검색 유입(SEO)용 공개
+// 콘텐츠라 로그인 없이 누구나/검색엔진도 볼 수 있어야 한다.
+Route::get('/dictionary', function () {
+    return view('dictionary');
+})->name('dictionary.index');
+
+// (2026-08-24 신설) 하단 탭바 "마이"/"로그인" — 코인 잔액·충전·리포트함·로그아웃(로그인 시)
+// 또는 카카오/네이버 로그인 버튼(비로그인 시)을 한 곳에 모은 페이지. 비로그인 사용자도
+// 로그인 버튼을 보려면 이 페이지에 들어와야 하므로 auth 미들웨어 밖에 둔다.
+Route::get('/my', function () {
+    return view('my');
+})->name('my.index');
 
 // 결제 전 "무료 미리보기" 챕터 생성/폴링. 무료 궁합 결과 화면이 로그인 없이도 쓰이므로
 // auth 미들웨어 밖에 둡니다 — 대신 throttle로 남용을 막습니다(1분에 20회, 정상적인
@@ -21,9 +53,10 @@ Route::post('/chapter-previews', [ChapterPreviewController::class, 'store'])
     ->name('chapter-previews.store');
 
 // auth 미들웨어가 비로그인 사용자를 리다이렉트할 때 route('login')을 찾다가
-// 에러 나지 않도록 이름만 있는 안전장치용 라우트. 실제 로그인 폼은 없고 홈으로 보냄
-// (홈에서 카카오/네이버 버튼으로 로그인).
-Route::get('/login', fn () => redirect('/'))->name('login');
+// 에러 나지 않도록 이름만 있는 안전장치용 라우트. 실제 로그인 폼은 없고 마이페이지로 보냄
+// (2026-08-25 수정: "/"가 마케팅 홈으로 바뀌면서, 카카오/네이버 로그인 버튼이 바로 보이는
+// 마이페이지가 더 정확한 목적지가 됐다).
+Route::get('/login', fn () => redirect()->route('my.index'))->name('login');
 
 Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->name('auth.redirect');
 Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('auth.callback');

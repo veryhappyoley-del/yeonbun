@@ -182,6 +182,245 @@
     margin-top: 6px;
   }
 
+  /* ---------- 홈 랜딩페이지 히어로 (2026-08-25 추가) ----------
+     계산기 화면의 .hero(좌측 인장+우측 텍스트, 가로 정렬)와 달리, 홈은 첫인상용 페이지라
+     인장을 위에 두고 슬로건을 가운데 정렬로 크게 보여준다 — myeongsado.com의 "중앙 정렬
+     대형 슬로건 + 단일 CTA" 구조를 참고하되 색/타이포는 결 palette 그대로. */
+  .home-hero {
+    text-align: center;
+    padding: 18px 4px 30px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 24px;
+  }
+
+  .home-hero h1 {
+    font-family: 'Song Myung', serif;
+    font-weight: 400;
+    font-size: 2rem;
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+    margin: 0 0 14px;
+    color: var(--ink);
+  }
+
+  .home-hero p {
+    margin: 0 auto 22px;
+    max-width: 320px;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+
+  .home-hero-cta {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 15px 20px;
+    font-size: 1.02rem;
+  }
+
+  /* ---------- 홈 히어로: 도장이 "쾅" 찍히는 연출 (2026-08-25 3차 수정) ----------
+     원래는 명사도의 "중앙 로고+네 노드 연결선" 구조를 네 기둥(년/월/일/시)으로 재해석해서
+     썼는데, 사용자가 ① 연결선이 가운데 인장의 투명한 안쪽을 그대로 뚫고 지나가 보이는 문제
+     ② 임팩트가 약하고 명사도와 구조가 너무 비슷하다는 점을 지적했다. 그래서 다이어그램을
+     걷어내고, 결의 기존 브랜드 모티프인 "도장(인장)"이 위에서 회전하며 떨어져 찍히는 순간
+     잉크 파동이 두 겹으로 번져나가는 연출로 바꿨다 — 명사도와는 전혀 다른 모션이라 비슷해
+     보이지 않는다.
+
+     .home-hero-stamp는 정사각형 고정 박스(위치 기준점), 도장(.home-hero-center)과 파동
+     링(.home-hero-stamp-ring) 둘 다 이 박스 안에서 절대좌표로 중앙 정렬된다. 도장의 rect에
+     불투명 배경(fill: var(--paper))을 줘서, 링이 도장 뒤에서 시작해 바깥으로 번질 때 도장
+     안쪽으로 비쳐 보이지 않게 했다(전에 선이 인장 안쪽을 뚫고 지나가 보이던 것과 같은
+     문제를 방지). */
+  .home-hero-stamp {
+    position: relative;
+    width: 84px;
+    height: 84px;
+    margin: 0 auto 18px;
+  }
+
+  .home-hero-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 68px;
+    height: 68px;
+    z-index: 2;
+    opacity: 0;
+    transform-origin: 50% 50%;
+    animation: homeStampDrop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  /* 시작(위에서 회전한 채 큼직하게) → 55%(살짝 통통 튀는 "쾅" 착지, 이 지점에 파동 링
+     타이밍을 맞춤) → 75%(가볍게 되튐) → 100%(정착). translate(-50%,-50%)를 매 스텝마다
+     같이 써줘야 중앙 정렬이 유지된다(transform 프로퍼티는 하나만 남기면 앞 값이 사라짐). */
+  @keyframes homeStampDrop {
+    0%   { opacity: 0; transform: translate(-50%, -50%) translateY(-42px) rotate(-12deg) scale(1.18); }
+    55%  { opacity: 1; transform: translate(-50%, -50%) translateY(3px) rotate(1.5deg) scale(1.05); }
+    75%  { opacity: 1; transform: translate(-50%, -50%) translateY(-2px) rotate(-0.5deg) scale(0.98); }
+    100% { opacity: 1; transform: translate(-50%, -50%) translateY(0) rotate(0deg) scale(1); }
+  }
+
+  .home-hero-stamp-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 68px;
+    height: 68px;
+    margin: -34px 0 0 -34px;
+    border-radius: 50%;
+    border: 1.5px solid var(--seal);
+    z-index: 1;
+    opacity: 0;
+    animation: homeStampRing 0.65s ease-out forwards;
+    /* 도장이 착지하는 지점(약 0.33s, 위 keyframe의 55%)에 맞춰 파동이 시작되게 함 */
+    animation-delay: 0.33s;
+  }
+
+  .home-hero-stamp-ring--2 {
+    border-color: var(--gold);
+    animation-delay: 0.42s;
+  }
+
+  @keyframes homeStampRing {
+    0%   { opacity: 0.6; transform: scale(0.55); }
+    100% { opacity: 0; transform: scale(2.3); }
+  }
+
+  /* ---------- 홈 히어로: 스포트라이트 + 스태거드 리빌 (2026-08-25 4차 수정) ----------
+     사용자가 스크린샷에 빨간 박스로 표시한 영역(도장+제목+부제+버튼+안내문구) 전체에
+     애니메이션을 원해서, 도장 하나만 움직이던 것에서 히어로 전체가 함께 "깨어나는" 연출로
+     확장했다. 두 겹으로 구성된다.
+
+     ① .home-hero 자체에 거는 "조명이 켜지는" 스윕 — 시작 시 아주 잠깐 어둡고(brightness
+        낮춤) 흐릿하게(blur) 살짝 작게(scale) 있다가 0.45초에 걸쳐 정상으로 돌아온다.
+        완전히 안 보이는 상태가 아니라 "어둑했다가 밝아지는" 정도라 콘텐츠가 아예 숨는
+        건 아니다.
+     ② 제목→부제→버튼→안내문구가 도장이 착지하는 시점(약 0.33~0.42초) 직후부터 80ms
+        간격으로 아래에서 살짝 떠오르며 나타난다(Linear.app/Stripe.com 로드 리듬 참고).
+
+     버튼(.home-hero-cta)은 직접 애니메이션을 걸지 않고 감싸는 .home-hero-cta-wrap에
+     걸었다 — <a class="btn">에 transform 애니메이션을 forwards로 걸면 그 뒤로
+     .btn:active { transform: scale(0.98) } 같은 클릭 피드백이 눌러도 안 먹는 문제가
+     생기기 때문(애니메이션이 fill-mode:forwards로 transform을 계속 붙잡고 있어서
+     일반 규칙의 transform이 덮어써지지 않음). */
+  .home-hero {
+    animation: homeHeroWake 0.45s ease-out both;
+  }
+
+  @keyframes homeHeroWake {
+    from { filter: brightness(0.55) blur(5px); transform: scale(0.965); }
+    to   { filter: brightness(1) blur(0); transform: scale(1); }
+  }
+
+  .home-hero h1,
+  .home-hero p,
+  .home-hero-cta-wrap,
+  .home-hero-hint {
+    opacity: 0;
+    transform: translateY(14px);
+    animation: homeTextUp 0.5s ease-out forwards;
+  }
+
+  .home-hero h1         { animation-delay: 0.42s; }
+  .home-hero p           { animation-delay: 0.50s; }
+  .home-hero-cta-wrap    { animation-delay: 0.58s; }
+  .home-hero-hint        { animation-delay: 0.66s; }
+
+  @keyframes homeTextUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-hero-center, .home-hero-stamp-ring {
+      animation: none;
+      opacity: 1;
+    }
+    .home-hero-center { transform: translate(-50%, -50%); }
+    .home-hero-stamp-ring { display: none; }
+
+    .home-hero {
+      animation: none;
+      filter: none;
+      transform: none;
+    }
+
+    .home-hero h1,
+    .home-hero p,
+    .home-hero-cta-wrap,
+    .home-hero-hint {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* ---------- 홈 "왜 결인가요" 섹션 전용 (2026-08-25 5차 추가) ----------
+     report-trust-grid(결제 CTA 아래 붙는 작은 신뢰 배지)를 재활용했다가, 홈페이지 정식
+     섹션치고는 아이콘/글자가 작고 여백이 빡빡해서 가독성·전문성이 떨어진다는 피드백을
+     받고 홈 전용으로 분리했다. 아이콘을 색이 있는 뱃지 안에 넣어서(이모지 단독보다
+     "디자인된 컴포넌트"처럼 보이게) Stripe/Linear류 SaaS 사이트의 기능 카드 처리 방식을
+     참고했고, 카드 padding과 글자 크기를 report-trust보다 한 단계 키웠다. 제목 색은
+     일부러 seal 강조색을 안 쓰고 var(--ink)로 중립적으로 뒀다 — 아이콘 뱃지 하나로만
+     포인트 컬러를 주는 게 네 칸 전부 핑크 제목보다 더 정돈되어 보인다. */
+  .home-feature-kicker {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--seal);
+    margin-bottom: 6px;
+  }
+
+  .home-feature-intro {
+    color: var(--ink-soft);
+    font-size: 0.88rem;
+    margin: -6px 0 18px;
+  }
+
+  .home-feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .home-feature-item {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 16px;
+  }
+
+  .home-feature-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--seal-tint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+  }
+
+  .home-feature-head {
+    font-weight: 700;
+    color: var(--ink);
+    font-size: 0.98rem;
+    margin-bottom: 5px;
+  }
+
+  .home-feature-desc {
+    color: var(--ink-soft);
+    font-size: 0.84rem;
+    line-height: 1.55;
+  }
+
+  @media (max-width: 380px) {
+    .home-feature-grid { grid-template-columns: 1fr; }
+  }
+
   /* ---------- Tabs ---------- */
   .tabs {
     display: flex;
@@ -214,6 +453,11 @@
 
   .panel { display: none; }
   .panel.active { display: block; animation: fadeIn 0.25s ease; }
+
+  /* (2026-08-25 추가) /calculator에 ?tab=으로 들어왔을 때 히어로/탭 스트립을 시각적으로만
+     숨긴다. DOM에서 완전히 지우면 안 되는데, activateTabFromQuery()가 .tab-btn을 찾아
+     .click()을 호출해 탭 전환 로직을 그대로 재사용하기 때문이다(app.js 참고). */
+  .is-hidden { display: none !important; }
 
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(4px); }
@@ -1834,28 +2078,8 @@
   .social-btn.naver { background: #03C75A; color: #ffffff; }
   .social-btn:hover { filter: brightness(0.96); }
 
-  .user-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--ink-soft);
-  }
-
-  .user-chip form { display: inline; }
-
-  .user-chip button {
-    appearance: none;
-    background: none;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 6px 12px;
-    font-family: 'Gowun Dodum', sans-serif;
-    font-size: 0.78rem;
-    color: var(--ink-faint);
-    cursor: pointer;
-  }
-
-  .user-chip button:hover { border-color: var(--seal); color: var(--seal); }
+  /* .user-chip 계열은 2026-08-24 헤더/하단탭 개편으로 saju.blade.php의 예전 .topbar가
+     빠지면서 더 이상 어디서도 쓰이지 않아 제거함(계정 정보/로그아웃은 마이페이지로 이동). */
 
   .chip-link {
     color: var(--gold);
@@ -1869,6 +2093,127 @@
   }
 
   .chip-link:hover { filter: brightness(0.96); }
+
+  /* ---------- 전역 헤더 (site-header.blade.php, 2026-08-24 신설) ----------
+     좌측 "결" 워드마크 + 우측 코인 칩/로그인 링크만 가볍게. 예전 .topbar(로그인 폼+코인+
+     리포트함+로그아웃을 한 줄에 다 넣은 버전)를 대체한다 — 무거운 계정 관리는 전부
+     마이페이지로 옮겼다. */
+  .site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 2px 0;
+    margin-bottom: 6px;
+  }
+  .site-header-logo {
+    font-family: 'Song Myung', serif;
+    font-weight: 400;
+    font-size: 1.4rem;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .site-header-coin {
+    color: var(--gold);
+    text-decoration: none;
+    font-weight: 700;
+    border: 1px solid var(--gold-tint);
+    background: var(--gold-tint);
+    border-radius: 999px;
+    padding: 6px 13px;
+    font-size: 0.78rem;
+  }
+  .site-header-coin:hover { filter: brightness(0.96); }
+  .site-header-login {
+    color: var(--seal);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.86rem;
+  }
+
+  /* ---------- 전역 하단 탭바 (site-bottom-nav.blade.php, 2026-08-24 신설) ----------
+     화면 하단에 고정해서 스크롤 중에도 항상 손 닿는 곳에 둔다. 데스크톱에서는 사이트
+     전체가 "폰 프레임"(body.phone-app, .wrap을 440px로 고정 — 위 phone 프레임 규칙 참고)
+     으로 보이는데, 이 바도 max-width:440px + margin auto로 똑같이 가운데 정렬해서 프레임
+     폭과 어긋나지 않게 맞춘다. env(safe-area-inset-bottom)은 iPhone 홈 인디케이터 영역을
+     피하기 위한 것으로, <meta viewport ... viewport-fit=cover">가 있어야 실제로 값이 들어간다
+     (이 바를 쓰는 페이지들에 함께 추가함). */
+  .site-bottom-nav {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    max-width: 440px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    background: var(--paper-2);
+    border-top: 1px solid var(--line);
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+    z-index: 40;
+  }
+
+  .site-bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 2px;
+    text-decoration: none;
+    color: var(--ink-faint);
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+  .site-bottom-nav-item.active { color: var(--seal); }
+  .site-bottom-nav-icon { width: 22px; height: 22px; }
+
+  /* "사주"는 실제 매출 진입점이라 원형 뱃지로 살짝 튀어나오게 강조(경쟁사 화면의 "가운데
+     탭 강조" 구조만 참고, 색은 사이트 결 그대로 seal 톤). 항상 이 톤을 유지하고, 선택된
+     상태는 라벨 색(위 .active 규칙)으로만 구분해서 "항상 강조되지만 지금 선택된 건 아니다"
+     와 "지금 선택됐다"가 둘 다 자연스럽게 읽히게 했다. */
+  .site-bottom-nav-item--primary { position: relative; }
+  .site-bottom-nav-badge {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--seal);
+    color: #fbf3e9;
+    font-family: 'Song Myung', serif;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -22px;
+    box-shadow: 0 8px 18px -6px var(--seal);
+    border: 3px solid var(--paper-2);
+  }
+  .site-bottom-nav-item--primary .site-bottom-nav-label { color: var(--ink-soft); }
+  .site-bottom-nav-item--primary.active .site-bottom-nav-label { color: var(--seal); }
+  .site-bottom-nav-item--primary.active .site-bottom-nav-badge { box-shadow: 0 0 0 3px var(--seal-tint), 0 8px 18px -6px var(--seal); }
+
+  /* 하단 탭바가 고정으로 떠 있는 만큼, 이 바를 쓰는 페이지의 .wrap 맨 아래 콘텐츠가
+     가려지지 않게 여백을 더 확보한다(body에 has-bottom-nav 클래스를 붙인 페이지만). */
+  body.has-bottom-nav .wrap { padding-bottom: 130px; }
+
+  /* ---------- 마이페이지 (my.blade.php, 2026-08-24 신설) ---------- */
+  .my-coin-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+  }
+  .my-coin-count {
+    font-family: 'Song Myung', serif;
+    font-size: 1.8rem;
+    color: var(--ink);
+  }
+  .my-coin-count span { font-size: 1rem; font-family: 'Gowun Dodum', sans-serif; color: var(--ink-faint); margin-left: 3px; }
+
+  /* ---------- 사전 (dictionary.blade.php, 2026-08-24 신설) ---------- */
+  .dict-term-list { display: flex; flex-direction: column; gap: 14px; }
+  .dict-term { padding-bottom: 14px; border-bottom: 1px dashed var(--line); }
+  .dict-term:last-child { border-bottom: none; padding-bottom: 0; }
+  .dict-term-name { font-family: 'Song Myung', serif; font-size: 1rem; color: var(--seal-deep); margin-bottom: 4px; }
+  .dict-term-desc { font-size: 0.86rem; color: var(--ink-soft); line-height: 1.65; }
 
   /* ---------- 코인 충전(결제) 페이지 ---------- */
   .plan-grid {
@@ -2306,3 +2651,119 @@
   }
 
   .chat-new-btn:hover { border-color: var(--seal); color: var(--seal); }
+
+  /* ---------- "사주" 종목 고르기 페이지 (sagu.blade.php, 2026-08-24 신설) ----------
+     상단 카테고리 필터(알약 모양) + 종목 카드 목록. 참고로 준 경쟁사 화면의 구조(카테고리
+     필터→카드 목록)만 가져오고, 색은 어두운 네온 대신 사이트 결(종이/먹색/인주색)을 그대로
+     쓴다. 카드 뱃지는 사이트에 이미 있는 seal-mark(테두리 사각형 안에 세리프 글자 하나)와
+     같은 문법을 재사용해서, 새 아이콘 세트를 따로 만들지 않고도 카드마다 다르게 보이게 했다. */
+  .sagu-cat-row { display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
+  .sagu-cat-btn {
+    appearance: none;
+    border: 1px solid var(--line);
+    background: var(--paper-2);
+    color: var(--ink-soft);
+    font-family: 'Gowun Dodum', sans-serif;
+    font-size: 0.86rem;
+    font-weight: 700;
+    padding: 9px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .sagu-cat-btn:hover { border-color: var(--seal); }
+  .sagu-cat-btn.active { background: var(--seal); border-color: var(--seal); color: #fbf3e9; }
+
+  .sagu-panel { display: none; }
+  .sagu-panel.active { display: block; animation: fadeIn 0.25s ease; }
+
+  .sagu-card-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .sagu-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px 18px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease, transform 0.12s ease;
+  }
+  a.sagu-card:hover { border-color: var(--seal); }
+  a.sagu-card:active { transform: scale(0.99); }
+
+  .sagu-card-badge {
+    flex: none;
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
+    border: 1.6px solid var(--seal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Song Myung', serif;
+    font-size: 1.25rem;
+    color: var(--seal);
+  }
+
+  .sagu-card-body { flex: 1; min-width: 0; }
+  .sagu-card-title { font-family: 'Song Myung', serif; font-weight: 400; font-size: 1.02rem; color: var(--ink); margin-bottom: 3px; }
+  .sagu-card-desc { font-size: 0.82rem; color: var(--ink-soft); line-height: 1.5; }
+
+  .sagu-card-price {
+    flex: none;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--seal);
+    background: var(--seal-tint);
+    padding: 6px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .sagu-card--soon { opacity: 0.55; }
+  .sagu-card--soon .sagu-card-badge { border-color: var(--ink-faint); color: var(--ink-faint); }
+  .sagu-card--soon .sagu-card-price { background: var(--paper-3); color: var(--ink-faint); }
+
+  /* (2026-08-25 추가) 종목 카드가 아래에서 살짝 올라오며 나타나는 연출("스윽 올라오는
+     느낌" 피드백 반영). .sagu-panel이 display:none → block으로 바뀔 때마다(카테고리 탭
+     전환, /sagu·홈 페이지 진입) 브라우저가 이 애니메이션을 매번 새로 재생해준다 — 별도
+     JS 트리거 없이 CSS만으로 카테고리를 바꿀 때마다 카드가 다시 스윽 올라온다. nth-child로
+     살짝씩 시차를 둬서 한 번에 튀어나오지 않고 순서대로 올라오게 했다. */
+  .sagu-card-list .sagu-card {
+    animation: saguCardIn 0.45s ease both;
+  }
+
+  .sagu-card-list .sagu-card:nth-child(1) { animation-delay: 0.02s; }
+  .sagu-card-list .sagu-card:nth-child(2) { animation-delay: 0.09s; }
+  .sagu-card-list .sagu-card:nth-child(3) { animation-delay: 0.16s; }
+  .sagu-card-list .sagu-card:nth-child(4) { animation-delay: 0.23s; }
+  .sagu-card-list .sagu-card:nth-child(5) { animation-delay: 0.30s; }
+  .sagu-card-list .sagu-card:nth-child(n+6) { animation-delay: 0.37s; }
+
+  @keyframes saguCardIn {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sagu-card-list .sagu-card { animation: none; }
+  }
+
+  .sagu-empty {
+    text-align: center;
+    color: var(--ink-faint);
+    font-size: 0.88rem;
+    padding: 40px 10px;
+    border: 1px dashed var(--line);
+    border-radius: 16px;
+    background: var(--paper-2);
+  }
+
+  @media (max-width: 420px) {
+    .sagu-card { padding: 14px; gap: 12px; }
+    .sagu-card-badge { width: 40px; height: 40px; font-size: 1.1rem; }
+    .sagu-card-price { font-size: 0.7rem; padding: 5px 10px; }
+  }

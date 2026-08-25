@@ -2,17 +2,15 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>결제 완료 — 결</title>
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
-<body class="phone-app">
+<body class="phone-app has-bottom-nav">
 
 <div class="wrap wrap-narrow">
 
-  <div class="topbar">
-    <a class="chip-link" href="{{ route('billing.index') }}">&larr; 코인 충전 페이지로</a>
-  </div>
+  @include('partials.site-header')
 
   <div class="card" style="margin-top:18px;">
     <div class="complete-badge" aria-hidden="true">✓</div>
@@ -49,7 +47,7 @@
     </div>
 
     <div class="complete-actions">
-      <a class="btn" href="{{ route('home') }}">코치와 대화하러 가기</a>
+      <a class="btn" href="{{ route('calculator.index', ['tab' => 'chat']) }}">코치와 대화하러 가기</a>
       <a class="btn outline" href="{{ route('billing.index') }}">코인 더 충전하기</a>
     </div>
   </div>
@@ -59,6 +57,8 @@
     @include('partials.business-footer')
   </footer>
 </div>
+
+@include('partials.site-bottom-nav')
 
 </body>
 </html>

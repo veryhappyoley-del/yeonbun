@@ -2,15 +2,18 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{{ $report->title ?: ($type['label'] ?? '리포트') }} — 결</title>
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
-<body class="phone-app">
+<body class="phone-app has-bottom-nav">
 
 <div class="wrap wrap-narrow">
 
+  @include('partials.site-header')
+
+  {{-- 전역 헤더와 별개로, 리포트함 목록으로 곧장 되돌아가는 페이지 전용 링크는 그대로 둔다. --}}
   <div class="topbar">
     <a class="chip-link" href="{{ route('reports.index') }}">&larr; 내 리포트함으로</a>
   </div>
@@ -63,6 +66,8 @@
     @include('partials.business-footer')
   </footer>
 </div>
+
+@include('partials.site-bottom-nav')
 
 </body>
 </html>

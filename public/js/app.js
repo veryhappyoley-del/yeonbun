@@ -1223,8 +1223,26 @@
     });
   }
 
+  // (2026-08-24 추가) "/사주" 종목 고르기 페이지의 카드에서 ?tab=compat 같은 식으로
+  // 넘어왔을 때 해당 탭을 자동으로 활성화한다. 탭 버튼을 직접 클릭한 것과 똑같이
+  // 동작하도록 버튼의 click을 그대로 트리거해서(위 bindEvents의 로직을 재사용) 활성
+  // 탭 스타일/패널 전환이 어긋나지 않게 한다. 유효하지 않은 값이면 기본 탭(단일 active)을
+  // 그대로 둔다.
+  function activateTabFromQuery() {
+    var params = new URLSearchParams(window.location.search);
+    var tab = params.get('tab');
+    if (!tab) return;
+    try {
+      var btn = document.querySelector('.tab-btn[data-tab="' + CSS.escape(tab) + '"]');
+      if (btn) btn.click();
+    } catch (e) {
+      // 이상한 값이 들어와도(예: 잘못된 선택자) 나머지 초기화가 멈추지 않게 조용히 무시.
+    }
+  }
+
   fillCitySelects();
   bindEvents();
+  activateTabFromQuery();
 
   // ---- AI 상담 탭(public/js/chat.js)에서 방금 계산한 사주를 읽어갈 수 있도록 노출 ----
   window.YeonbunApp = {

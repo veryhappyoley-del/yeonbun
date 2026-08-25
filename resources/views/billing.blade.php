@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>코인 충전 — 결</title>
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
@@ -10,13 +10,11 @@
     <script src="https://js.tosspayments.com/v1/payment"></script>
   @endif
 </head>
-<body class="phone-app">
+<body class="phone-app has-bottom-nav">
 
 <div class="wrap">
 
-  <div class="topbar">
-    <a class="chip-link" href="{{ route('home') }}">&larr; 결로 돌아가기</a>
-  </div>
+  @include('partials.site-header')
 
   <div class="hero">
     <svg class="seal-mark" viewBox="0 0 64 64" aria-hidden="true">
@@ -93,6 +91,8 @@
     @include('partials.business-footer')
   </footer>
 </div>
+
+@include('partials.site-bottom-nav')
 
 @if ($tossConfigured)
 <script>

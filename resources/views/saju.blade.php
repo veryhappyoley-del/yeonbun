@@ -1,4 +1,16 @@
 @php
+  // (2026-08-25 추가) 이 페이지는 이제 /calculator에서만 서비스된다("/"는 home.blade.php로
+  // 분리됨). /sagu의 카드를 눌러 ?tab=single|compat|chat으로 들어온 경우, /sagu에서 이미
+  // "결" 로고+설명+종목 카드를 다 보고 왔기 때문에 여기서 히어로(결 로고+설명)와 상단 탭
+  // 스트립을 또 보여주면 같은 내용이 중복돼 어색하다(사용자 피드백: 빨간 박스로 표시된
+  // 영역 없애달라는 요청). 그래서 유효한 tab 값으로 들어온 경우엔 그 영역을 시각적으로
+  // 숨긴다 — DOM에서 완전히 지우지는 않는데, public/js/app.js의 activateTabFromQuery()가
+  // 여전히 .tab-btn 버튼을 찾아 .click()을 호출해서 탭 전환 로직(어떤 .panel이 보일지)을
+  // 그대로 재사용하기 때문이다(display:none이어도 JS로 호출하는 .click()은 정상 동작함).
+  // 값이 없거나 모르는 값이면(직접 "/calculator"로 들어온 경우 등) 평소대로 다 보여준다.
+  $incomingTab = request()->query('tab');
+  $hideCalcChrome = in_array($incomingTab, ['single', 'compat', 'chat'], true);
+
   // 결제 CTA(public/js/reports.js buildCTA)의 "목차 미리보기"에 쓸 정적 데이터.
   // AI 콘텐츠는 전혀 포함하지 않고, 이미 코드로 정의된 챕터 제목/티저만 그대로 노출한다.
   // (2026-08-24 수정) previewChapters()를 써서 ReportType::$previewChapterKeys가 지정된
@@ -19,7 +31,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>결 — 연애 특화 사주</title>
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
@@ -29,26 +41,14 @@
   <!-- 공유 카드를 실제 HTML/CSS 디자인 그대로 이미지로 캡처하는 데 사용 (public/js/reports.js) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
-<body class="phone-app">
+<body class="phone-app has-bottom-nav">
 
 <div class="wrap">
 
-  <div class="topbar">
-    @auth
-      <div class="user-chip">
-        <a class="chip-link" id="topbar-credits" href="{{ route('billing.index') }}">코인 {{ auth()->user()->credits }}개</a>
-        <a class="chip-link" href="{{ route('reports.index') }}">내 리포트함</a>
-        <span>{{ auth()->user()->name }}님</span>
-        <form method="POST" action="{{ route('logout') }}">
-          @csrf
-          <button type="submit">로그아웃</button>
-        </form>
-      </div>
-    @else
-      <a class="social-btn kakao" href="{{ route('auth.redirect', 'kakao') }}">카카오로 로그인</a>
-      <a class="social-btn naver" href="{{ route('auth.redirect', 'naver') }}">네이버로 로그인</a>
-    @endauth
-  </div>
+  {{-- (2026-08-24 수정) 로그인 폼+코인+리포트함+로그아웃을 한 줄에 다 넣던 예전 .topbar를
+       전역 헤더(코인 칩/로그인 링크만)로 대체. 계정 관리는 마이페이지(하단 탭바 "마이")로
+       옮겼다. --}}
+  @include('partials.site-header')
 
   @if (session('billing_success'))
     <div class="placeholder-note" style="margin-top:14px;">{{ session('billing_success') }}</div>
@@ -57,7 +57,7 @@
     <div class="card" style="border-color: var(--seal); color: var(--seal-deep); margin-top:14px;">{{ session('billing_error') }}</div>
   @endif
 
-  <div class="hero">
+  <div class="hero @if ($hideCalcChrome) is-hidden @endif">
     <svg class="seal-mark" viewBox="0 0 64 64" aria-hidden="true">
       <rect x="4" y="4" width="56" height="56" rx="8" fill="none" stroke="var(--seal)" stroke-width="3"></rect>
       <text x="32" y="41" text-anchor="middle" font-family="Song Myung, serif" font-size="26" fill="var(--seal)">결</text>
@@ -69,7 +69,7 @@
     </div>
   </div>
 
-  <div class="tabs" role="tablist">
+  <div class="tabs @if ($hideCalcChrome) is-hidden @endif" role="tablist">
     <button class="tab-btn active" data-tab="single" role="tab">나의 연애 사주</button>
     <button class="tab-btn" data-tab="compat" role="tab">궁합 보기</button>
     <button class="tab-btn" data-tab="chat" role="tab">연애 코치</button>
@@ -298,6 +298,8 @@
     @include('partials.business-footer')
   </footer>
 </div>
+
+@include('partials.site-bottom-nav')
 
 <script>
   window.YeonbunAuth = {

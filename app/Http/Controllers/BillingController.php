@@ -203,7 +203,7 @@ class BillingController extends Controller
 
         $request->user()->increment('credits', $plan['credits']);
 
-        return redirect()->route('home')->with(
+        return redirect()->route('calculator.index')->with(
             'billing_success',
             "[테스트 모드] {$plan['label']}({$plan['credits']}개)이 충전됐어요. 실제 결제는 아직 연동 전이라 금액은 청구되지 않았어요."
         );
