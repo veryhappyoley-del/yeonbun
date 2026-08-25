@@ -11,7 +11,7 @@
 <div class="wrap">
 
   <div class="topbar">
-    <a class="chip-link" href="{{ route('home') }}">&larr; 결로 돌아가기</a>
+    <a class="chip-link" href="{{ route('home') }}">&larr; 연록으로 돌아가기</a>
   </div>
 
   <div class="hero">

@@ -29,8 +29,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="사주팔자로 읽는 나의 연애 기질과 궁합, 그리고 내 사주 맥락을 아는 AI 연애 코치까지. 결에서 무료로 시작해보세요.">
-  <title>결 — 사주로 읽는 나의 연애</title>
+  <meta name="description" content="사주팔자로 읽는 나의 연애 기질과 궁합, 그리고 내 사주 맥락을 아는 AI 연애 코치까지. 연록에서 무료로 시작해보세요.">
+  <title>연록 — 사주로 읽는 나의 연애</title>
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
 <body class="phone-app has-bottom-nav">
@@ -62,7 +62,7 @@
       <span class="home-hero-stamp-ring home-hero-stamp-ring--2"></span>
       <svg class="home-hero-center" viewBox="0 0 64 64" aria-hidden="true">
         <rect x="4" y="4" width="56" height="56" rx="8" fill="var(--paper)" stroke="var(--seal)" stroke-width="3"></rect>
-        <text x="32" y="41" text-anchor="middle" font-family="Song Myung, serif" font-size="26" fill="var(--seal)">결</text>
+        <text x="32" y="39" text-anchor="middle" font-family="Song Myung, serif" font-size="19" letter-spacing="-0.5" fill="var(--seal)">연록</text>
       </svg>
     </div>
     <h1>사주로 읽는,<br>나의 연애</h1>
@@ -90,9 +90,9 @@
        사용자가 이름 결정은 보류하기로 함) 문구에 "결"을 최소한으로만 남기고, 이름이
        바뀌어도 어색하지 않게 "이래서 다릅니다" 쪽에 무게를 실었다. --}}
   <div class="card">
-    <div class="home-feature-kicker">결의 차별점</div>
-    <h2>이래서 결이 다릅니다</h2>
-    <p class="home-feature-intro">다른 사주 서비스에는 없는, 결만의 강점이에요.</p>
+    <div class="home-feature-kicker">연록의 차별점</div>
+    <h2>이래서 연록이 다릅니다</h2>
+    <p class="home-feature-intro">다른 사주 서비스에는 없는, 연록만의 강점이에요.</p>
     <div class="home-feature-grid">
       <div class="home-feature-item">
         <div class="home-feature-icon">💘</div>

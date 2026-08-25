@@ -33,7 +33,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>결 — 연애 특화 사주</title>
+  <title>연록 — 연애 특화 사주</title>
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
   @if (config('services.toss.client_key'))
     <script src="https://js.tosspayments.com/v1/payment"></script>
@@ -60,10 +60,10 @@
   <div class="hero @if ($hideCalcChrome) is-hidden @endif">
     <svg class="seal-mark" viewBox="0 0 64 64" aria-hidden="true">
       <rect x="4" y="4" width="56" height="56" rx="8" fill="none" stroke="var(--seal)" stroke-width="3"></rect>
-      <text x="32" y="41" text-anchor="middle" font-family="Song Myung, serif" font-size="26" fill="var(--seal)">결</text>
+      <text x="32" y="39" text-anchor="middle" font-family="Song Myung, serif" font-size="19" letter-spacing="-0.5" fill="var(--seal)">연록</text>
     </svg>
     <div class="hero-text">
-      <h1>결</h1>
+      <h1>연록</h1>
       <p>사주팔자로 읽는 나의 연애 기질과 궁합, 그리고 사주 맥락을 아는 연애 코치</p>
       <p class="sub">천을귀인처럼 좋은 인연이 닿기를. 생년월일시를 입력해 시작하세요.</p>
     </div>

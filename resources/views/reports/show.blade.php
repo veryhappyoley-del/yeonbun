@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>{{ $report->title ?: ($type['label'] ?? '리포트') }} — 결</title>
+  <title>{{ $report->title ?: ($type['label'] ?? '리포트') }} — 연록</title>
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
 <body class="phone-app has-bottom-nav">

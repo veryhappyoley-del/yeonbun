@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>관리자 대시보드 — 결</title>
+  <title>관리자 대시보드 — 연록</title>
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
 <body>
@@ -11,7 +11,7 @@
 <div class="wrap">
 
   <div class="topbar">
-    <a class="chip-link" href="{{ route('home') }}">&larr; 결로 돌아가기</a>
+    <a class="chip-link" href="{{ route('home') }}">&larr; 연록으로 돌아가기</a>
   </div>
 
   <div class="hero">

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>코인 충전 — 결</title>
+  <title>코인 충전 — 연록</title>
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
   @if ($tossConfigured)
     <script src="https://js.tosspayments.com/v1/payment"></script>
@@ -19,7 +19,7 @@
   <div class="hero">
     <svg class="seal-mark" viewBox="0 0 64 64" aria-hidden="true">
       <rect x="4" y="4" width="56" height="56" rx="8" fill="none" stroke="var(--seal)" stroke-width="3"></rect>
-      <text x="32" y="41" text-anchor="middle" font-family="Song Myung, serif" font-size="26" fill="var(--seal)">결</text>
+      <text x="32" y="39" text-anchor="middle" font-family="Song Myung, serif" font-size="19" letter-spacing="-0.5" fill="var(--seal)">연록</text>
     </svg>
     <div class="hero-text">
       <h1>코인 충전</h1>

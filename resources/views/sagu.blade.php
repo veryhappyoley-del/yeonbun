@@ -61,7 +61,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>사주 — 결</title>
+  <title>사주 — 연록</title>
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
 <body class="phone-app has-bottom-nav">
@@ -75,7 +75,7 @@
   <div class="hero">
     <svg class="seal-mark" viewBox="0 0 64 64" aria-hidden="true">
       <rect x="4" y="4" width="56" height="56" rx="8" fill="none" stroke="var(--seal)" stroke-width="3"></rect>
-      <text x="32" y="41" text-anchor="middle" font-family="Song Myung, serif" font-size="26" fill="var(--seal)">결</text>
+      <text x="32" y="39" text-anchor="middle" font-family="Song Myung, serif" font-size="19" letter-spacing="-0.5" fill="var(--seal)">연록</text>
     </svg>
     <div class="hero-text">
       <h1>사주</h1>
@@ -83,7 +83,7 @@
            사용자 지적: 내부 로드맵을 사용자에게 알릴 필요가 없다 — 대신 브랜드 정체성을
            설명하는 문구로 교체. 홈페이지 "결의 차별점" 섹션과 같은 메시지("인생 전반이
            아니라 연애·궁합만 깊이 파고든다")를 재사용해서 사이트 전체 톤을 일관되게 뒀다. --}}
-      <p>지금 궁금한 걸 골라주세요. 결은 인생 전반이 아니라 연애와 궁합에만 집중해요.</p>
+      <p>지금 궁금한 걸 골라주세요. 연록은 인생 전반이 아니라 연애와 궁합에만 집중해요.</p>
     </div>
   </div>
 

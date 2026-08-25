@@ -1,7 +1,10 @@
 {{--
   전역 상단 헤더 (2026-08-24 신설, 헤더/하단탭 도입 작업).
 
-  좌측엔 "결" 워드마크만, 우측엔 로그인 상태에 따라 코인 잔액 칩(로그인 시) 또는 "로그인"
+  (2026-08-25 브랜드명 변경: 결 → 연록. "인연록(因緣錄)"에서 '인'을 뺀 이름 — 인연의
+  기록이라는 뜻은 그대로 담고 있다. 팔레트/도장 모티프는 그대로 유지하고 이름만 교체.)
+
+  좌측엔 "연록" 워드마크만, 우측엔 로그인 상태에 따라 코인 잔액 칩(로그인 시) 또는 "로그인"
   링크(비로그인 시)만 가볍게 보여준다. 계정 정보/로그아웃/리포트함처럼 무거운 건 전부
   마이페이지(site-bottom-nav.blade.php의 "마이"/"로그인" 탭 목적지, my.blade.php)로 몰아서,
   헤더는 "지금 코인 얼마 있지?" 정도만 한눈에 보이게 가볍게 유지한다.
@@ -15,7 +18,7 @@
   null 체크로 조용히 건너뛰므로 안전하다).
 --}}
 <div class="site-header">
-  <a class="site-header-logo" href="{{ route('home') }}">결</a>
+  <a class="site-header-logo" href="{{ route('home') }}">연록</a>
   @auth
     <a class="site-header-coin" id="topbar-credits" href="{{ route('billing.index') }}">코인 {{ auth()->user()->credits }}개</a>
   @else

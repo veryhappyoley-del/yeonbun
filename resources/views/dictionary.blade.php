@@ -40,8 +40,8 @@
       [
           'title' => '운의 흐름',
           'terms' => [
-              ['term' => '대운', 'desc' => '몇 년 단위로 크게 바뀌는 인생의 흐름을 말해요. 결에서는 아직 대운 계산 기능을 제공하지 않아요(추후 지원 예정).'],
-              ['term' => '세운', 'desc' => '한 해 단위로 바뀌는 운의 흐름을 말해요. 결에서는 아직 세운 계산 기능을 제공하지 않아요(추후 지원 예정).'],
+              ['term' => '대운', 'desc' => '몇 년 단위로 크게 바뀌는 인생의 흐름을 말해요. 연록에서는 아직 대운 계산 기능을 제공하지 않아요(추후 지원 예정).'],
+              ['term' => '세운', 'desc' => '한 해 단위로 바뀌는 운의 흐름을 말해요. 연록에서는 아직 세운 계산 기능을 제공하지 않아요(추후 지원 예정).'],
           ],
       ],
   ];
@@ -51,7 +51,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>사전 — 결</title>
+  <title>사전 — 연록</title>
   <meta name="description" content="일간, 오행, 신강신약, 십신 등 명리학 기초 용어를 쉬운 말로 풀어드려요.">
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
@@ -64,7 +64,7 @@
   <div class="hero">
     <svg class="seal-mark" viewBox="0 0 64 64" aria-hidden="true">
       <rect x="4" y="4" width="56" height="56" rx="8" fill="none" stroke="var(--seal)" stroke-width="3"></rect>
-      <text x="32" y="41" text-anchor="middle" font-family="Song Myung, serif" font-size="26" fill="var(--seal)">결</text>
+      <text x="32" y="39" text-anchor="middle" font-family="Song Myung, serif" font-size="19" letter-spacing="-0.5" fill="var(--seal)">연록</text>
     </svg>
     <div class="hero-text">
       <h1>사전</h1>
