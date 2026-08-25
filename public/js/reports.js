@@ -198,12 +198,30 @@
       });
   }
 
+  // (2026-08-25 추가, 로드맵 1·2번) 결제 버튼을 눌렀는데 로그인이 안 돼 있으면 이 게이트가
+  // 뜨는데, 예전엔 로그인 링크에 돌아올 위치 정보가 전혀 없어서(카카오/네이버 로그인 URL이
+  // 고정값) 로그인 후 무조건 홈으로 튕겨나가 입력했던 사주/궁합 결과가 다 날아갔다. 지금
+  // 보고 있는 탭(단일/궁합)을 읽어서 ?redirect=현재경로?tab=... 을 로그인 URL에 붙여주면,
+  // SocialAuthController가 이 값을 세션에 저장했다가 로그인 콜백에서 같은 탭으로 돌려보낸다.
+  function currentLoginRedirectPath() {
+    var activeTabBtn = document.querySelector('.tab-btn.active');
+    var tab = activeTabBtn ? activeTabBtn.getAttribute('data-tab') : null;
+    var path = (window.location && window.location.pathname) || '/calculator';
+    return tab ? (path + '?tab=' + encodeURIComponent(tab)) : path;
+  }
+
+  function withLoginRedirect(loginUrl) {
+    if (!loginUrl) return loginUrl;
+    var sep = loginUrl.indexOf('?') === -1 ? '?' : '&';
+    return loginUrl + sep + 'redirect=' + encodeURIComponent(currentLoginRedirectPath());
+  }
+
   function showLoginGate(statusBox) {
     statusBox.innerHTML = '';
     statusBox.appendChild(txt('div', 'hint', '로그인하면 프리미엄 리포트를 구매할 수 있어요.'));
     var row = el('div', { class: 'login-gate-inline' });
-    row.appendChild(el('a', { class: 'social-btn kakao', href: window.YeonbunBilling.kakaoLoginUrl }, [document.createTextNode('카카오로 로그인')]));
-    row.appendChild(el('a', { class: 'social-btn naver', href: window.YeonbunBilling.naverLoginUrl }, [document.createTextNode('네이버로 로그인')]));
+    row.appendChild(el('a', { class: 'social-btn kakao', href: withLoginRedirect(window.YeonbunBilling.kakaoLoginUrl) }, [document.createTextNode('카카오로 로그인')]));
+    row.appendChild(el('a', { class: 'social-btn naver', href: withLoginRedirect(window.YeonbunBilling.naverLoginUrl) }, [document.createTextNode('네이버로 로그인')]));
     statusBox.appendChild(row);
   }
 

@@ -1240,8 +1240,137 @@
     }
   }
 
+  /* ============================================================
+   * 7. 폼 자동 저장/복원 — 로그인 전 입력값 유지 (2026-08-25 추가, 로드맵 1번)
+   *
+   *    배경: 리포트 구매나 연애 코치처럼 로그인이 필요한 기능을 로그인 없이 시도하면
+   *    인라인 로그인 게이트가 뜨고, 카카오/네이버 로그인을 마치고 돌아오면 페이지가
+   *    완전히 새로고침된다(SPA가 아니라 서버로 갔다 오는 리다이렉트 왕복이라 JS 메모리
+   *    상태가 전부 사라짐). "어느 탭으로 돌아올지"는 로그인 URL의 redirect 파라미터로
+   *    해결했지만(App\Http\Controllers\Auth\SocialAuthController 참고), 탭 안에 입력해
+   *    둔 생년월일시 같은 값 자체는 별개 문제라서, 입력하는 즉시(디바운스) localStorage에
+   *    저장해 두고 페이지가 새로 열릴 때(로그인 왕복이든 그냥 새로고침이든) 값이 있으면
+   *    되살린다.
+   * ============================================================ */
+
+  var DRAFT_KEY = 'yeonbunCalcDraft.v1';
+  var DRAFT_TTL_MS = 24 * 60 * 60 * 1000; // 하루 넘게 방치된 초안은 되살리지 않음(오래된 값이 갑자기 나타나 혼란 주는 것 방지)
+
+  var DRAFT_TEXT_FIELDS = [
+    's-name', 's-year', 's-month', 's-day', 's-hour', 's-minute', 's-sido', 's-sigungu',
+    'c-name-a', 'c-year-a', 'c-month-a', 'c-day-a', 'c-hour-a', 'c-minute-a', 'c-sido-a', 'c-sigungu-a',
+    'c-name-b', 'c-year-b', 'c-month-b', 'c-day-b', 'c-hour-b', 'c-minute-b', 'c-sido-b', 'c-sigungu-b',
+    'c-concern-detail'
+  ];
+  var DRAFT_CHECKBOX_FIELDS = ['s-unknown', 'c-unknown-a', 'c-unknown-b'];
+  // 시/군/구는 시/도가 바뀌어야 옵션 목록 자체가 다시 채워지는 종속 관계라, 복원할 때도
+  // 반드시 시/도 값 설정 → change 이벤트(옵션 재생성) → 시/군/구 값 설정 순서를 지켜야 한다.
+  var DRAFT_SIDO_SIGUNGU_PAIRS = [['s-sido', 's-sigungu'], ['c-sido-a', 'c-sigungu-a'], ['c-sido-b', 'c-sigungu-b']];
+  var DRAFT_SIGUNGU_IDS = DRAFT_SIDO_SIGUNGU_PAIRS.map(function (pair) { return pair[1]; });
+
+  var draftSaveTimer = null;
+
+  function collectDraft() {
+    var draft = { savedAt: Date.now(), text: {}, checked: {}, stage: null, concern: null };
+    DRAFT_TEXT_FIELDS.forEach(function (id) {
+      var node = document.getElementById(id);
+      if (node) draft.text[id] = node.value;
+    });
+    DRAFT_CHECKBOX_FIELDS.forEach(function (id) {
+      var node = document.getElementById(id);
+      if (node) draft.checked[id] = node.checked;
+    });
+    draft.stage = getSingleSelectValue('c-stage-row', 'stage');
+    draft.concern = getSingleSelectValue('c-concern-grid', 'concern');
+    return draft;
+  }
+
+  function saveDraftNow() {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(collectDraft()));
+    } catch (e) {
+      // 시크릿 모드 등 localStorage를 못 쓰는 환경 — 자동저장만 조용히 포기하고
+      // 계산기 본연의 기능은 그대로 동작해야 하므로 에러를 삼킨다.
+    }
+  }
+
+  function scheduleDraftSave() {
+    if (draftSaveTimer) clearTimeout(draftSaveTimer);
+    draftSaveTimer = setTimeout(saveDraftNow, 400);
+  }
+
+  function loadDraft() {
+    try {
+      var raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return null;
+      var draft = JSON.parse(raw);
+      if (!draft || typeof draft !== 'object') return null;
+      if (!draft.savedAt || (Date.now() - draft.savedAt) > DRAFT_TTL_MS) return null;
+      return draft;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function wireDraftAutosave() {
+    DRAFT_TEXT_FIELDS.forEach(function (id) {
+      var node = document.getElementById(id);
+      if (node) node.addEventListener('input', scheduleDraftSave);
+    });
+    DRAFT_CHECKBOX_FIELDS.forEach(function (id) {
+      var node = document.getElementById(id);
+      if (node) node.addEventListener('change', scheduleDraftSave);
+    });
+    // 관계 단계 칩 / 궁금한 것 카드는 클릭으로 토글되는 커스텀 UI라 change/input이 아니라
+    // 클릭 시점에 저장해야 한다(위 wireSingleSelect가 active 클래스를 먼저 바꾼 뒤라 순서 문제 없음).
+    ['c-stage-row', 'c-concern-grid'].forEach(function (containerId) {
+      var container = document.getElementById(containerId);
+      if (container) container.addEventListener('click', scheduleDraftSave);
+    });
+  }
+
+  function restoreDraft() {
+    var draft = loadDraft();
+    if (!draft || !draft.text) return;
+
+    Object.keys(draft.text).forEach(function (id) {
+      if (DRAFT_SIGUNGU_IDS.indexOf(id) !== -1) return; // 시/군/구는 아래에서 순서 맞춰 별도 복원
+      var node = document.getElementById(id);
+      if (node && draft.text[id]) node.value = draft.text[id];
+    });
+
+    Object.keys(draft.checked || {}).forEach(function (id) {
+      var node = document.getElementById(id);
+      if (node) node.checked = !!draft.checked[id];
+    });
+
+    DRAFT_SIDO_SIGUNGU_PAIRS.forEach(function (pair) {
+      var sidoId = pair[0], sigunguId = pair[1];
+      var sidoVal = draft.text[sidoId];
+      if (!sidoVal) return;
+      var sidoNode = document.getElementById(sidoId);
+      var sigunguNode = document.getElementById(sigunguId);
+      if (!sidoNode || !sigunguNode) return;
+      sidoNode.value = sidoVal;
+      sidoNode.dispatchEvent(new Event('change')); // fillSigunguSelect()로 시/군/구 옵션을 다시 채움
+      var sigunguVal = draft.text[sigunguId];
+      if (sigunguVal) sigunguNode.value = sigunguVal;
+    });
+
+    if (draft.stage) {
+      var stageBtn = document.querySelector('#c-stage-row [data-stage="' + draft.stage + '"]');
+      if (stageBtn) stageBtn.click();
+    }
+    if (draft.concern) {
+      var concernCard = document.querySelector('#c-concern-grid [data-concern="' + draft.concern + '"]');
+      if (concernCard) concernCard.click();
+    }
+  }
+
   fillCitySelects();
   bindEvents();
+  restoreDraft();
+  wireDraftAutosave();
   activateTabFromQuery();
 
   // ---- AI 상담 탭(public/js/chat.js)에서 방금 계산한 사주를 읽어갈 수 있도록 노출 ----

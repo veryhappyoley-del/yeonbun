@@ -365,10 +365,12 @@
      일부러 seal 강조색을 안 쓰고 var(--ink)로 중립적으로 뒀다 — 아이콘 뱃지 하나로만
      포인트 컬러를 주는 게 네 칸 전부 핑크 제목보다 더 정돈되어 보인다. */
   .home-feature-kicker {
-    font-size: 0.72rem;
+    font-size: 0.78rem;
     font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    /* (2026-08-25 6차 수정) 원래 영문 킥커("WHY 결")를 염두에 두고 letter-spacing:0.12em +
+       uppercase로 만들었는데, 한글 킥커("결의 차별점")로 바뀌면서 그 정도 자간은 한글에서
+       과하게 벌어져 보인다. 자간을 줄이고 uppercase는 한글에 의미가 없어서 제거했다. */
+    letter-spacing: 0.02em;
     color: var(--seal);
     margin-bottom: 6px;
   }
@@ -2766,4 +2768,135 @@
     .sagu-card { padding: 14px; gap: 12px; }
     .sagu-card-badge { width: 40px; height: 40px; font-size: 1.1rem; }
     .sagu-card-price { font-size: 0.7rem; padding: 5px 10px; }
+  }
+
+  /* ============================================================
+   * 리포트함 카드 (2026-08-25 추가, 로드맵 4번)
+   *
+   * 예전엔 reports/index.blade.php가 관리자 상담 세션 목록용으로 만든
+   * .chat-session-row를 그대로 재활용했다 — 용도가 다른 컴포넌트를 재활용하다 보니
+   * 제목/부제 두 줄만 있는 밋밋한 리스트였다(이 세션에서 이미 report-trust-grid를
+   * 홈페이지에 재활용했다가 겪은 것과 같은 문제 패턴). 사용자가 참고로 준 경쟁사
+   * "나의 보관함" 화면(아이콘+뱃지+상대방 이름+날짜/영구보관+버튼 2개로 구성된 카드)의
+   * 구조는 그대로 가져오되, 색은 결의 종이/먹색/인주색 palette로, 아이콘은 홈페이지
+   * "결의 차별점" 섹션에서 이미 쓴 동그란 뱃지 스타일(.home-feature-icon)을 재사용해서
+   * 사이트 전체 시각 언어를 통일했다.
+   * ============================================================ */
+
+  .report-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .report-card {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px;
+  }
+
+  .report-card-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .report-card-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: var(--seal-tint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+  }
+
+  .report-card-subject {
+    font-family: 'Song Myung', serif;
+    font-weight: 400;
+    font-size: 1.1rem;
+    color: var(--ink);
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+
+  .report-card-heart {
+    color: var(--seal);
+    font-size: 0.85em;
+    margin: 0 2px;
+  }
+
+  .report-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    margin-bottom: 16px;
+  }
+
+  .report-card-dot { opacity: 0.6; }
+
+  .report-card-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .report-card-actions .btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 11px 12px;
+    font-size: 0.86rem;
+  }
+
+  /* ============================================================
+   * 인쇄 / PDF 저장 (2026-08-25 추가, 로드맵 4번)
+   *
+   * 서버에서 PDF 파일을 직접 만드는(dompdf 등) 대신 브라우저 인쇄 기능을 활용한다.
+   * 이유: PDF 생성 라이브러리는 한글 폰트를 파일로 별도로 심어줘야 하는데, 이 사이트
+   * 콘텐츠가 전부 한글이라 폰트 파일 하나가 잘못되면 리포트 전체가 네모(□)로 깨져
+   * 나오는 치명적인 실패가 된다. 반면 브라우저 인쇄(Ctrl+P → "PDF로 저장")는 사용자
+   * 기기에 이미 설치된 한글 폰트를 그대로 쓰기 때문에 깨질 위험이 없고, 텍스트가 살아
+   * 있는 진짜 PDF(선택·복사 가능)가 나온다 — 이미지로 캡처하는 공유 카드(html2canvas)
+   * 보다도 품질이 좋다. "PDF 저장" 버튼은 인쇄 대화상자를 띄우기만 하고, 실제
+   * "PDF로 저장"은 그 안에서 사용자가 인쇄 대상을 고르는 표준 브라우저 기능이다.
+   */
+  @media print {
+    body.phone-app {
+      background: #fff;
+    }
+
+    .site-header, .site-bottom-nav, .no-print,
+    .chapter-tab-strip, .chapter-toc-badge,
+    .home-hero-stamp, .home-hero-hint {
+      display: none !important;
+    }
+
+    .wrap, .wrap-narrow {
+      max-width: none !important;
+      padding: 0 !important;
+    }
+
+    .card {
+      background: #fff !important;
+      border: 1px solid #ccc !important;
+      box-shadow: none !important;
+      break-inside: avoid;
+    }
+
+    .chapter-section {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .btn, .chapter-retry-btn, .report-card-actions {
+      display: none !important;
+    }
   }

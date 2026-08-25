@@ -214,6 +214,11 @@ class ReportController extends Controller
                 'reportType' => $reportType,
                 'chaptersReady' => $chaptersReady,
                 'data' => null,
+                // (2026-08-25 추가, 로드맵 4번) ?print=1 로 들어왔을 때 자동으로 인쇄
+                // 대화상자를 띄울지 판단하는 데 씀 — 콘텐츠가 다 준비된 상태에서만
+                // 자동으로 띄운다(생성 중인데 인쇄창부터 뜨면 "준비 중" 화면만 인쇄돼서
+                // 의미가 없음). hasUsableContent()와 동일한 기준(챕터형은 chaptersReady).
+                'printReady' => $chaptersReady,
             ]);
         }
 
@@ -228,6 +233,7 @@ class ReportController extends Controller
             'reportType' => null,
             'chaptersReady' => false,
             'data' => $data,
+            'printReady' => $this->hasUsableContent($report),
         ]);
     }
 

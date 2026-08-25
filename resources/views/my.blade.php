@@ -72,8 +72,10 @@
       <h2>로그인</h2>
       <div class="hint" style="margin-bottom:16px;">카카오 또는 네이버 계정으로 간편하게 시작하세요.</div>
       <div class="login-gate-inline" style="justify-content:center;">
-        <a class="social-btn kakao" href="{{ route('auth.redirect', 'kakao') }}">카카오로 로그인</a>
-        <a class="social-btn naver" href="{{ route('auth.redirect', 'naver') }}">네이버로 로그인</a>
+        {{-- (2026-08-25 추가, 로드맵 1·2번) 마이페이지에서 로그인하면 로그인 상태가 반영된
+             마이페이지로 그대로 돌아오도록 redirect 파라미터를 붙인다. --}}
+        <a class="social-btn kakao" href="{{ route('auth.redirect', ['provider' => 'kakao', 'redirect' => '/my']) }}">카카오로 로그인</a>
+        <a class="social-btn naver" href="{{ route('auth.redirect', ['provider' => 'naver', 'redirect' => '/my']) }}">네이버로 로그인</a>
       </div>
     </div>
   @endauth

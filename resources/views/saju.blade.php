@@ -260,8 +260,11 @@
             수많은 연애 상담 사례를 학습한 AI 코치예요. 실시간으로 답변을 생성하고 대화 기록을 저장하기 때문에 로그인이 필요해요.<br>
             사주 계산·궁합·상담가이드는 로그인 없이 계속 무료로 쓰실 수 있어요.
           </p>
-          <a class="social-btn kakao" href="{{ route('auth.redirect', 'kakao') }}">카카오로 시작하기</a>
-          <a class="social-btn naver" href="{{ route('auth.redirect', 'naver') }}">네이버로 시작하기</a>
+          {{-- (2026-08-25 추가, 로드맵 1·2번) 로그인하고 돌아왔을 때 다시 연애 코치 탭으로
+               떨어지도록 redirect 파라미터를 붙인다. 이 게이트는 이 페이지(계산기, 항상
+               /calculator)의 연애 코치 탭 안에서만 보이므로 경로를 그대로 고정해도 된다. --}}
+          <a class="social-btn kakao" href="{{ route('auth.redirect', ['provider' => 'kakao', 'redirect' => '/calculator?tab=chat']) }}">카카오로 시작하기</a>
+          <a class="social-btn naver" href="{{ route('auth.redirect', ['provider' => 'naver', 'redirect' => '/calculator?tab=chat']) }}">네이버로 시작하기</a>
         </div>
       @else
         <div id="chat-error"></div>
