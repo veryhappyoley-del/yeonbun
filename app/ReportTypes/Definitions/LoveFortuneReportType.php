@@ -46,6 +46,17 @@ use App\ReportTypes\ReportTypeDefinition;
  *   - opposite_type/compatibility_match: 기존 문단들 중 명백히 대비되는 두 항목(초반
  *     매력 vs 장기 마찰, 잘 맞는 상대 vs 조심할 상대)을 compare_cards로 분리하고,
  *     나머지는 paragraphs로 유지(compatibility_match는 4문단 → compare 1쌍 + 문단 2개).
+ *
+ * (maxTokens 상향 — 2026-08-25) 사용자가 실사용 중 20챕터 중 1개가 계속 "재시도 필요"로
+ * 뜨는 걸 발견해서, 20개 중 요구 분량이 가장 많은 두 챕터의 여유를 더 키웠습니다:
+ * character_link(5문단, 2700→3400), relationship_advice(4개 항목×3필드, 2600→3200).
+ * ChapterGenerator::effectiveMaxTokens()가 max_tokens 도달로 인한 실패는 재시도마다
+ * 자동으로 예산을 올려주므로(1.6배→2.2배→... 최대 8000), 이 상향은 "첫 시도부터 잘릴
+ * 확률"을 낮추기 위한 것입니다 — 만약 실패 원인이 토큰 부족이 아니라 스키마 불일치
+ * (last_error='schema_mismatch'/'schema_type_mismatch')였다면 이 상향만으로는 해결되지
+ * 않으니, 상향 이후에도 같은 챕터가 계속 실패하면 report_chapters.last_error를 확인해야
+ * 합니다. max_tokens는 상한선일 뿐 실제 사용한 토큰만큼만 과금되므로, 이 상향 자체가
+ * 나머지 18개 챕터의 비용을 늘리지는 않습니다.
  */
 class LoveFortuneReportType implements ReportTypeDefinition
 {
@@ -108,7 +119,7 @@ class LoveFortuneReportType implements ReportTypeDefinition
                     "상황 → 장점으로 작용할 때 → 과해졌을 때 문제' 순서로 정확히 5문단(문단당 2~3문장, 각 140자 ".
                     '이내)으로 쓰세요. characterType이 없으면, 대신 일간 오행/음양만으로 유추할 수 있는 이 사람의 '.
                     '핵심 연애 캐릭터를 새로 정의해서 같은 구조로 쓰세요. '.$baseGuidance,
-                maxTokens: 2700,
+                maxTokens: 3400,
                 inputKeys: ['characterType', 'dayElement', 'dayYinYang', 'deep'],
                 blocks: ['paragraphs'],
             ),
@@ -423,7 +434,7 @@ class LoveFortuneReportType implements ReportTypeDefinition
                 promptGuidance: '이 사람이 실제로 자주 마주치는 연애 상황을 정확히 4가지 골라서(앞선 챕터들과 겹치지 '.
                     '않는 새로운 상황으로), 상황→문제→추천 행동 순서로 구체적인 조언을 쓰세요(각 필드 1~2문장, 140자 '.
                     "이내). 운명론적 확언 금지 — '~한 경향이 있습니다', '~해보는 것도 방법입니다' 식으로.",
-                maxTokens: 2600,
+                maxTokens: 3200,
                 inputKeys: ['dayElement', 'dayYinYang', 'deep'],
                 blocks: ['advice_cards'],
             ),
