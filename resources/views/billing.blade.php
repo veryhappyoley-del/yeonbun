@@ -9,6 +9,7 @@
   @if ($tossConfigured)
     <script src="https://js.tosspayments.com/v1/payment"></script>
   @endif
+  @include('partials.favicon')
 </head>
 <body class="phone-app has-bottom-nav">
 

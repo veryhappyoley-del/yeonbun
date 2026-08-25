@@ -54,6 +54,7 @@
   <title>사전 — 연록</title>
   <meta name="description" content="일간, 오행, 신강신약, 십신 등 명리학 기초 용어를 쉬운 말로 풀어드려요.">
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+  @include('partials.favicon')
 </head>
 <body class="phone-app has-bottom-nav">
 

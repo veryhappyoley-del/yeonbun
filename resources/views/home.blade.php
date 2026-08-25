@@ -32,6 +32,7 @@
   <meta name="description" content="사주팔자로 읽는 나의 연애 기질과 궁합, 그리고 내 사주 맥락을 아는 AI 연애 코치까지. 연록에서 무료로 시작해보세요.">
   <title>연록 — 사주로 읽는 나의 연애</title>
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+  @include('partials.favicon')
 </head>
 <body class="phone-app has-bottom-nav">
 

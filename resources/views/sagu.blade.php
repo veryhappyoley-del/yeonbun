@@ -63,6 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>사주 — 연록</title>
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+  @include('partials.favicon')
 </head>
 <body class="phone-app has-bottom-nav">
 

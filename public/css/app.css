@@ -2113,6 +2113,13 @@
     font-size: 1.4rem;
     color: var(--ink);
     text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+  .site-header-logo-img {
+    height: 28px;
+    width: auto;
+    display: block;
   }
   .site-header-coin {
     color: var(--gold);
