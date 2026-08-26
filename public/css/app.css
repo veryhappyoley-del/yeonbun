@@ -1955,6 +1955,8 @@
     line-height: 1.7;
   }
 
+  /* (2026-08-26 수정) 사업자 정보를 항목별 줄바꿈 목록으로 정리 + 개인정보 처리방침
+     링크/인스타그램 아이콘 행 추가. */
   .business-footer {
     margin-top: 14px;
     padding-top: 14px;
@@ -1963,7 +1965,17 @@
     color: var(--ink-faint);
   }
 
-  .business-footer p {
+  .business-footer-list {
+    list-style: none;
+    margin: 0 0 4px;
+    padding: 0;
+  }
+
+  .business-footer-list li {
+    margin: 0 0 2px;
+  }
+
+  .business-footer p, .business-footer-contact {
     margin: 0 0 4px;
   }
 
@@ -1973,6 +1985,23 @@
   }
 
   .business-footer a:hover { color: var(--seal); }
+
+  .business-footer-links {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .business-footer-links a {
+    text-decoration: underline;
+  }
+
+  .business-footer-instagram {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; }
@@ -2908,4 +2937,59 @@
     .btn, .chapter-retry-btn, .report-card-actions {
       display: none !important;
     }
+  }
+
+  /* ---------- 개인정보 처리방침 (2026-08-26 신설) ---------- */
+  .policy-meta {
+    color: var(--ink-faint);
+    font-size: 0.8rem;
+    margin: -6px 0 18px;
+  }
+
+  .policy-section {
+    margin-bottom: 22px;
+  }
+
+  .policy-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .policy-section h3 {
+    font-family: 'Song Myung', serif;
+    font-weight: 400;
+    font-size: 1.02rem;
+    margin: 0 0 8px;
+  }
+
+  .policy-section p {
+    margin: 0 0 8px;
+  }
+
+  .policy-section ul, .policy-section ol {
+    margin: 0 0 8px;
+    padding-left: 1.3em;
+  }
+
+  .policy-section li {
+    margin: 0 0 4px;
+  }
+
+  .policy-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+    margin: 0 0 8px;
+  }
+
+  .policy-table th, .policy-table td {
+    border: 1px solid var(--line);
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .policy-table th {
+    background: var(--paper-3);
+    font-weight: 600;
+    white-space: nowrap;
   }

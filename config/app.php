@@ -63,9 +63,17 @@ return [
     | will be used by the PHP date and date-time functions. The timezone
     | is set to "UTC" by default as it is suitable for most use cases.
     |
+    | (2026-08-26 수정) 라라벨 클라우드/로컬 서버 자체 시계는 UTC로 유지되지만(정상 —
+    | 클라우드 인프라는 보통 UTC로 돈다), 화면에 보여주는 시각은 이 값 기준으로 렌더링된다.
+    | 결제 완료 시각(billing/complete.blade.php), 리포트 생성 시각(reports/show,
+    | reports/index), 관리자 대시보드 결제/리포트 내역·상담 시각(admin/dashboard,
+    | admin/chats/show)이 전부 `$model->created_at->format(...)` / `->updated_at->format(...)`
+    | 처럼 Carbon 인스턴스를 그대로 포맷하는데, 이 Carbon 인스턴스가 이 timezone 설정을
+    | 따라간다. "UTC"였을 때는 한국 시각보다 9시간 느리게 표시됐다.
+    |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Asia/Seoul',
 
     /*
     |--------------------------------------------------------------------------

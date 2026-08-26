@@ -18,4 +18,8 @@ return [
     'address' => env('BUSINESS_ADDRESS'),
     'phone' => env('BUSINESS_PHONE'),
     'email' => env('BUSINESS_EMAIL'),
+
+    // (2026-08-26 추가) 푸터 인스타그램 아이콘이 가리킬 계정 URL. 비어있으면
+    // 아이콘 자체를 숨긴다(다른 사업자 정보 항목들과 동일한 "값 없으면 표시 안 함" 원칙).
+    'instagram' => env('BUSINESS_INSTAGRAM'),
 ];

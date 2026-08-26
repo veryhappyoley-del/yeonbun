@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\Controller;
+use App\Models\ChapterPreview;
 use App\Models\ChatSession;
 use App\Models\PageView;
 use App\Models\Payment;
@@ -20,6 +22,23 @@ class DashboardController extends Controller
     // 막대그래프에 찍을 수 있는 최대 일수. 조회 기간이 이보다 길면 최근 이 일수만큼만
     // 그래프에 표시하고(카드 숫자는 전체 기간 기준 그대로), 화면에 안내 문구를 띄웁니다.
     private const MAX_CHART_DAYS = 60;
+
+    // (2026-08-26 신설) 리포트 종류 라벨. 예전엔 admin/dashboard.blade.php 안에 배열
+    // 리터럴로 하드코딩돼 있어서 "상품별 매출" 집계용으로 재사용할 방법이 없었다 — 여기로
+    // 옮기고 뷰에도 그대로 넘겨서 한 군데만 고치면 되게 정리했다. single/compat은 레거시
+    // (schema_version=1) 타입, love_fortune/compatibility는 현재 판매 중인 챕터형 타입.
+    public const REPORT_TYPE_LABELS = [
+        'single' => '심층 연애 리포트',
+        'compat' => '프리미엄 궁합 리포트',
+        'love_fortune' => '연애운분석',
+        'compatibility' => '궁합분석',
+    ];
+
+    // 가입 경로(users.provider) 라벨. provider가 없는 행(과거 시드 데이터 등)은 "기타"로 묶는다.
+    public const PROVIDER_LABELS = [
+        'kakao' => '카카오',
+        'naver' => '네이버',
+    ];
 
     public function index(Request $request)
     {
@@ -45,6 +64,86 @@ class DashboardController extends Controller
         $visitorToSignup = $totalVisitors > 0 ? round($totalUsers / $totalVisitors * 100, 1) : 0;
         $signupToPaid = $totalUsers > 0 ? round($payingUsers / $totalUsers * 100, 1) : 0;
         $visitorToPaid = $totalVisitors > 0 ? round($payingUsers / $totalVisitors * 100, 1) : 0;
+
+        // (2026-08-26 추가) 객단가(ARPU) — 결제 고객 1인당 평균 결제 금액. 코인 충전과
+        // 리포트 결제를 모두 합친 $totalRevenue/$payingUsers 기준이라, 한 사람이 코인도
+        // 사고 리포트도 샀으면 그 둘을 합친 금액이 분자에 들어간다.
+        $arpu = $payingUsers > 0 ? (int) round($totalRevenue / $payingUsers) : 0;
+
+        // (2026-08-26 추가) 상품별 매출 분리 — 리포트는 종류별(연애운분석/궁합분석/레거시),
+        // 코인 충전은 플랜별(스몰/미디엄/라지팩)로 각각 건수·매출을 집계해서 하나의
+        // 목록으로 합친다. 매출 큰 순으로 정렬해서 어떤 상품이 실제로 잘 팔리는지 한눈에
+        // 보이게 한다.
+        $reportRevenueByType = Report::where('status', 'paid')
+            ->whereBetween('created_at', [$stDate, $edDate])
+            ->selectRaw('type, COUNT(*) as cnt, SUM(amount) as total')
+            ->groupBy('type')
+            ->get()
+            ->map(fn ($row) => [
+                'label' => self::REPORT_TYPE_LABELS[$row->type] ?? $row->type,
+                'count' => (int) $row->cnt,
+                'amount' => (int) $row->total,
+            ]);
+
+        $paymentRevenueByPlan = Payment::where('status', 'paid')
+            ->whereBetween('created_at', [$stDate, $edDate])
+            ->selectRaw('plan, COUNT(*) as cnt, SUM(amount) as total')
+            ->groupBy('plan')
+            ->get()
+            ->map(fn ($row) => [
+                'label' => (BillingController::PLANS[$row->plan]['label'] ?? $row->plan).' (코인)',
+                'count' => (int) $row->cnt,
+                'amount' => (int) $row->total,
+            ]);
+
+        $revenueByProduct = $reportRevenueByType->concat($paymentRevenueByPlan)
+            ->sortByDesc('amount')
+            ->values();
+
+        // (2026-08-26 추가) 결제 퍼널 이탈 현황 — 결제창까지는 갔지만(행이 생성됨) 승인이
+        // 안 끝난(pending) 건, 실패(failed)한 건을 완료(paid)와 나란히 보여준다. 코인 충전과
+        // 리포트 결제는 실패 원인이 다를 수 있어(리포트는 AI 생성 실패 재시도 포함) 따로 집계.
+        $reportFunnel = $this->funnelStats(Report::class, $stDate, $edDate);
+        $paymentFunnel = $this->funnelStats(Payment::class, $stDate, $edDate);
+
+        // (2026-08-26 추가) 가입 경로 비율 — 카카오/네이버 중 어느 쪽으로 더 많이
+        // 가입하는지. 두 소셜 로그인 버튼 노출 우선순위 등을 정할 때 참고할 수 있다.
+        $signupCountsByProvider = User::whereBetween('created_at', [$stDate, $edDate])
+            ->selectRaw('provider, COUNT(*) as cnt')
+            ->groupBy('provider')
+            ->pluck('cnt', 'provider');
+        $signupProviderTotal = (int) $signupCountsByProvider->sum();
+        $signupsByProvider = collect(self::PROVIDER_LABELS)
+            ->map(fn ($label, $key) => [
+                'label' => $label,
+                'count' => (int) ($signupCountsByProvider[$key] ?? 0),
+                'pct' => $signupProviderTotal > 0 ? round((($signupCountsByProvider[$key] ?? 0) / $signupProviderTotal) * 100, 1) : 0,
+            ])
+            ->values();
+        // 카카오/네이버 둘 다 아닌 값(과거 시드 데이터 등)이 있으면 "기타"로 한 줄 더
+        // 추가해서 퍼센트 합이 항상 100%가 되게 맞춘다.
+        $labeledProviderCount = $signupsByProvider->sum('count');
+        if ($signupProviderTotal > $labeledProviderCount) {
+            $otherCount = $signupProviderTotal - $labeledProviderCount;
+            $signupsByProvider->push([
+                'label' => '기타',
+                'count' => $otherCount,
+                'pct' => round($otherCount / $signupProviderTotal * 100, 1),
+            ]);
+        }
+
+        // (2026-08-26 추가) 무료 미리보기(챕터 프리뷰) 생성 현황 — 결제 전 무료로 보여주는
+        // 1개 챕터가 실제로 얼마나 만들어지는지, 그중 AI 생성이 실패하는 비율은 얼마나
+        // 되는지 본다. chapter_previews는 로그인 없이 익명으로 동작해서(입력값 해시로만
+        // 구분) 개별 사용자와 연결할 수 없어 전체 건수로만 집계된다.
+        $previewCountsByStatus = ChapterPreview::whereBetween('created_at', [$stDate, $edDate])
+            ->selectRaw('status, COUNT(*) as cnt')
+            ->groupBy('status')
+            ->pluck('cnt', 'status');
+        $previewTotal = (int) $previewCountsByStatus->sum();
+        $previewReady = (int) ($previewCountsByStatus['ready'] ?? 0);
+        $previewFailed = (int) ($previewCountsByStatus['failed'] ?? 0);
+        $previewPending = $previewTotal - $previewReady - $previewFailed;
 
         // 그래프용 일자 범위: 선택 기간이 너무 길면 최근 MAX_CHART_DAYS일만 자릅니다.
         $chartStart = $edDate->copy()->startOfDay()->subDays(self::MAX_CHART_DAYS - 1);
@@ -125,7 +224,45 @@ class DashboardController extends Controller
             'chartTruncated' => $chartTruncated,
             'recentPayments' => $recentPayments,
             'recentReports' => $recentReports,
+            'reportTypeLabels' => self::REPORT_TYPE_LABELS,
+            'planLabels' => BillingController::PLANS,
+            'arpu' => $arpu,
+            'revenueByProduct' => $revenueByProduct,
+            'reportFunnel' => $reportFunnel,
+            'paymentFunnel' => $paymentFunnel,
+            'signupsByProvider' => $signupsByProvider,
+            'previewTotal' => $previewTotal,
+            'previewReady' => $previewReady,
+            'previewFailed' => $previewFailed,
+            'previewPending' => $previewPending,
         ]);
+    }
+
+    /**
+     * status 컬럼을 가진 모델(Report/Payment)의 결제 퍼널 집계 — 기간 내 생성된
+     * 행을 status별로 세어서 시작(전체)/완료(paid)/대기중(pending)/실패(failed)/완료율을
+     * 반환합니다. Report와 Payment 둘 다 이 형태의 status 컬럼을 갖고 있어서 공용으로 씁니다.
+     *
+     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $modelClass
+     * @return array{started: int, paid: int, pending: int, failed: int, completion_rate: float}
+     */
+    private function funnelStats(string $modelClass, Carbon $stDate, Carbon $edDate): array
+    {
+        $counts = $modelClass::whereBetween('created_at', [$stDate, $edDate])
+            ->selectRaw('status, COUNT(*) as cnt')
+            ->groupBy('status')
+            ->pluck('cnt', 'status');
+
+        $started = (int) $counts->sum();
+        $paid = (int) ($counts['paid'] ?? 0);
+
+        return [
+            'started' => $started,
+            'paid' => $paid,
+            'pending' => (int) ($counts['pending'] ?? 0),
+            'failed' => (int) ($counts['failed'] ?? 0),
+            'completion_rate' => $started > 0 ? round($paid / $started * 100, 1) : 0,
+        ];
     }
 
     public function chats(Request $request)

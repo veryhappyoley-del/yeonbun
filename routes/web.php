@@ -37,6 +37,13 @@ Route::get('/dictionary', function () {
     return view('dictionary');
 })->name('dictionary.index');
 
+// (2026-08-26 신설) 개인정보 처리방침 — 푸터(partials.business-footer)에서 항상 링크되는
+// 정적 공개 페이지. 소셜 로그인으로 이메일을 수집하는 시점부터 필요하므로 사업자등록
+// 완료 여부(BUSINESS_REG_NO)와 무관하게 항상 접근 가능해야 해서 auth 미들웨어 밖에 둔다.
+Route::get('/privacy', function () {
+    return view('privacy');
+})->name('privacy.index');
+
 // (2026-08-24 신설) 하단 탭바 "마이"/"로그인" — 코인 잔액·충전·리포트함·로그아웃(로그인 시)
 // 또는 카카오/네이버 로그인 버튼(비로그인 시)을 한 곳에 모은 페이지. 비로그인 사용자도
 // 로그인 버튼을 보려면 이 페이지에 들어와야 하므로 auth 미들웨어 밖에 둔다.

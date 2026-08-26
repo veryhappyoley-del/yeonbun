@@ -30,7 +30,12 @@ class BillingController extends Controller
      * 코인 플랜. 가격은 예시 값이라 자유롭게 조정하면 됩니다.
      * credits = 지급할 메시지(AI 응답 1회 = 1개) 개수.
      */
-    private const PLANS = [
+    // (2026-08-26 수정) 관리자 대시보드(DashboardController)의 "상품별 매출" 집계가
+    // 플랜 라벨("스몰팩" 등)을 이 배열에서 그대로 가져다 쓸 수 있게 private → public으로
+    // 바꿨다. 라벨/가격을 두 군데(BillingController, DashboardController)에 따로
+    // 유지하면 나중에 가격을 바꿀 때 한쪽을 빠뜨리기 쉬워서, 원본 하나(여기)만 두고
+    // 참조하는 쪽으로 정리.
+    public const PLANS = [
         'small' => [
             'label' => '스몰팩',
             'credits' => 15,
