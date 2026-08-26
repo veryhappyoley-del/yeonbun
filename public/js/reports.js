@@ -364,7 +364,8 @@
     wrap.appendChild(previewBox);
 
     // 결제 전 "뭘 받는지" 미리 보여줘서 망설임을 줄이는 목차 미리보기(includeToc가 false가
-    // 아닐 때만 — 궁합분석은 이 함수 밖에서 별도로 렌더링) + FAQ.
+    // 아닐 때만 — 궁합분석/연애운분석 둘 다 이 함수 밖(app.js)에서 무료 티저 바로 아래에
+    // 별도로 렌더링하므로 여기선 건너뜀) + FAQ.
     // 콘텐츠 자체는 공개하지 않고 챕터 제목/티저(정적 데이터)와 자주 묻는 질문만 보여준다.
     if (includeToc) {
       var toc = buildTocPreview(typeKey);
@@ -375,10 +376,13 @@
     return wrap;
   }
 
+  // (2026-08-25 수정) 궁합분석과 같은 결제 유도 경험(무료 티저 → 목차 미리보기 → CTA)을
+  // 쓰도록 includeToc:false로 바꿨다 — 목차 미리보기는 이제 app.js의 renderSingleResult가
+  // 무료 티저(origin_profile) 바로 아래에서 별도로 렌더링한다.
   function attachSingleCTA(card, state) {
     var input = buildSingleInput(state);
     var title = (state.name ? state.name + '님의 ' : '') + '연애운분석';
-    card.appendChild(buildCTA('love_fortune', { input: input, title: title }, null, { showShare: false }));
+    card.appendChild(buildCTA('love_fortune', { input: input, title: title }, null, { showShare: false, includeToc: false }));
   }
 
   // (2026-08-24 수정) 궁합분석의 공유는 이제 별도 HTML 템플릿(buildCompatCardHTML,
@@ -581,6 +585,10 @@
     attachSingleCTA: attachSingleCTA,
     attachCompatCTA: attachCompatCTA,
     attachCardShare: attachCardShare,
-    buildTocPreview: buildTocPreview
+    buildTocPreview: buildTocPreview,
+    // (2026-08-25 추가) app.js의 renderSingleResult가 무료 티저(origin_profile)를 요청할 때
+    // 결제용과 똑같은 input을 쓰기 위해 노출 — 같은 input이어야 ChapterGenerator의 입력
+    // 해시가 일치해서 미리 본 내용이 결제 후 그대로 이어진다(궁합분석과 같은 보장).
+    buildSingleInput: buildSingleInput
   };
 })();

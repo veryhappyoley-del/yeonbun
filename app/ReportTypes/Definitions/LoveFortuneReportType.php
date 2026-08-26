@@ -57,6 +57,23 @@ use App\ReportTypes\ReportTypeDefinition;
  * 않으니, 상향 이후에도 같은 챕터가 계속 실패하면 report_chapters.last_error를 확인해야
  * 합니다. max_tokens는 상한선일 뿐 실제 사용한 토큰만큼만 과금되므로, 이 상향 자체가
  * 나머지 18개 챕터의 비용을 늘리지는 않습니다.
+ *
+ * (무료 티저 추가 — 2026-08-25) 사용자가 "나의 연애 사주 보기"와 "궁합 보기"의 결제
+ * 유도 방식이 다르다고 지적 — 궁합분석은 compat_overview 챕터를 결제 전에 실제로 미리
+ * 생성해서 일부는 공개/일부는 블러 처리하는데(App\ReportTypes\Definitions\
+ * CompatibilityReportType::$freePreviewChapterKey 참고), 연애운분석은 그 기능이 아예
+ * 없어서 "정보만 잔뜩 보여주고 버튼만 아래에 있는" 다른 느낌이었다. 두 리포트가 같은
+ * 결제 유도 경험을 갖도록 이 타입에도 freePreviewChapterKey를 추가한다.
+ *
+ * 챕터는 origin_profile(1번 챕터)을 골랐다 — 이유는 compat_overview를 고른 기준과
+ * 동일하게 ① 무료 화면(사주 명식/캐릭터 카드) 바로 다음에 자연스럽게 이어지는 챕터형
+ * 리포트의 "도입부"라 이탈 지점을 바로 해소해주고, ② 20챕터 중 비교적 저렴한 편(maxTokens
+ * 1600 — character_link의 3400보다 훨씬 쌈)이라 미리보기 비용 부담이 적고, ③ schema가
+ * paragraphs 3개뿐인 가장 단순한 형태라 compat_overview와 같은 프론트 렌더 로직
+ * (public/js/app.js의 renderTeaserContent, 원래 이름 startCompatPreview였다가 두 타입이
+ * 공유하도록 startChapterPreview로 일반화)을 그대로 재사용할 수 있다. concern_answer는
+ * 안 붙였다 — "나의 연애 사주" 폼에는 궁합 폼과 달리 "지금 가장 궁금한 것" 선택 UI가
+ * 없어서 물어볼 질문 자체가 없기 때문(나중에 그 폼이 생기면 그때 추가).
  */
 class LoveFortuneReportType implements ReportTypeDefinition
 {
@@ -68,6 +85,7 @@ class LoveFortuneReportType implements ReportTypeDefinition
             price: 27000,
             inputShape: InputShape::Self,
             chapters: self::chapters(),
+            freePreviewChapterKey: 'origin_profile',
         );
     }
 

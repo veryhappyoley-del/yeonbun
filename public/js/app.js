@@ -809,7 +809,39 @@
       window.YeonbunReports.attachCardShare(characterCard, out);
     }
 
-    // 4. "심층 연애 리포트 보기" 구매 CTA(공유 카드 버튼은 위 캐릭터 카드 공유로 대체돼서 여기선 뺌).
+    // 4. 무료 티저(origin_profile 실제 생성) — 궁합보기와 같은 결제 유도 방식으로 통일
+    //    (2026-08-25, 사용자 피드백: "궁합보기는 미리보기 블러형식인데 연애사주보기는
+    //    다르다"). 캐릭터 카드로 "내가 어떤 유형인지"를 이미 보여준 시점에, 그 뒤에 이어질
+    //    챕터형 리포트의 실제 도입부(1번 챕터) 일부를 진짜로 만들어서 보여준다. 결제용과
+    //    똑같은 buildSingleInput()을 써서, 미리 본 내용이 결제 후 그대로 이어지게 한다.
+    var teaserHost = el('div', { class: 'card' });
+    out.appendChild(teaserHost);
+    if (window.YeonbunReports) {
+      startChapterPreview(teaserHost, 'love_fortune', 'origin_profile', window.YeonbunReports.buildSingleInput(currentSajuA), {
+        label: '🔍 내 연애, 더 깊이 보면',
+        ctaMessage: '전체 내용은 연애운분석 리포트에서 이어져요 — 아래 20개 챕터도 함께 준비돼 있어요.'
+      });
+    }
+
+    // 5. 20개 챕터 목차 미리보기를 CTA 버튼보다 위(무료 티저 바로 아래)로 — 궁합보기와
+    //    같은 순서(정적 데이터라 비용 0원). .report-toc-toggle은 자체 배경이 없어서(테두리
+    //    구분선만 있음) 다른 섹션들처럼 .card로 감싸야 붕 뜬 느낌 없이 붙는다.
+    if (window.YeonbunReports && window.YeonbunReports.buildTocPreview) {
+      var singleToc = window.YeonbunReports.buildTocPreview('love_fortune');
+      if (singleToc) {
+        // 원래 .report-toc-toggle은 위에 다른 내용이 있는 컨테이너(예: buildCTA 안) 기준으로
+        // 구분선을 그리게 돼 있어서, 여기처럼 카드 안에 이것 하나만 있을 땐 그 구분선/여백을
+        // 없애서 카드 상단에 붕 뜬 줄이 보이지 않게 한다.
+        singleToc.style.marginTop = '0';
+        singleToc.style.paddingTop = '0';
+        singleToc.style.borderTop = 'none';
+        var tocCard = el('div', { class: 'card' });
+        tocCard.appendChild(singleToc);
+        out.appendChild(tocCard);
+      }
+    }
+
+    // 6. "심층 연애 리포트 보기" 구매 CTA(공유 카드 버튼은 위 캐릭터 카드 공유로 대체돼서 여기선 뺌).
     var ctaHost = el('div', { class: 'card' });
     out.appendChild(ctaHost);
     if (window.YeonbunReports) window.YeonbunReports.attachSingleCTA(ctaHost, currentSajuA);
@@ -869,9 +901,22 @@
 
     // 무료 티저(compat_overview 실제 생성) — 결제 안내를 클릭하기 전, 가장 궁금할 시점에
     // "점수가 왜 이렇게 나왔는지"에 대한 진짜 답 일부를 미리 보여준다.
-    var teaserHost = el('div', { class: 'compat-teaser' });
+    var teaserHost = el('div', { class: 'report-teaser' });
     card.appendChild(teaserHost);
-    startCompatPreview(teaserHost, compat, relationshipStage, primaryConcern, concernDetail);
+    startChapterPreview(teaserHost, 'compatibility', 'compat_overview', {
+      score: compat.score,
+      levelLabel: compat.levelLabel,
+      notes: compat.notes,
+      relation: compat.rel,
+      relationshipStage: relationshipStage || null,
+      primaryConcern: primaryConcern || null,
+      concernDetail: concernDetail || null
+    }, {
+      label: '🔍 이 궁합, 더 자세히 보면',
+      primaryConcern: primaryConcern,
+      concernDetail: concernDetail,
+      ctaMessage: '전체 내용은 궁합분석 리포트에서 이어져요 — 아래 12개 챕터도 함께 준비돼 있어요.'
+    });
 
     // 12개 챕터 목차 미리보기를 CTA 버튼보다 위(무료 티저 바로 아래)로 당겨서, 이탈하기
     // 전에 "이런 챕터가 더 있다"는 걸 보여준다(정적 데이터라 비용 0원).
@@ -907,37 +952,45 @@
     return meta ? meta.getAttribute('content') : '';
   }
 
+  // (2026-08-25까지는 궁합분석 전용 startCompatPreview였는데, 연애운분석도 같은 결제
+  // 유도 방식을 쓰도록 startChapterPreview로 일반화했다 — reportType/chapterKey/input을
+  // 인자로 받아서 어떤 (타입, 챕터) 조합이든 재사용 가능. label/ctaMessage/primaryConcern/
+  // concernDetail은 opts로 넘기고, 궁합분석만 쓰는 concern_answer 관련 인자는 love_fortune
+  // 쪽에선 그냥 안 넘기면 된다(renderTeaserContent가 이미 그 경우를 안전하게 처리함).
+
   // 로딩 상태를 스피너+스켈레톤으로 눈에 띄게 보여준다 — 아무 표시 없이 텍스트만 있으면
   // "멈춘 건가?" 싶다가 콘텐츠가 갑자기 튀어나와 놀라게 되므로, 지금 뭔가 만들어지고
   // 있다는 걸 계속 티내고 스켈레톤 높이로 레이아웃 점프도 줄인다.
-  function renderTeaserLoading(host) {
+  function renderTeaserLoading(host, label) {
     host.innerHTML = '';
-    host.appendChild(txt('div', 'compat-teaser-label', '🔍 이 궁합, 더 자세히 보면'));
+    host.appendChild(txt('div', 'report-teaser-label', label));
 
-    var loading = el('div', { class: 'compat-teaser-loading' });
+    var loading = el('div', { class: 'report-teaser-loading' });
 
-    var row = el('div', { class: 'compat-teaser-loading-row' });
-    row.appendChild(el('span', { class: 'compat-teaser-spinner' }));
+    var row = el('div', { class: 'report-teaser-loading-row' });
+    row.appendChild(el('span', { class: 'report-teaser-spinner' }));
     row.appendChild(el('span', null, [document.createTextNode('실제 리포트 내용 일부를 미리 만들고 있어요…')]));
     loading.appendChild(row);
 
-    var skeleton = el('div', { class: 'compat-teaser-skeleton' });
-    skeleton.appendChild(el('div', { class: 'compat-teaser-skel-block' }));
-    skeleton.appendChild(el('div', { class: 'compat-teaser-skel-line', style: 'width:100%' }));
-    skeleton.appendChild(el('div', { class: 'compat-teaser-skel-line', style: 'width:92%' }));
-    skeleton.appendChild(el('div', { class: 'compat-teaser-skel-line', style: 'width:68%' }));
+    var skeleton = el('div', { class: 'report-teaser-skeleton' });
+    skeleton.appendChild(el('div', { class: 'report-teaser-skel-block' }));
+    skeleton.appendChild(el('div', { class: 'report-teaser-skel-line', style: 'width:100%' }));
+    skeleton.appendChild(el('div', { class: 'report-teaser-skel-line', style: 'width:92%' }));
+    skeleton.appendChild(el('div', { class: 'report-teaser-skel-line', style: 'width:68%' }));
     loading.appendChild(skeleton);
 
     host.appendChild(loading);
   }
 
   // 결제 전에도 실제로 생성된 콘텐츠를 그대로 보여준다(더미 텍스트 아님) — 1문단은 완전
-  // 공개, 나머지는 진짜 텍스트를 그대로 둔 채 CSS로만 블러 처리(.compat-teaser-fade)해서
+  // 공개, 나머지는 진짜 텍스트를 그대로 둔 채 CSS로만 블러 처리(.report-teaser-fade)해서
   // "읽다가 흐려지는" 느낌을 준다. 결제 후에도 같은 내용이 그대로 이어지므로(GenerateReportJob
   // 이 같은 입력 해시로 이 캐시를 재사용) 미리 본 것과 다른 내용이 나올 걱정이 없다.
-  function renderTeaserContent(host, content, primaryConcern, concernDetail) {
+  // primaryConcern/concernDetail은 궁합분석에서만 쓰는 값 — 연애운분석 호출에서는 그냥
+  // null/undefined로 넘어오고, question이 안 잡히면 concern_answer 카드는 자동으로 생략된다.
+  function renderTeaserContent(host, content, label, primaryConcern, concernDetail, ctaMessage) {
     host.innerHTML = '';
-    host.appendChild(txt('div', 'compat-teaser-label', '🔍 이 궁합, 더 자세히 보면'));
+    host.appendChild(txt('div', 'report-teaser-label', label));
 
     var trimmedDetail = concernDetail ? String(concernDetail).trim() : '';
     var question = trimmedDetail !== '' ? trimmedDetail : (CONCERN_LABELS[primaryConcern] || null);
@@ -959,7 +1012,7 @@
       host.appendChild(txt('p', 'rpt-p', paragraphs[0]));
 
       if (paragraphs.length > 1) {
-        var fadeWrap = el('div', { class: 'compat-teaser-fade' });
+        var fadeWrap = el('div', { class: 'report-teaser-fade' });
         paragraphs.slice(1).forEach(function (p) {
           fadeWrap.appendChild(txt('p', 'rpt-p', p));
         });
@@ -968,7 +1021,7 @@
     }
 
     if (question && answer !== '' || paragraphs.length) {
-      host.appendChild(txt('div', 'compat-teaser-cta', '전체 내용은 궁합분석 리포트에서 이어져요 — 아래 12개 챕터도 함께 준비돼 있어요.'));
+      host.appendChild(txt('div', 'report-teaser-cta', ctaMessage));
     } else {
       // 콘텐츠가 비정상적으로 비어있으면(스키마 검증 실패 등) 조용히 숨김 — 무료 화면 흐름을 방해하지 않음.
       host.innerHTML = '';
@@ -980,23 +1033,26 @@
     host.innerHTML = '';
   }
 
-  // 결제 전 compat_overview 미리보기를 요청/폴링한다. 서버(ChapterPreviewController)가
-  // 같은 입력 해시로 이미 만든 게 있으면 API를 다시 안 부르고 바로 돌려주므로, 같은
-  // 조합을 다시 계산해도(예: 뒤로 갔다 다시 계산) 비용이 중복으로 들지 않는다.
-  function startCompatPreview(host, compat, relationshipStage, primaryConcern, concernDetail) {
+  // 결제 전 무료 티저 챕터 1개를 요청/폴링한다. 서버(ChapterPreviewController)가 같은
+  // 입력 해시로 이미 만든 게 있으면 API를 다시 안 부르고 바로 돌려주므로, 같은 조합을
+  // 다시 계산해도(예: 뒤로 갔다 다시 계산) 비용이 중복으로 들지 않는다.
+  //   reportType/chapterKey: ReportTypeRegistry에 등록된 타입 key와 그 타입의
+  //     freePreviewChapterKey(현재 compatibility→compat_overview, love_fortune→origin_profile).
+  //   input: 그 챕터의 inputKeys에 필요한 값을 담은 객체(더 많은 키가 있어도 서버가
+  //     ChapterGenerator::filterInput()에서 알아서 걸러내므로 안전).
+  //   opts.label: 티저 상단 라벨 문구. opts.ctaMessage: 콘텐츠가 실제로 나왔을 때 보여줄
+  //     CTA 안내문. opts.primaryConcern/opts.concernDetail: 궁합분석에서만 쓰는 "지금 가장
+  //     궁금한 것" 값(연애운분석은 안 넘기면 됨).
+  function startChapterPreview(host, reportType, chapterKey, input, opts) {
+    opts = opts || {};
+    var label = opts.label || '🔍 더 자세히 보면';
+    var ctaMessage = opts.ctaMessage || '';
+    var primaryConcern = opts.primaryConcern || null;
+    var concernDetail = opts.concernDetail || null;
+
     if (!window.YeonbunBilling || !window.YeonbunBilling.chapterPreviewsUrl) return;
 
-    renderTeaserLoading(host);
-
-    var input = {
-      score: compat.score,
-      levelLabel: compat.levelLabel,
-      notes: compat.notes,
-      relation: compat.rel,
-      relationshipStage: relationshipStage || null,
-      primaryConcern: primaryConcern || null,
-      concernDetail: concernDetail || null
-    };
+    renderTeaserLoading(host, label);
 
     var attempts = 0;
     var maxAttempts = 20; // 20 * 1.5초 ≈ 30초
@@ -1011,12 +1067,12 @@
           'Accept': 'application/json',
           'X-CSRF-TOKEN': csrfToken()
         },
-        body: JSON.stringify({ type: 'compatibility', chapter: 'compat_overview', input: input })
+        body: JSON.stringify({ type: reportType, chapter: chapterKey, input: input })
       })
         .then(function (res) { return res.ok ? res.json() : Promise.reject(new Error('preview request failed')); })
         .then(function (data) {
           if (data.status === 'ready') {
-            renderTeaserContent(host, data.content, primaryConcern, concernDetail);
+            renderTeaserContent(host, data.content, label, primaryConcern, concernDetail, ctaMessage);
             return;
           }
           if (data.status === 'failed' || attempts >= maxAttempts) {
