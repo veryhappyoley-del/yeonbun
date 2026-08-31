@@ -3001,6 +3001,10 @@
   /* 궁합 폼(A/B)에 새로 추가한 성별 토글 — 기존 .compat-stage-chip과 같은 문법(테두리 →
      채워진 색)을 재사용해서 새 CSS 언어를 만들지 않았다. 대운/세운 방향(순행/역행) 계산에
      성별이 꼭 필요해서 추가했다(public/js/luck-cycle.js 참고). */
+  /* (2026-08-31 보강) 선택 여부가 배경색 하나에만 의존하면 눈에 잘 안 띈다는 피드백을
+     반영해, 선택 시 체크마크(::before) + 굵어진 테두리 + 은은한 그림자까지 겹쳐서 표시한다
+     — 배경색 대비가 약한 화면/환경에서도 "선택됐다"는 게 분명히 보이도록 이중 삼중으로
+     신호를 준다. */
   .compat-gender-row { display: flex; gap: 8px; margin-top: 8px; }
   .compat-gender-chip {
     flex: 1;
@@ -3012,10 +3016,17 @@
     font-size: 0.84rem;
     font-weight: 600;
     cursor: pointer;
-    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
   }
   .compat-gender-chip:hover { border-color: var(--seal); }
-  .compat-gender-chip.active { background: var(--seal); border-color: var(--seal); color: #fbf3e9; }
+  .compat-gender-chip.active {
+    background: var(--seal);
+    border: 2px solid var(--seal);
+    color: #fbf3e9;
+    font-weight: 700;
+    box-shadow: 0 0 0 3px var(--seal-tint, rgba(139, 94, 131, 0.25));
+  }
+  .compat-gender-chip.active::before { content: "✓ "; }
 
   /* priority_timing 블록 — 실제로 계산된 대운/세운 우선순위 시기 카드. .rpt-advice-card와
      같은 종이 카드 문법을 그대로 쓰고, 순위 배지만 새로 추가했다. */
