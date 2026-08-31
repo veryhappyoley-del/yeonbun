@@ -122,28 +122,28 @@
     <h2>무엇을 볼 수 있나요</h2>
     <div class="sagu-card-list">
       <a class="sagu-card" href="{{ route('calculator.index', ['tab' => 'single']) }}">
-        <span class="sagu-card-badge" aria-hidden="true">사</span>
+        <span class="sagu-card-badge" aria-hidden="true">연</span>
         <div class="sagu-card-body">
           <div class="sagu-card-title">연애의 나침반</div>
           <div class="sagu-card-desc">나의 연애 성향과 사랑의 흐름.</div>
         </div>
         <span class="sagu-card-price">무료로 시작</span>
       </a>
-      <a class="sagu-card" href="{{ route('calculator.index', ['tab' => 'compat']) }}">
-        <span class="sagu-card-badge" aria-hidden="true">궁</span>
+      <a class="sagu-card" href="{{ route('calculator.index', ['tab' => 'reunion']) }}">
+        <span class="sagu-card-badge" aria-hidden="true">재</span>
         <div class="sagu-card-body">
-          <div class="sagu-card-title">우리의 연애온도</div>
-          <div class="sagu-card-desc">우리의 궁합과 관계의 방향.</div>
+          <div class="sagu-card-title">다시, 우리</div>
+          <div class="sagu-card-desc">재회 가능성과 다시 만나는 전략.</div>
         </div>
         <span class="sagu-card-price">무료로 시작</span>
       </a>
-      <a class="sagu-card" href="{{ route('calculator.index', ['tab' => 'chat']) }}">
-        <span class="sagu-card-badge" aria-hidden="true">코</span>
+      <a class="sagu-card" href="{{ route('calculator.index', ['tab' => 'unrequited']) }}">
+        <span class="sagu-card-badge" aria-hidden="true">짝</span>
         <div class="sagu-card-body">
-          <div class="sagu-card-title">연애 코치</div>
-          <div class="sagu-card-desc">내 사주 맥락을 아는 AI 코치와 실시간으로 연애 상담.</div>
+          <div class="sagu-card-title">짝사랑의 다음장</div>
+          <div class="sagu-card-desc">짝사랑을 연애로 바꾸는 인연의 흐름.</div>
         </div>
-        <span class="sagu-card-price">코인으로 상담</span>
+        <span class="sagu-card-price">무료로 시작</span>
       </a>
     </div>
     <div class="hint" style="margin-top:14px;">
