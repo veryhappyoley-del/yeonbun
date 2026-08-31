@@ -86,7 +86,7 @@ class LoveFortuneReportType implements ReportTypeDefinition
             // 맞춰 예전 라벨("연애운분석")을 새 브랜드명으로 바꿨다. key는 이미 판매/저장된
             // report_chapters와 맞물려 있어 그대로 유지하고 label(화면 노출용)만 바꾼다.
             label: '연애의 나침반',
-            price: 27000,
+            price: 8900,
             inputShape: InputShape::Self,
             chapters: self::chapters(),
             freePreviewChapterKey: 'origin_profile',

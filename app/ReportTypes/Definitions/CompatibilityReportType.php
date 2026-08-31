@@ -51,7 +51,7 @@ class CompatibilityReportType implements ReportTypeDefinition
             // (2026-08-31 수정) 브랜드 개편 — "궁합분석" → "우리의 연애온도"(4종 라인업의
             // 02번). key/report_chapters는 그대로 유지, 화면 노출용 label만 변경.
             label: '우리의 연애온도',
-            price: 21900,
+            price: 16900,
             inputShape: InputShape::TwoPerson,
             chapters: self::chapters(),
             // (2026-08-24 추가) 20챕터 전부를 결제 전 목차 미리보기에 보여주면 구매 결정에
