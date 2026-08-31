@@ -75,7 +75,7 @@
         @include('reports.partials.single-report', ['data' => $data, 'input' => $report->input ?? []])
       @elseif ($data && ! empty($data['data_conflict']))
         <div class="placeholder-note" style="border-color: var(--seal); margin-top:0;">
-          입력된 사주 정보에 확인이 필요한 부분이 있어서 이번 분석은 신뢰도가 낮게 나왔어요. 이미 결제는 완료된 상태이니, 생년월일시 정보를 다시 한 번 확인한 뒤 "나의 연애 사주"를 새로 계산해서 리포트를 다시 만들어보시는 걸 추천드려요.
+          입력된 사주 정보에 확인이 필요한 부분이 있어서 이번 분석은 신뢰도가 낮게 나왔어요. 이미 결제는 완료된 상태이니, 생년월일시 정보를 다시 한 번 확인한 뒤 "연애의 나침반"을 새로 계산해서 리포트를 다시 만들어보시는 걸 추천드려요.
         </div>
       @else
         @include('reports.partials.pending', ['report' => $report])

@@ -22,9 +22,13 @@ final class ReportTypeRegistry
     private const DEFINITIONS = [
         \App\ReportTypes\Definitions\LoveFortuneReportType::class,
         \App\ReportTypes\Definitions\CompatibilityReportType::class,
-        // (2026-08-31 추가) "짝사랑 탈출" — 대운/세운 계산이 필요한 유일한 타입이라
+        // (2026-08-31 추가) "짝사랑의 다음 장" — 대운/세운 계산이 필요한 유일한 타입이라
         // public/js/luck-cycle.js가 계산한 timingCandidates를 입력으로 함께 보낸다.
         \App\ReportTypes\Definitions\UnrequitedLoveReportType::class,
+        // (2026-08-31 추가) "다시, 우리" — InputShape::TwoPersonWithHistory를 처음 실제로
+        // 쓰는 타입. luck-cycle.js의 monthlyCalendar()로 12개월 전체를 계산해서 입력으로
+        // 함께 보낸다(재회 타이밍 캘린더 챕터).
+        \App\ReportTypes\Definitions\ReunionStrategyReportType::class,
     ];
 
     /**

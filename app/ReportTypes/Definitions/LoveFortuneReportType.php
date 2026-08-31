@@ -81,7 +81,11 @@ class LoveFortuneReportType implements ReportTypeDefinition
     {
         return new ReportType(
             key: 'love_fortune',
-            label: '연애운분석',
+            // (2026-08-31 수정) "연애 재회 사주" 4종 브랜드 개편 — 사용자가 지정한 번호
+            // 순서(01. 연애의 나침반/02. 우리의 연애온도/03. 짝사랑의 다음 장/04. 다시, 우리)에
+            // 맞춰 예전 라벨("연애운분석")을 새 브랜드명으로 바꿨다. key는 이미 판매/저장된
+            // report_chapters와 맞물려 있어 그대로 유지하고 label(화면 노출용)만 바꾼다.
+            label: '연애의 나침반',
             price: 27000,
             inputShape: InputShape::Self,
             chapters: self::chapters(),

@@ -21,15 +21,18 @@
           'key' => 'love',
           'label' => '연애 · 재회',
           'available' => true,
+          // (2026-08-31 수정) "연애 재회 사주" 4종 브랜드 개편 — 01.연애의 나침반/
+          // 02.우리의 연애온도/03.짝사랑의 다음 장/04.다시, 우리 순서로 이름을 바꾸고,
+          // 그동안 comingSoon placeholder였던 04번을 실제 구매 가능한 카드로 바꿨다.
           'items' => [
               [
-                  'badge' => '사', 'title' => '나의 연애 사주',
-                  'desc' => '내 사주로 보는 연애 기질과 성향, 그리고 앞으로의 연애운.',
+                  'badge' => '나', 'title' => '연애의 나침반',
+                  'desc' => '나의 연애 성향과 사랑의 흐름.',
                   'href' => route('calculator.index', ['tab' => 'single']), 'price' => '무료로 시작',
               ],
               [
-                  'badge' => '궁', 'title' => '궁합 보기',
-                  'desc' => '두 사람의 사주로 보는 궁합 점수와 관계의 흐름.',
+                  'badge' => '온', 'title' => '우리의 연애온도',
+                  'desc' => '우리의 궁합과 관계의 방향.',
                   'href' => route('calculator.index', ['tab' => 'compat']), 'price' => '무료로 시작',
               ],
               [
@@ -41,14 +44,17 @@
                   // (2026-08-31 추가) App\ReportTypes\Definitions\UnrequitedLoveReportType.
                   // 궁합 보기와 같은 폼(#panel-compat)을 그대로 재사용하는 탭이라
                   // ?tab=unrequited로 들어간다(public/js/app.js 참고).
-                  'badge' => '짝', 'title' => '짝사랑 탈출',
-                  'desc' => '지금 이 마음, 발전 가능성부터 다가갈 시기까지 짚어주는 리포트.',
+                  'badge' => '짝', 'title' => '짝사랑의 다음 장',
+                  'desc' => '짝사랑을 연애로 바꾸는 인연의 흐름.',
                   'href' => route('calculator.index', ['tab' => 'unrequited']), 'price' => '23,900원',
               ],
               [
-                  'badge' => '재', 'title' => '재회 전략',
-                  'desc' => '헤어진 관계를 다시 잇고 싶을 때를 위한 전략 리포트.',
-                  'comingSoon' => true,
+                  // (2026-08-31 추가) App\ReportTypes\Definitions\ReunionStrategyReportType.
+                  // 이별 히스토리(교제기간/이별시점/이별주도자/이별사유)까지 받아야 해서
+                  // 궁합 폼을 재사용하지 않고 별도 패널(#panel-reunion)을 새로 만들었다.
+                  'badge' => '재', 'title' => '다시, 우리',
+                  'desc' => '재회 가능성과 다시 만나는 전략.',
+                  'href' => route('calculator.index', ['tab' => 'reunion']), 'price' => '25,900원',
               ],
           ],
       ],

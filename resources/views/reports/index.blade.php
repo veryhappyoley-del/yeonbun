@@ -26,7 +26,7 @@
 
   <div class="card">
     @if ($reports->isEmpty())
-      <div class="empty-state">아직 구매한 리포트가 없어요. '나의 연애 사주'나 '궁합 보기' 결과 화면 아래에서 프리미엄 리포트를 만나보세요.</div>
+      <div class="empty-state">아직 구매한 리포트가 없어요. '연애의 나침반'이나 '우리의 연애온도' 결과 화면 아래에서 프리미엄 리포트를 만나보세요.</div>
     @else
       {{-- (2026-08-25 추가, 로드맵 4번) 예전엔 관리자 상담 세션 목록용 컴포넌트
            (.chat-session-row)를 그대로 재활용해서 제목/부제 두 줄짜리 밋밋한 리스트였다.
@@ -40,14 +40,22 @@
             $isCompat = in_array($report->type, ['compat', 'compatibility'], true);
             // (2026-08-31 추가) App\ReportTypes\Definitions\UnrequitedLoveReportType.
             $isUnrequited = $report->type === 'unrequited_love';
+            // (2026-08-31 추가) App\ReportTypes\Definitions\ReunionStrategyReportType.
+            $isReunion = $report->type === 'reunion_strategy';
             $title = (string) ($report->title ?? '');
             $subjectHtml = null;
 
-            if ($isCompat && preg_match('/^(.+?)\s*×\s*(.+?)\s*궁합분석$/u', $title, $m)) {
+            // (2026-08-31 수정) 브랜드 개편으로 title 접미사가 바뀌었다(궁합분석→연애온도,
+            // 짝사랑 탈출→짝사랑의 다음 장, 연애운분석→연애의 나침반). 이미 예전 이름으로
+            // 저장된 title도 계속 예쁘게 파싱되도록 정규식에 신/구 접미사를 |로 함께 둔다
+            // (신규 구매는 항상 새 이름으로 저장되지만, 기존 구매 고객의 title은 그대로다).
+            if ($isCompat && preg_match('/^(.+?)\s*×\s*(.+?)\s*(?:궁합분석|연애온도)$/u', $title, $m)) {
                 $subjectHtml = e(trim($m[1])).' <span class="report-card-heart">♥</span> '.e(trim($m[2]));
-            } elseif ($isUnrequited && preg_match('/^(.+?)님의\s*(.+?)\s*짝사랑 탈출$/u', $title, $m)) {
+            } elseif ($isUnrequited && preg_match('/^(.+?)님의\s*(.+?)\s*(?:짝사랑 탈출|짝사랑의 다음 장)$/u', $title, $m)) {
                 $subjectHtml = e(trim($m[1])).' <span class="report-card-heart">♥</span> '.e(trim($m[2]));
-            } elseif (! $isCompat && ! $isUnrequited && preg_match('/^(.+?)님의\s*연애운분석$/u', $title, $m)) {
+            } elseif ($isReunion && preg_match('/^(.+?)\s*×\s*(.+?)\s*다시, 우리$/u', $title, $m)) {
+                $subjectHtml = e(trim($m[1])).' <span class="report-card-heart">♥</span> '.e(trim($m[2]));
+            } elseif (! $isCompat && ! $isUnrequited && ! $isReunion && preg_match('/^(.+?)님의\s*(?:연애운분석|연애의 나침반)$/u', $title, $m)) {
                 $subjectHtml = e(trim($m[1])).'님';
             }
 
@@ -57,8 +65,8 @@
           @endphp
           <div class="report-card">
             <div class="report-card-top">
-              <div class="report-card-icon" aria-hidden="true">{{ $isCompat ? '💞' : ($isUnrequited ? '💔' : '💘') }}</div>
-              <span class="badge {{ $isCompat ? 'indigo' : ($isUnrequited ? 'gold' : 'seal') }}">{{ $label }}</span>
+              <div class="report-card-icon" aria-hidden="true">{{ $isCompat ? '💞' : ($isUnrequited ? '💔' : ($isReunion ? '🔄' : '💘')) }}</div>
+              <span class="badge {{ $isCompat ? 'indigo' : ($isUnrequited ? 'gold' : ($isReunion ? 'water' : 'seal')) }}">{{ $label }}</span>
             </div>
             <div class="report-card-subject">{!! $subjectHtml !!}</div>
             <div class="report-card-meta">

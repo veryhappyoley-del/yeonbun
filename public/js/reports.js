@@ -22,11 +22,15 @@
   // 생성)은 챕터형 20챕터 상품인 love_fortune(연애운분석)/compatibility(궁합분석)로 대체됐습니다
   // — 새 구매는 이 두 타입키만 쓰고, 예전 타입키는 이미 구매한 고객의 리포트를 보여줄 때만
   // 서버 쪽(ReportController)에서 계속 인식합니다.
+  // (2026-08-31 수정) 브랜드 개편 — 01.연애의 나침반/02.우리의 연애온도/03.짝사랑의 다음 장/
+  // 04.다시, 우리 순서로 라벨을 바꿨다. 키(love_fortune/compatibility/unrequited_love/
+  // reunion_strategy)는 그대로라 결제·리포트 조회 로직은 전혀 영향받지 않는다.
   var TYPE_INFO = {
-    love_fortune: { label: '연애운분석', priceLabel: '27,000원' },
-    compatibility: { label: '궁합분석', priceLabel: '21,900원' },
-    // (2026-08-31 추가) "짝사랑 탈출" — App\ReportTypes\Definitions\UnrequitedLoveReportType.
-    unrequited_love: { label: '짝사랑 탈출', priceLabel: '23,900원' }
+    love_fortune: { label: '연애의 나침반', priceLabel: '27,000원' },
+    compatibility: { label: '우리의 연애온도', priceLabel: '21,900원' },
+    unrequited_love: { label: '짝사랑의 다음 장', priceLabel: '23,900원' },
+    // (2026-08-31 추가) "다시, 우리" — App\ReportTypes\Definitions\ReunionStrategyReportType.
+    reunion_strategy: { label: '다시, 우리', priceLabel: '25,900원' }
   };
 
   // 결제 전 "이걸 사면 뭘 받는지" 안내용 — 목차 미리보기(제목+티저, 잠금 아이콘)와 FAQ.
@@ -340,6 +344,37 @@
     };
   }
 
+  // (2026-08-31 추가) "다시, 우리"(재회 전략) — personA/personB + 궁합 요약까지는
+  // buildTwoPersonInput/buildUnrequitedInput과 같지만, 이 리포트만의 두 가지가 더 있다:
+  //   1) 이별 히스토리(교제기간/이별시점/이별주도자/이별사유) — App\ReportTypes\InputShape::
+  //      TwoPersonWithHistory가 문서화하던 값을 이번에 처음 실제로 채운다.
+  //   2) monthlyCalendar/topWindows — "재회 타이밍 캘린더" 챕터용으로 실제 계산된 12개월
+  //      대운/세운 점수(public/js/luck-cycle.js의 monthlyCalendar()). moving_timing
+  //      챕터와 같은 이유로, AI가 날짜/등급을 지어내지 못하게 여기서 결정론적으로 미리
+  //      계산해서 넘긴다 — app.js의 renderReunionResult가 계산해서 state에 실어 보낸다.
+  function buildReunionInput(state) {
+    var a = state.sajuA, b = state.sajuB, c = state.compat;
+    return {
+      personA: personSummary(a, state.nameA),
+      personB: personSummary(b, state.nameB),
+      score: c.score,
+      levelLabel: c.levelLabel,
+      notes: c.notes,
+      relation: c.rel,
+      genderA: state.genderA || null,
+      genderB: state.genderB || null,
+      datingDuration: state.datingDuration || null,
+      breakupTiming: state.breakupTiming || null,
+      breakupInitiator: state.breakupInitiator || null,
+      breakupReason: state.breakupReason || null,
+      breakupReasonDetail: state.breakupReasonDetail || null,
+      // 결정론적으로 계산된 값 — AI는 여기 없는 시기/등급을 새로 지어내면 안 된다
+      // (App\ReportTypes\Definitions\ReunionStrategyReportType의 reunion_calendar 챕터 참고).
+      monthlyCalendar: state.monthlyCalendar || [],
+      topWindows: state.topWindows || []
+    };
+  }
+
   /* ============================================================
    * CTA(구매 버튼, 필요하면 공유카드 버튼도 함께) 렌더링
    * ============================================================ */
@@ -405,7 +440,7 @@
   // 무료 티저(origin_profile) 바로 아래에서 별도로 렌더링한다.
   function attachSingleCTA(card, state) {
     var input = buildSingleInput(state);
-    var title = (state.name ? state.name + '님의 ' : '') + '연애운분석';
+    var title = (state.name ? state.name + '님의 ' : '') + '연애의 나침반';
     card.appendChild(buildCTA('love_fortune', { input: input, title: title }, null, { showShare: false, includeToc: false }));
   }
 
@@ -418,7 +453,7 @@
   // (app.js)에서 무료 티저 바로 아래에 별도로 렌더링하므로 includeToc:false.
   function attachCompatCTA(card, state) {
     var input = buildTwoPersonInput(state);
-    var title = (state.nameA || 'A') + ' × ' + (state.nameB || 'B') + ' 궁합분석';
+    var title = (state.nameA || 'A') + ' × ' + (state.nameB || 'B') + ' 연애온도';
     card.appendChild(buildCTA('compatibility', { input: input, title: title }, null, { showShare: false, includeToc: false }));
   }
 
@@ -426,8 +461,15 @@
   // → 구매 버튼)을 그대로 쓰되 typeKey/제목만 다르다.
   function attachUnrequitedCTA(card, state) {
     var input = buildUnrequitedInput(state);
-    var title = (state.nameA || '나') + '님의 ' + (state.nameB || '그 사람') + ' 짝사랑 탈출';
+    var title = (state.nameA || '나') + '님의 ' + (state.nameB || '그 사람') + ' 짝사랑의 다음 장';
     card.appendChild(buildCTA('unrequited_love', { input: input, title: title }, null, { showShare: false, includeToc: false }));
+  }
+
+  // (2026-08-31 추가) "다시, 우리" — attachUnrequitedCTA와 같은 틀, typeKey/제목/input만 다르다.
+  function attachReunionCTA(card, state) {
+    var input = buildReunionInput(state);
+    var title = (state.nameA || '나') + ' × ' + (state.nameB || '그 사람') + ' 다시, 우리';
+    card.appendChild(buildCTA('reunion_strategy', { input: input, title: title }, null, { showShare: false, includeToc: false }));
   }
 
   function truncate(str, n) {
@@ -617,6 +659,7 @@
     attachSingleCTA: attachSingleCTA,
     attachCompatCTA: attachCompatCTA,
     attachUnrequitedCTA: attachUnrequitedCTA,
+    attachReunionCTA: attachReunionCTA,
     attachCardShare: attachCardShare,
     buildTocPreview: buildTocPreview,
     // (2026-08-25 추가) app.js의 renderSingleResult가 무료 티저(origin_profile)를 요청할 때

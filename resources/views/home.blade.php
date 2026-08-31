@@ -124,16 +124,16 @@
       <a class="sagu-card" href="{{ route('calculator.index', ['tab' => 'single']) }}">
         <span class="sagu-card-badge" aria-hidden="true">사</span>
         <div class="sagu-card-body">
-          <div class="sagu-card-title">나의 연애 사주</div>
-          <div class="sagu-card-desc">내 사주로 보는 연애 기질과 성향, 그리고 앞으로의 연애운.</div>
+          <div class="sagu-card-title">연애의 나침반</div>
+          <div class="sagu-card-desc">나의 연애 성향과 사랑의 흐름.</div>
         </div>
         <span class="sagu-card-price">무료로 시작</span>
       </a>
       <a class="sagu-card" href="{{ route('calculator.index', ['tab' => 'compat']) }}">
         <span class="sagu-card-badge" aria-hidden="true">궁</span>
         <div class="sagu-card-body">
-          <div class="sagu-card-title">궁합 보기</div>
-          <div class="sagu-card-desc">두 사람의 사주로 보는 궁합 점수와 관계의 흐름.</div>
+          <div class="sagu-card-title">우리의 연애온도</div>
+          <div class="sagu-card-desc">우리의 궁합과 관계의 방향.</div>
         </div>
         <span class="sagu-card-price">무료로 시작</span>
       </a>

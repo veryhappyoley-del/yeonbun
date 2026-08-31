@@ -9,7 +9,7 @@
   // 그대로 재사용하기 때문이다(display:none이어도 JS로 호출하는 .click()은 정상 동작함).
   // 값이 없거나 모르는 값이면(직접 "/calculator"로 들어온 경우 등) 평소대로 다 보여준다.
   $incomingTab = request()->query('tab');
-  $hideCalcChrome = in_array($incomingTab, ['single', 'compat', 'unrequited', 'chat'], true);
+  $hideCalcChrome = in_array($incomingTab, ['single', 'compat', 'unrequited', 'reunion', 'chat'], true);
 
   // 결제 CTA(public/js/reports.js buildCTA)의 "목차 미리보기"에 쓸 정적 데이터.
   // AI 콘텐츠는 전혀 포함하지 않고, 이미 코드로 정의된 챕터 제목/티저만 그대로 노출한다.
@@ -71,12 +71,15 @@
   </div>
 
   <div class="tabs @if ($hideCalcChrome) is-hidden @endif" role="tablist">
-    <button class="tab-btn active" data-tab="single" role="tab">나의 연애 사주</button>
-    <button class="tab-btn" data-tab="compat" role="tab">궁합 보기</button>
-    {{-- (2026-08-31 추가) "짝사랑 탈출" — #panel-compat을 그대로 재사용하는 탭이라
+    <button class="tab-btn active" data-tab="single" role="tab">연애의 나침반</button>
+    <button class="tab-btn" data-tab="compat" role="tab">우리의 연애온도</button>
+    {{-- (2026-08-31 추가) "짝사랑의 다음 장" — #panel-compat을 그대로 재사용하는 탭이라
          data-tab 값은 unrequited지만 실제로 보여줄 패널은 app.js의 탭 클릭 핸들러가
          panel-compat으로 매핑한다. --}}
-    <button class="tab-btn" data-tab="unrequited" role="tab">짝사랑 탈출</button>
+    <button class="tab-btn" data-tab="unrequited" role="tab">짝사랑의 다음 장</button>
+    {{-- (2026-08-31 추가) "다시, 우리" — 이별 히스토리 필드가 필요해서 궁합 폼을 재사용하지
+         않고 별도 패널(#panel-reunion)로 뒀다. --}}
+    <button class="tab-btn" data-tab="reunion" role="tab">다시, 우리</button>
     <button class="tab-btn" data-tab="chat" role="tab">연애 코치</button>
   </div>
   <!-- "고민 상담 가이드" 탭은 상단 메뉴에서 뺐습니다(완성도가 낮다는 판단, 2026-08-24).
@@ -87,7 +90,7 @@
        (.panel은 기본 display:none, .active가 있어야만 보임 — app.css 참고). -->
 
 
-  <!-- ===================== 1. 나의 연애 사주 ===================== -->
+  <!-- ===================== 1. 연애의 나침반 ===================== -->
   <section class="panel active" id="panel-single">
     <div class="card">
       <h2>생년월일시 입력</h2>
@@ -138,7 +141,7 @@
     <div id="s-result"></div>
   </section>
 
-  <!-- ===================== 2. 궁합 보기 ===================== -->
+  <!-- ===================== 2. 우리의 연애온도 ===================== -->
   <section class="panel" id="panel-compat">
     <div class="card">
       <h2>두 사람의 생년월일시</h2>
@@ -255,23 +258,145 @@
         <input type="text" id="c-concern-detail" maxlength="40" placeholder="예) 이 사람과 결혼까지 갈 수 있을까요">
       </div>
 
-      <button class="btn btn-center" id="c-submit" style="margin-top:18px;">궁합 보기</button>
+      <button class="btn btn-center" id="c-submit" style="margin-top:18px;">우리의 연애온도 보기</button>
     </div>
 
     <div id="c-result"></div>
   </section>
 
-  {{-- (2026-08-31 신설) "짝사랑 탈출" 탭은 #panel-compat과 완전히 같은 입력 폼을 그대로
+  {{-- (2026-08-31 신설) "짝사랑의 다음 장" 탭은 #panel-compat과 완전히 같은 입력 폼을 그대로
        재사용한다(사용자 요청: "틀은 현재랑 동일하게"). 별도 패널을 새로 만들지 않고,
        public/js/app.js의 탭 전환 로직이 data-tab="unrequited" 버튼을 눌렀을 때 이
        #panel-compat을 보여주면서 모드만 바꾼다 — 폼 필드/궁합 계산 로직을 중복으로
        유지하지 않기 위함(예: 나중에 궁합 계산 방식이 바뀌면 한 곳만 고치면 됨). --}}
 
-  <!-- ===================== 3. 고민 상담 가이드 (룰 기반, 즉시 응답) ===================== -->
+  {{-- ===================== 3. 다시, 우리 (재회 전략) =====================
+       (2026-08-31 신설) 이 탭은 #panel-compat을 재사용하지 않고 별도 패널을 새로 만들었다
+       — 이유는 App\ReportTypes\Definitions\ReunionStrategyReportType이 필요로 하는 이별
+       히스토리(교제기간/이별시점/이별주도자/이별사유)가 궁합/짝사랑 탈출 폼의 "현재
+       관계"/"지금 가장 궁금한 것" 선택지와는 완전히 다른 질문이라, 기존 폼에 억지로
+       끼워 넣으면(모드별로 숨기는 섹션이 이미 2개나 있는 #panel-compat에 4개를 더
+       추가) 유지보수가 오히려 더 어려워질 것으로 판단했다. 대신 필드 id 패턴(r-*)과
+       마크업 구조(compat-people/compat-person 등)는 #panel-compat과 최대한 동일하게
+       맞춰서, public/js/app.js의 계산 로직(calcSaju 호출부)만 새로 짧게 추가하면 되게
+       했다. --}}
+  <section class="panel" id="panel-reunion">
+    <div class="card">
+      <h2>두 사람의 생년월일시</h2>
+      <div class="hint" style="margin-bottom:14px;">재회 전략은 두 사람의 궁합과 이별 히스토리를 함께 봐야 정확해져요. 시간을 몰라도 계산은 되지만, 알면 더 정확해요.</div>
+      <div class="compat-people">
+        <div class="compat-person compat-person-a">
+          <div class="compat-person-label">A</div>
+          <label for="r-name-a">이름</label>
+          <input type="text" id="r-name-a" placeholder="나">
+          <div class="field-row" style="margin-top:8px;">
+            <div><label for="r-year-a">해</label><input type="number" id="r-year-a" placeholder="1995"></div>
+            <div><label for="r-month-a">월</label><input type="number" id="r-month-a" placeholder="5"></div>
+            <div><label for="r-day-a">일</label><input type="number" id="r-day-a" placeholder="15"></div>
+          </div>
+          <div class="field-row" style="margin-top:8px;">
+            <div><label for="r-hour-a">시</label><input type="number" id="r-hour-a" placeholder="14" min="0" max="23"></div>
+            <div><label for="r-minute-a">분</label><input type="number" id="r-minute-a" placeholder="30" min="0" max="59"></div>
+          </div>
+          <div class="check-row">
+            <input type="checkbox" id="r-unknown-a">
+            <label for="r-unknown-a" style="margin:0;">태어난 시간을 몰라요</label>
+          </div>
+          <div class="field-row" style="margin-top:8px;">
+            <div><label for="r-sido-a">출생 지역 — 시/도</label><select id="r-sido-a"></select></div>
+            <div><label for="r-sigungu-a">시/군/구</label><select id="r-sigungu-a"></select></div>
+          </div>
+          {{-- 대운/세운 방향(순행/역행) 계산에 성별이 필요하다(public/js/luck-cycle.js 참고).
+               이 패널은 짝사랑 탈출과 달리 항상 성별을 받는 전용 패널이라 숨김 토글이 없다. --}}
+          <label style="margin-top:8px; display:block;">성별</label>
+          <div class="compat-gender-row" id="r-gender-row-a">
+            <button type="button" class="compat-gender-chip" data-gender="male">남자</button>
+            <button type="button" class="compat-gender-chip" data-gender="female">여자</button>
+          </div>
+        </div>
+        <div class="compat-person compat-person-b">
+          <div class="compat-person-label">B</div>
+          <label for="r-name-b">이름</label>
+          <input type="text" id="r-name-b" placeholder="전 연인">
+          <div class="field-row" style="margin-top:8px;">
+            <div><label for="r-year-b">해</label><input type="number" id="r-year-b" placeholder="1996"></div>
+            <div><label for="r-month-b">월</label><input type="number" id="r-month-b" placeholder="9"></div>
+            <div><label for="r-day-b">일</label><input type="number" id="r-day-b" placeholder="2"></div>
+          </div>
+          <div class="field-row" style="margin-top:8px;">
+            <div><label for="r-hour-b">시</label><input type="number" id="r-hour-b" placeholder="9" min="0" max="23"></div>
+            <div><label for="r-minute-b">분</label><input type="number" id="r-minute-b" placeholder="0" min="0" max="59"></div>
+          </div>
+          <div class="check-row">
+            <input type="checkbox" id="r-unknown-b">
+            <label for="r-unknown-b" style="margin:0;">태어난 시간을 몰라요</label>
+          </div>
+          <div class="field-row" style="margin-top:8px;">
+            <div><label for="r-sido-b">출생 지역 — 시/도</label><select id="r-sido-b"></select></div>
+            <div><label for="r-sigungu-b">시/군/구</label><select id="r-sigungu-b"></select></div>
+          </div>
+          <label style="margin-top:8px; display:block;">성별</label>
+          <div class="compat-gender-row" id="r-gender-row-b">
+            <button type="button" class="compat-gender-chip" data-gender="male">남자</button>
+            <button type="button" class="compat-gender-chip" data-gender="female">여자</button>
+          </div>
+        </div>
+      </div>
+
+      {{-- (2026-08-31 신설) 이별 히스토리 — App\ReportTypes\InputShape::TwoPersonWithHistory가
+           문서로만 존재하던 값을 이번에 처음 실제로 채운다. 4개 다 필수는 아니지만(선택
+           안 해도 분석 자체는 진행됨), 비어 있으면 그 챕터의 프롬프트가 일반적인 안내로
+           대체된다. --}}
+      <div class="compat-context">
+        <div class="compat-context-label">두 사람은 얼마나 만났나요?</div>
+        <div class="compat-stage-row" id="r-duration-row">
+          <button type="button" class="compat-stage-chip" data-duration="under_3m">3개월 미만</button>
+          <button type="button" class="compat-stage-chip" data-duration="3m_1y">3개월~1년</button>
+          <button type="button" class="compat-stage-chip" data-duration="1y_3y">1~3년</button>
+          <button type="button" class="compat-stage-chip" data-duration="over_3y">3년 이상</button>
+        </div>
+
+        <div class="compat-context-label">헤어진 지 얼마나 됐나요?</div>
+        <div class="compat-stage-row" id="r-timing-row">
+          <button type="button" class="compat-stage-chip" data-timing="under_1m">1개월 이내</button>
+          <button type="button" class="compat-stage-chip" data-timing="1m_3m">1~3개월</button>
+          <button type="button" class="compat-stage-chip" data-timing="3m_6m">3~6개월</button>
+          <button type="button" class="compat-stage-chip" data-timing="6m_1y">6개월~1년</button>
+          <button type="button" class="compat-stage-chip" data-timing="over_1y">1년 이상</button>
+        </div>
+
+        <div class="compat-context-label">이별을 먼저 말한 사람은?</div>
+        <div class="compat-stage-row" id="r-initiator-row">
+          <button type="button" class="compat-stage-chip" data-initiator="me">나</button>
+          <button type="button" class="compat-stage-chip" data-initiator="partner">상대방</button>
+          <button type="button" class="compat-stage-chip" data-initiator="mutual">합의·자연스럽게</button>
+        </div>
+
+        <div class="compat-context-label">이별 사유는 무엇에 가까운가요?</div>
+        <div class="compat-stage-row" id="r-reason-row">
+          <button type="button" class="compat-stage-chip" data-reason="personality">성격 차이</button>
+          <button type="button" class="compat-stage-chip" data-reason="conflict">다툼·갈등</button>
+          <button type="button" class="compat-stage-chip" data-reason="distance">거리(장거리 등)</button>
+          <button type="button" class="compat-stage-chip" data-reason="external">외부 요인(가족·주변)</button>
+          <button type="button" class="compat-stage-chip" data-reason="fatigue">권태기</button>
+          <button type="button" class="compat-stage-chip" data-reason="other">기타</button>
+        </div>
+
+        <label for="r-reason-detail" class="compat-context-label">더 자세한 사연이 있다면 <span class="compat-context-optional">(선택, 최대 60자)</span></label>
+        <input type="text" id="r-reason-detail" maxlength="60" placeholder="예) 서로 바빠지면서 연락이 뜸해졌어요">
+      </div>
+
+      <button class="btn btn-center" id="r-submit" style="margin-top:18px;">다시, 우리 분석 시작</button>
+    </div>
+
+    <div id="r-result"></div>
+  </section>
+
+  <!-- ===================== 4. 고민 상담 가이드 (룰 기반, 즉시 응답) ===================== -->
   <section class="panel" id="panel-guide">
     <div class="card">
       <h2>지금 어떤 고민이 있나요?</h2>
-      <div class="hint" style="margin-bottom:14px;">먼저 '나의 연애 사주' 탭에서 풀이를 한 번 보면, 아래 조언이 내 사주 기질에 맞춰 나와요. 아직 안 봤다면 일반적인 조언으로 보여드릴게요.</div>
+      <div class="hint" style="margin-bottom:14px;">먼저 '연애의 나침반' 탭에서 풀이를 한 번 보면, 아래 조언이 내 사주 기질에 맞춰 나와요. 아직 안 봤다면 일반적인 조언으로 보여드릴게요.</div>
       <div class="concern-grid" id="concern-grid"></div>
       <div id="guide-result"></div>
 
@@ -281,7 +406,7 @@
     </div>
   </section>
 
-  <!-- ===================== 4. 연애 코치 (실시간 AI 호출, 로그인 필요) ===================== -->
+  <!-- ===================== 5. 연애 코치 (실시간 AI 호출, 로그인 필요) ===================== -->
   <section class="panel" id="panel-chat">
     <div class="card">
       <h2>연애 코치와 이야기하기</h2>
@@ -305,7 +430,7 @@
 
         <div id="chat-setup">
           <p class="hint" style="margin-bottom:14px;">
-            '나의 연애 사주' 탭에서 먼저 사주를 계산해 두면, 코치가 그 정보를 참고해서 훨씬 더 맞춤화된 조언을 줘요.
+            '연애의 나침반' 탭에서 먼저 사주를 계산해 두면, 코치가 그 정보를 참고해서 훨씬 더 맞춤화된 조언을 줘요.
             (계산해 두지 않아도 일반 상담으로 바로 시작할 수 있어요.)
           </p>
           <button class="btn btn-center" id="chat-start">새 상담 시작하기</button>
@@ -329,7 +454,7 @@
   </section>
 
   <footer>
-    사주는 태양의 움직임(절기)을 기준으로 한 전통 역법 계산에 성격 해석을 더한 것으로, 통계적·문화적 참고용 콘텐츠입니다. 연애의 실제 결과를 보장하지 않으며, 중요한 결정은 실제 관계와 대화를 통해 내리시길 권해요. 절기 경계(입춘 등) 부근 출생은 계산이 실제 만세력과 몇 분 이내로 달라질 수 있어요. 연애 코치 탭과 프리미엄 리포트(연애운분석·궁합분석)의 답변은 고전 명리학 이론을 폭넓게 학습한 AI가 생성한 것으로, 전문 심리상담이나 법률·의료 조언을 대체하지 않아요.
+    사주는 태양의 움직임(절기)을 기준으로 한 전통 역법 계산에 성격 해석을 더한 것으로, 통계적·문화적 참고용 콘텐츠입니다. 연애의 실제 결과를 보장하지 않으며, 중요한 결정은 실제 관계와 대화를 통해 내리시길 권해요. 절기 경계(입춘 등) 부근 출생은 계산이 실제 만세력과 몇 분 이내로 달라질 수 있어요. 연애 코치 탭과 프리미엄 리포트(연애의 나침반·우리의 연애온도·짝사랑의 다음 장·다시, 우리)의 답변은 고전 명리학 이론을 폭넓게 학습한 AI가 생성한 것으로, 전문 심리상담이나 법률·의료 조언을 대체하지 않아요.
     @include('partials.business-footer')
   </footer>
 </div>

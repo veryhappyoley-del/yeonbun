@@ -47,7 +47,9 @@ class UnrequitedLoveReportType implements ReportTypeDefinition
     {
         return new ReportType(
             key: 'unrequited_love',
-            label: '짝사랑 탈출',
+            // (2026-08-31 수정) 브랜드 개편 — "짝사랑 탈출" → "짝사랑의 다음 장"(4종
+            // 라인업의 03번). key/report_chapters는 그대로 유지, 화면 노출용 label만 변경.
+            label: '짝사랑의 다음 장',
             price: 23900,
             inputShape: InputShape::TwoPerson,
             chapters: self::chapters(),

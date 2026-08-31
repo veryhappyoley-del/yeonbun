@@ -693,6 +693,9 @@
   }
   .badge.seal { background: var(--seal-tint); color: var(--seal); }
   .badge.indigo { background: var(--indigo-tint); color: var(--indigo); }
+  /* (2026-08-31 추가) "다시, 우리" 리포트 카드 배지 — 기존 seal/indigo/기본(gold)과
+     구별되는 4번째 색이 필요해서 --water를 새로 재활용했다. */
+  .badge.water { background: color-mix(in srgb, var(--water) 14%, transparent); color: var(--water); }
 
   /* ---------- 궁합 ---------- */
   /* (2026-08-24 수정) 예전엔 뷰포트 560px 이상에서 A/B를 좌우 2열로 배치했는데, 18단계에서
@@ -3051,3 +3054,37 @@
   .rpt-verdict--stop { background: color-mix(in srgb, var(--fire) 14%, transparent); border-color: var(--fire); }
   .rpt-verdict--neutral { background: var(--paper); }
   .rpt-verdict-badge { font-family: 'Gowun Dodum', sans-serif; font-weight: 700; font-size: 1.02rem; color: var(--ink); }
+
+  /* ---------- "다시, 우리"(재회 전략) 리포트 (2026-08-31 추가) ---------- */
+  /* contact_action 블록의 5번째/6번째 판정(가벼운 연락/진심을 전달할 시점)은 기존
+     go/slow/stop/neutral 4색으로는 표현이 부족해서 2개만 새로 더했다(나머지 3개는
+     verdict_badge와 그대로 공유). */
+  .rpt-verdict--info { background: color-mix(in srgb, var(--water) 14%, transparent); border-color: var(--water); }
+  .rpt-verdict--warm { background: var(--seal-tint); border-color: var(--seal); }
+
+  /* reunion_calendar_table 블록 — 실제로 계산된 12개월 재회 타이밍을 표 형태로. 별점은
+     luck-cycle.js가 이미 문자로 만들어 주므로(⭐☆) 여기선 줄바꿈 없는 한 줄 표로만
+     배치한다. */
+  .rpt-calendar { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
+  .rpt-calendar-row {
+    display: grid;
+    grid-template-columns: 84px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.84rem;
+  }
+  .rpt-calendar-row:last-child { border-bottom: none; }
+  .rpt-calendar-period { font-weight: 700; color: var(--ink); }
+  .rpt-calendar-stars { letter-spacing: 1px; }
+  .rpt-calendar-action {
+    justify-self: end;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--seal);
+    background: var(--seal-tint);
+    border-radius: 999px;
+    padding: 3px 10px;
+    white-space: nowrap;
+  }

@@ -825,7 +825,7 @@
     if (window.YeonbunReports) {
       startChapterPreview(teaserHost, 'love_fortune', 'origin_profile', window.YeonbunReports.buildSingleInput(currentSajuA), {
         label: '🔍 내 연애, 더 깊이 보면',
-        ctaMessage: '전체 내용은 연애운분석 리포트에서 이어져요 — 아래 20개 챕터도 함께 준비돼 있어요.'
+        ctaMessage: '전체 내용은 연애의 나침반 리포트에서 이어져요 — 아래 20개 챕터도 함께 준비돼 있어요.'
       });
     }
 
@@ -921,7 +921,7 @@
       label: '🔍 이 궁합, 더 자세히 보면',
       primaryConcern: primaryConcern,
       concernDetail: concernDetail,
-      ctaMessage: '전체 내용은 궁합분석 리포트에서 이어져요 — 아래 12개 챕터도 함께 준비돼 있어요.'
+      ctaMessage: '전체 내용은 우리의 연애온도 리포트에서 이어져요 — 아래 12개 챕터도 함께 준비돼 있어요.'
     });
 
     // 12개 챕터 목차 미리보기를 CTA 버튼보다 위(무료 티저 바로 아래)로 당겨서, 이탈하기
@@ -989,7 +989,7 @@
       relation: compat.rel
     }, {
       label: '🔍 이 짝사랑, 더 자세히 보면',
-      ctaMessage: '전체 내용은 짝사랑 탈출 리포트에서 이어져요 — 언제·어떻게 다가가야 할지까지 담겨 있어요.'
+      ctaMessage: '전체 내용은 짝사랑의 다음 장 리포트에서 이어져요 — 언제·어떻게 다가가야 할지까지 담겨 있어요.'
     });
 
     if (window.YeonbunReports && window.YeonbunReports.buildTocPreview) {
@@ -1014,6 +1014,90 @@
     };
 
     if (window.YeonbunReports) window.YeonbunReports.attachUnrequitedCTA(card, currentCompat);
+  }
+
+  // (2026-08-31 신설) "다시, 우리"(재회 전략) — renderUnrequitedResult와 같은 이유로
+  // 별도 함수로 뒀다(기존 궁합 계산 로직을 안 건드리기 위함). 짝사랑 탈출과 다른 점 2가지:
+  //   1) 이별 히스토리(history 인자 — datingDuration/breakupTiming/breakupInitiator/
+  //      breakupReason/breakupReasonDetail)를 함께 받아서 그대로 currentCompat에 싣는다.
+  //   2) 대운/세운 타이밍을 top3만(priorityWindows) 계산하는 짝사랑 탈출과 달리, 12개월
+  //      전체(monthlyCalendar)를 계산해서 "재회 타이밍 캘린더" 챕터가 화면에 표 전체를
+  //      그대로 그릴 수 있게 한다(public/js/luck-cycle.js 참고).
+  function renderReunionResult(sajuA, sajuB, nameA, nameB, genderA, genderB, history) {
+    var out = document.getElementById('r-result');
+    out.innerHTML = '';
+    var compat = calcCompat(sajuA, sajuB);
+    var card = el('div', { class: 'card' });
+    card.appendChild(txt('h2', '', (nameA || '나') + ' × ' + (nameB || '그 사람')));
+
+    var scoreWrap = el('div', { class: 'compat-score-wrap' });
+    scoreWrap.appendChild(el('div', { class: 'compat-score' }, [
+      document.createTextNode(String(compat.score)), el('span', {}, [document.createTextNode('/100')])
+    ]));
+    scoreWrap.appendChild(txt('div', 'compat-score-label', compat.levelLabel));
+    card.appendChild(scoreWrap);
+
+    var badgeRow = el('div', { class: 'badge-row' }, [
+      el('span', { class: 'badge indigo' }, [document.createTextNode((nameA || '나') + ' 일간: ' + sajuA.day.stem + '(' + sajuA.day.stemElement + ')')]),
+      el('span', { class: 'badge indigo' }, [document.createTextNode((nameB || '그 사람') + ' 일간: ' + sajuB.day.stem + '(' + sajuB.day.stemElement + ')')])
+    ]);
+    card.appendChild(badgeRow);
+
+    var result = el('div', { class: 'result-block' });
+    compat.notes.forEach(function (n, i) {
+      result.appendChild(block('풀이 ' + (i + 1), n));
+    });
+    card.appendChild(result);
+
+    // 무료 티저 — relationship_status 챕터 하나만 실제로 생성해서 일부 공개/일부 블러.
+    // ReunionStrategyReportType이 이 챕터의 inputKeys를 score/notes/relation/이별
+    // 히스토리 스칼라 값만으로 한정해 뒀기 때문에(personA/personB 전체 deep 데이터 불필요),
+    // 여기서도 그 값들만 보내면 된다(unrequited_overview 티저와 같은 설계).
+    var teaserHost = el('div', { class: 'report-teaser' });
+    card.appendChild(teaserHost);
+    startChapterPreview(teaserHost, 'reunion_strategy', 'relationship_status', {
+      score: compat.score,
+      levelLabel: compat.levelLabel,
+      notes: compat.notes,
+      relation: compat.rel,
+      datingDuration: history.datingDuration,
+      breakupTiming: history.breakupTiming,
+      breakupInitiator: history.breakupInitiator,
+      breakupReason: history.breakupReason,
+      breakupReasonDetail: history.breakupReasonDetail
+    }, {
+      label: '🔍 우리 관계, 더 자세히 보면',
+      ctaMessage: '전체 내용은 다시, 우리 리포트에서 이어져요 — 타이밍 캘린더부터 30일 행동 계획까지 담겨 있어요.'
+    });
+
+    if (window.YeonbunReports && window.YeonbunReports.buildTocPreview) {
+      var toc = window.YeonbunReports.buildTocPreview('reunion_strategy');
+      if (toc) card.appendChild(toc);
+    }
+
+    out.appendChild(card);
+
+    // 대운/세운 기반 12개월 전체 캘린더 + 그중 상위 3개 시기 — personA(나) 기준으로
+    // 미리 계산해서 결제 후 챕터 생성 프롬프트에 "실제 후보"로 넘긴다(AI가 날짜/등급을
+    // 지어내지 못하게 하기 위함, App\ReportTypes\Definitions\ReunionStrategyReportType의
+    // reunion_calendar 챕터 참고).
+    var monthlyCalendar = [], topWindows = [];
+    if (window.YeonbunLuckCycle) {
+      var calendar = window.YeonbunLuckCycle.monthlyCalendar(sajuA, genderA, { monthsAhead: 12 }) || {};
+      monthlyCalendar = calendar.months || [];
+      topWindows = calendar.topWindows || [];
+    }
+
+    currentCompat = {
+      sajuA: sajuA, sajuB: sajuB, nameA: nameA, nameB: nameB, compat: compat,
+      genderA: genderA || null, genderB: genderB || null,
+      datingDuration: history.datingDuration, breakupTiming: history.breakupTiming,
+      breakupInitiator: history.breakupInitiator, breakupReason: history.breakupReason,
+      breakupReasonDetail: history.breakupReasonDetail,
+      monthlyCalendar: monthlyCalendar, topWindows: topWindows
+    };
+
+    if (window.YeonbunReports) window.YeonbunReports.attachReunionCTA(card, currentCompat);
   }
 
   // "지금 가장 궁금한 것" 카드(4종)의 한글 라벨 — resources/views/reports/partials/blocks/
@@ -1185,7 +1269,7 @@
     card.appendChild(header);
 
     var elKey = currentSajuA ? currentSajuA.love.dayEl : null;
-    var patternText = elKey ? CONCERN_PATTERN[concernKey][elKey] : '아직 사주 정보가 없어서 일반적인 경향으로 안내할게요. ‘나의 연애 사주’ 탭에서 먼저 풀이를 보면 이 부분이 더 맞춤화돼요.';
+    var patternText = elKey ? CONCERN_PATTERN[concernKey][elKey] : '아직 사주 정보가 없어서 일반적인 경향으로 안내할게요. ‘연애의 나침반’ 탭에서 먼저 풀이를 보면 이 부분이 더 맞춤화돼요.';
     var nameLabel = currentSajuA && currentSajuA.name ? currentSajuA.name + '님은' : '지금';
 
     card.appendChild(txt('div', 'field-label', '상황 요약'));
@@ -1261,6 +1345,9 @@
     wireSidoSigungu('s-sido', 's-sigungu');
     wireSidoSigungu('c-sido-a', 'c-sigungu-a');
     wireSidoSigungu('c-sido-b', 'c-sigungu-b');
+    // (2026-08-31 추가) "다시, 우리" 전용 패널(#panel-reunion)의 A/B 출생 지역 셀렉트.
+    wireSidoSigungu('r-sido-a', 'r-sigungu-a');
+    wireSidoSigungu('r-sido-b', 'r-sigungu-b');
   }
 
   function readSingleForm() {
@@ -1296,7 +1383,7 @@
     if (relSection) relSection.classList.toggle('is-hidden', isUnrequited);
     if (genderA) genderA.classList.toggle('is-hidden', !isUnrequited);
     if (genderB) genderB.classList.toggle('is-hidden', !isUnrequited);
-    if (submitBtn) submitBtn.textContent = isUnrequited ? '짝사랑 탈출 분석 시작' : '궁합 보기';
+    if (submitBtn) submitBtn.textContent = isUnrequited ? '짝사랑의 다음 장 분석 시작' : '우리의 연애온도 보기';
   }
 
   function bindEvents() {
@@ -1304,6 +1391,16 @@
     wireSingleSelect('c-concern-grid', 'compat-concern-card');
     wireSingleSelect('c-gender-row-a', 'compat-gender-chip');
     wireSingleSelect('c-gender-row-b', 'compat-gender-chip');
+
+    // (2026-08-31 추가) "다시, 우리" 전용 패널(#panel-reunion)의 성별/이별 히스토리
+    // 선택지 — 컨테이너 id가 서로 달라서 같은 아이템 클래스(compat-gender-chip/
+    // compat-stage-chip)를 재사용해도 wireSingleSelect가 컨테이너별로 독립적으로 동작한다.
+    wireSingleSelect('r-gender-row-a', 'compat-gender-chip');
+    wireSingleSelect('r-gender-row-b', 'compat-gender-chip');
+    wireSingleSelect('r-duration-row', 'compat-stage-chip');
+    wireSingleSelect('r-timing-row', 'compat-stage-chip');
+    wireSingleSelect('r-initiator-row', 'compat-stage-chip');
+    wireSingleSelect('r-reason-row', 'compat-stage-chip');
 
     // (2026-08-31 수정) "짝사랑 탈출"(data-tab="unrequited")은 별도 패널이 없고
     // #panel-compat을 그대로 재사용한다 — PANEL_OVERRIDE로 실제 보여줄 패널 id만
@@ -1383,6 +1480,66 @@
 
       renderCompatResult(sajuA, sajuB, nameA, nameB, stage, concern, concernDetail);
     });
+
+    // (2026-08-31 추가) "다시, 우리"(재회 전략) 전용 패널(#panel-reunion) 제출 —
+    // #panel-compat과 완전히 별도의 폼이라 필드/검증 로직을 그대로 복제했다(성별 둘 다
+    // 필수 — 대운/세운 방향 계산에 A/B 모두 필요하다).
+    var reunionSubmit = document.getElementById('r-submit');
+    if (reunionSubmit) {
+      reunionSubmit.addEventListener('click', function () {
+        var ya = parseInt(document.getElementById('r-year-a').value, 10);
+        var ma = parseInt(document.getElementById('r-month-a').value, 10);
+        var da = parseInt(document.getElementById('r-day-a').value, 10);
+        var ha = parseInt(document.getElementById('r-hour-a').value, 10);
+        var na = parseInt(document.getElementById('r-minute-a').value, 10);
+        var unknownA = document.getElementById('r-unknown-a').checked || isNaN(ha) || isNaN(na);
+        var lonA = parseFloat(document.getElementById('r-sigungu-a').value);
+
+        var yb = parseInt(document.getElementById('r-year-b').value, 10);
+        var mb = parseInt(document.getElementById('r-month-b').value, 10);
+        var db = parseInt(document.getElementById('r-day-b').value, 10);
+        var hb = parseInt(document.getElementById('r-hour-b').value, 10);
+        var nb = parseInt(document.getElementById('r-minute-b').value, 10);
+        var unknownB = document.getElementById('r-unknown-b').checked || isNaN(hb) || isNaN(nb);
+        var lonB = parseFloat(document.getElementById('r-sigungu-b').value);
+
+        var nameA = document.getElementById('r-name-a').value.trim();
+        var nameB = document.getElementById('r-name-b').value.trim();
+
+        if (!ya || !ma || !da || !yb || !mb || !db) {
+          alert('두 사람의 생년월일을 모두 입력해 주세요.');
+          return;
+        }
+
+        var genderA = getSingleSelectValue('r-gender-row-a', 'gender');
+        var genderB = getSingleSelectValue('r-gender-row-b', 'gender');
+        if (!genderA) {
+          alert('대운/세운 계산에 필요해서, 나(A)의 성별을 먼저 선택해 주세요.');
+          return;
+        }
+
+        var sajuA = calcSaju({
+          year: ya, month: ma, day: da,
+          hour: unknownA ? null : ha, minute: unknownA ? null : na,
+          unknownTime: unknownA, longitude: isNaN(lonA) ? 126.978 : lonA
+        });
+        var sajuB = calcSaju({
+          year: yb, month: mb, day: db,
+          hour: unknownB ? null : hb, minute: unknownB ? null : nb,
+          unknownTime: unknownB, longitude: isNaN(lonB) ? 126.978 : lonB
+        });
+
+        var history = {
+          datingDuration: getSingleSelectValue('r-duration-row', 'duration'),
+          breakupTiming: getSingleSelectValue('r-timing-row', 'timing'),
+          breakupInitiator: getSingleSelectValue('r-initiator-row', 'initiator'),
+          breakupReason: getSingleSelectValue('r-reason-row', 'reason'),
+          breakupReasonDetail: document.getElementById('r-reason-detail').value.trim().slice(0, 60)
+        };
+
+        renderReunionResult(sajuA, sajuB, nameA, nameB, genderA, genderB, history);
+      });
+    }
 
     var grid = document.getElementById('concern-grid');
     CONCERNS.forEach(function (c) {

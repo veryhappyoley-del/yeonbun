@@ -27,13 +27,17 @@ class DashboardController extends Controller
     // 리터럴로 하드코딩돼 있어서 "상품별 매출" 집계용으로 재사용할 방법이 없었다 — 여기로
     // 옮기고 뷰에도 그대로 넘겨서 한 군데만 고치면 되게 정리했다. single/compat은 레거시
     // (schema_version=1) 타입, love_fortune/compatibility는 현재 판매 중인 챕터형 타입.
+    // (2026-08-31 수정) 브랜드 개편 — 01.연애의 나침반/02.우리의 연애온도/03.짝사랑의
+    // 다음 장/04.다시, 우리 순서로 라벨을 바꾸고 4번째 타입을 추가했다. 배열 키(DB에
+    // 저장된 reports.type)는 그대로라 기존 집계 쿼리에는 영향이 없다.
     public const REPORT_TYPE_LABELS = [
         'single' => '심층 연애 리포트',
         'compat' => '프리미엄 궁합 리포트',
-        'love_fortune' => '연애운분석',
-        'compatibility' => '궁합분석',
-        // (2026-08-31 추가) App\ReportTypes\Definitions\UnrequitedLoveReportType.
-        'unrequited_love' => '짝사랑 탈출',
+        'love_fortune' => '연애의 나침반',
+        'compatibility' => '우리의 연애온도',
+        'unrequited_love' => '짝사랑의 다음 장',
+        // (2026-08-31 추가) App\ReportTypes\Definitions\ReunionStrategyReportType.
+        'reunion_strategy' => '다시, 우리',
     ];
 
     // 가입 경로(users.provider) 라벨. provider가 없는 행(과거 시드 데이터 등)은 "기타"로 묶는다.

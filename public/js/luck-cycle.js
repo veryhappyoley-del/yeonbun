@@ -179,6 +179,84 @@
 
   var MONTH_LABELS = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
 
+  var YUKHAP_PAIRS = [['자', '축'], ['인', '해'], ['묘', '술'], ['진', '유'], ['사', '신'], ['오', '미']];
+  function isYukhapWithDay(dayBranch, branch) {
+    return YUKHAP_PAIRS.some(function (pair) {
+      return (pair[0] === dayBranch && pair[1] === branch) || (pair[1] === dayBranch && pair[0] === branch);
+    });
+  }
+
+  // (2026-08-31 리팩터) priorityWindows가 원래 자기 안에서만 쓰던 "한 달 채점" 로직을
+  // 별도 함수로 뽑아냈다 — "다시, 우리"(재회 전략) 리포트의 monthlyCalendar()도 똑같은
+  // 채점 기준(십신 가중치+용신+육합)을 그대로 써야 해서, 로직을 두 곳에 복사해 두면
+  // 나중에 한쪽만 고치는 실수가 생기기 쉽기 때문이다. 점수 산식 자체는 예전
+  // priorityWindows 안에 있던 것과 완전히 동일하다(순서/가중치 전혀 안 바꿈) — 기존
+  // "짝사랑 탈출" 리포트가 이미 이 계산 결과를 쓰고 있어서 값이 달라지면 안 된다.
+  function scoreMonth(dayEl, dayYY, dayBranch, usefulGod, gender, y, m) {
+    var E = window.YeonbunSajuEngine;
+    var mp = monthPillar(y, m);
+    var stemTenGod = E.tenGodOf(dayEl, dayYY, mp.stemElement, mp.stemYinYang);
+    var branchTenGod = E.tenGodOf(dayEl, dayYY, mp.branchElement, mp.branchYinYang);
+
+    var score = 0;
+    var reasons = [];
+
+    var stemW = romanceWeight(stemTenGod, gender);
+    var branchW = romanceWeight(branchTenGod, gender);
+    score += stemW + branchW;
+    if (stemW > 0) reasons.push('이 달의 천간이 ' + stemTenGod + ' 기운이라 이성운이 움직이기 좋은 시기예요.');
+    if (branchW > 0 && branchTenGod !== stemTenGod) reasons.push('이 달의 지지도 ' + branchTenGod + ' 기운을 더해줘요.');
+
+    if (usefulGod && (mp.stemElement === usefulGod.primary || mp.branchElement === usefulGod.primary)) {
+      score += 2;
+      reasons.push('평소 도움이 되는 오행(용신)과 맞아떨어지는 달이라 전체적인 기운의 흐름이 좋아요.');
+    } else if (usefulGod && (mp.stemElement === usefulGod.secondary || mp.branchElement === usefulGod.secondary)) {
+      score += 1;
+    }
+
+    if (isYukhapWithDay(dayBranch, mp.branch)) {
+      score += 2;
+      reasons.push('일지와 육합(六合)을 이루는 달이라 관계가 자연스럽게 가까워지기 좋은 흐름이에요.');
+    }
+
+    return { year: y, month: m, periodLabel: y + '년 ' + MONTH_LABELS[m - 1], score: score, reasons: reasons };
+  }
+
+  // 점수 상위 시기가 한 달에 몰리지 않도록, 이미 고른 시기와 minGapMonths개월 이내면
+  // 건너뛰고 다음으로 높은 시기를 고른다(연도 안에서 우선순위 1~3위가 고르게 퍼지도록).
+  // priorityWindows와 monthlyCalendar의 topWindows가 공유하는 선택 로직.
+  function pickTopN(scored, topN, minGapMonths) {
+    var sorted = scored.slice().sort(function (a, b) { return b.score - a.score; });
+    var picked = [];
+    for (var j = 0; j < sorted.length && picked.length < topN; j++) {
+      var cand = sorted[j];
+      var tooClose = picked.some(function (p) {
+        var gap = Math.abs((p.year * 12 + p.month) - (cand.year * 12 + cand.month));
+        return gap < minGapMonths;
+      });
+      if (!tooClose) picked.push(cand);
+    }
+    return picked;
+  }
+
+  function scoreMonthsAhead(saju, gender, monthsAhead) {
+    var dayEl = saju.day.stemElement, dayYY = saju.day.stemYinYang;
+    var dayBranch = saju.day.branch;
+    var usefulGod = saju.deep.usefulGod || null;
+
+    var now = new Date();
+    var startYear = now.getFullYear(), startMonth = now.getMonth() + 1;
+
+    var scored = [];
+    for (var i = 1; i <= monthsAhead; i++) {
+      var totalMonth = (startMonth - 1) + i;
+      var y = startYear + Math.floor(totalMonth / 12);
+      var m = (totalMonth % 12) + 1;
+      scored.push(scoreMonth(dayEl, dayYY, dayBranch, usefulGod, gender, y, m));
+    }
+    return scored;
+  }
+
   /**
    * 앞으로 monthsAhead개월 동안의 월운을 한 달씩 훑어서, 이 사람의 일간(day master) ·
    * 용신(usefulGod) · 성별을 기준으로 "다가가기 좋은 시기"에 점수를 매긴다. 실제 계산된
@@ -197,76 +275,66 @@
     var topN = opts.topN || 3;
     var minGapMonths = opts.minGapMonths == null ? 2 : opts.minGapMonths;
 
-    var E = window.YeonbunSajuEngine;
-    var dayEl = saju.day.stemElement, dayYY = saju.day.stemYinYang;
-    var dayBranch = saju.day.branch;
-    var usefulGod = saju.deep.usefulGod || null;
+    var scored = scoreMonthsAhead(saju, gender, monthsAhead);
 
-    var YUKHAP_PAIRS = [['자', '축'], ['인', '해'], ['묘', '술'], ['진', '유'], ['사', '신'], ['오', '미']];
-    function isYukhapWithDay(branch) {
-      return YUKHAP_PAIRS.some(function (pair) {
-        return (pair[0] === dayBranch && pair[1] === branch) || (pair[1] === dayBranch && pair[0] === branch);
-      });
-    }
+    return pickTopN(scored, topN, minGapMonths);
+  }
 
-    var now = new Date();
-    var startYear = now.getFullYear(), startMonth = now.getMonth() + 1;
+  // (2026-08-31 신설) "다시, 우리"(재회 전략) 리포트의 "재회 타이밍 캘린더" 챕터 전용.
+  // priorityWindows는 상위 N개만 골라 반환하지만, 이 캘린더는 화면에 12개월 표 전체를
+  // 그대로 보여줘야 해서 전체 달을 다 반환한다. 별점(1~5)은 이 사람의 monthsAhead개월
+  // 점수 분포 안에서의 상대적 위치(최소~최대를 1~5로 min-max 정규화)이고, 추천 행동은
+  // 별점 구간 + 직전 달 대비 상승/하락 추세로 정한다 — 같은 별 3개라도 막 오르는
+  // 중이면 "가벼운 연락", 막 꺾이는 중이면 "감정 점검"으로 다르게 안내해서, 예시로 준
+  // "9월⭐⭐/기다리기 → 10월⭐⭐⭐/가벼운연락 → 11월⭐⭐⭐⭐/만남시도 → 12월⭐⭐⭐⭐⭐/관계진전 →
+  // 1월⭐⭐⭐/감정점검" 같은 오르내리는 흐름을 재현한다. AI는 이 표의 숫자를 하나도 만들지
+  // 않고(리포트 화면이 $report->input에서 직접 읽어 렌더링), 상위 3개 시기(topWindows)에
+  // 대한 짧은 코멘트만 덧붙인다(reunion_calendar 챕터, priority_timing 블록 재사용).
+  //
+  // @param {Object} saju calcSaju() 반환값(personA 기준).
+  // @param {'male'|'female'} gender
+  // @param {Object} [opts] { monthsAhead(기본 12) }
+  // @return {{ months: Array<{year,month,periodLabel,stars,score,action,reasons}>, topWindows: Array }}
+  function monthlyCalendar(saju, gender, opts) {
+    if (!ready() || !saju || !saju.day || !saju.deep) return { months: [], topWindows: [] };
+    opts = opts || {};
+    var monthsAhead = opts.monthsAhead || 12;
 
-    var scored = [];
-    for (var i = 1; i <= monthsAhead; i++) {
-      var totalMonth = (startMonth - 1) + i;
-      var y = startYear + Math.floor(totalMonth / 12);
-      var m = (totalMonth % 12) + 1;
+    var scored = scoreMonthsAhead(saju, gender, monthsAhead);
 
-      var mp = monthPillar(y, m);
-      var stemTenGod = E.tenGodOf(dayEl, dayYY, mp.stemElement, mp.stemYinYang);
-      var branchTenGod = E.tenGodOf(dayEl, dayYY, mp.branchElement, mp.branchYinYang);
+    var scores = scored.map(function (s) { return s.score; });
+    var minScore = Math.min.apply(null, scores);
+    var maxScore = Math.max.apply(null, scores);
+    var range = maxScore - minScore;
 
-      var score = 0;
-      var reasons = [];
+    var ACTION_BY_TIER = { 1: '기다리기', 2: '기다리기', 4: '만남 시도', 5: '관계 진전' };
 
-      var stemW = romanceWeight(stemTenGod, gender);
-      var branchW = romanceWeight(branchTenGod, gender);
-      score += stemW + branchW;
-      if (stemW > 0) reasons.push('이 달의 천간이 ' + stemTenGod + ' 기운이라 이성운이 움직이기 좋은 시기예요.');
-      if (branchW > 0 && branchTenGod !== stemTenGod) reasons.push('이 달의 지지도 ' + branchTenGod + ' 기운을 더해줘요.');
+    var months = scored.map(function (s, idx) {
+      var stars = range > 0 ? Math.round(1 + (4 * (s.score - minScore)) / range) : 3;
+      stars = Math.max(1, Math.min(5, stars));
 
-      if (usefulGod && (mp.stemElement === usefulGod.primary || mp.branchElement === usefulGod.primary)) {
-        score += 2;
-        reasons.push('평소 도움이 되는 오행(용신)과 맞아떨어지는 달이라 전체적인 기운의 흐름이 좋아요.');
-      } else if (usefulGod && (mp.stemElement === usefulGod.secondary || mp.branchElement === usefulGod.secondary)) {
-        score += 1;
+      var action;
+      if (stars === 3) {
+        var prevScore = idx > 0 ? scored[idx - 1].score : s.score;
+        action = s.score > prevScore ? '가벼운 연락' : '감정 점검';
+      } else {
+        action = ACTION_BY_TIER[stars];
       }
 
-      if (isYukhapWithDay(mp.branch)) {
-        score += 2;
-        reasons.push('일지와 육합(六合)을 이루는 달이라 관계가 자연스럽게 가까워지기 좋은 흐름이에요.');
-      }
+      return {
+        year: s.year, month: s.month, periodLabel: s.periodLabel,
+        stars: stars, score: s.score, action: action, reasons: s.reasons
+      };
+    });
 
-      scored.push({ year: y, month: m, periodLabel: y + '년 ' + MONTH_LABELS[m - 1], score: score, reasons: reasons });
-    }
-
-    scored.sort(function (a, b) { return b.score - a.score; });
-
-    // 점수 상위 시기가 한 달에 몰리지 않도록, 이미 고른 시기와 minGapMonths개월 이내면
-    // 건너뛰고 다음으로 높은 시기를 고른다(연도 안에서 우선순위 1~3위가 고르게 퍼지도록).
-    var picked = [];
-    for (var j = 0; j < scored.length && picked.length < topN; j++) {
-      var cand = scored[j];
-      var tooClose = picked.some(function (p) {
-        var gap = Math.abs((p.year * 12 + p.month) - (cand.year * 12 + cand.month));
-        return gap < minGapMonths;
-      });
-      if (!tooClose) picked.push(cand);
-    }
-
-    return picked;
+    return { months: months, topWindows: pickTopN(scored, 3, 2) };
   }
 
   window.YeonbunLuckCycle = {
     yearPillar: yearPillar,
     monthPillar: monthPillar,
     daeunList: daeunList,
-    priorityWindows: priorityWindows
+    priorityWindows: priorityWindows,
+    monthlyCalendar: monthlyCalendar
   };
 })();

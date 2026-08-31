@@ -136,7 +136,7 @@
         if (ctx) {
           addBubble('system', (name ? name + '님의 ' : '') + '사주 정보(일간 ' + ctx.dayElement + ', 오행 분포, 신살)를 상담사에게 전달했어요.');
         } else {
-          addBubble('system', '사주 정보 없이 시작했어요. "나의 연애 사주" 탭에서 먼저 계산하면 더 맞춤화된 상담을 받을 수 있어요.');
+          addBubble('system', '사주 정보 없이 시작했어요. "연애의 나침반" 탭에서 먼저 계산하면 더 맞춤화된 상담을 받을 수 있어요.');
         }
         showRoomView();
       })
