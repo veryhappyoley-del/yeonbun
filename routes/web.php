@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ChapterPreviewController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 // (2026-08-25 수정) "/"는 이제 진짜 홈 랜딩페이지(home.blade.php)다. 예전엔 계산기 화면이
@@ -101,6 +102,17 @@ Route::middleware('auth')->group(function () {
     // 챕터형(schema_version=2) 리포트에서 챕터 하나만 재시도. 레거시(schema_version=1)
     // 리포트에는 챕터가 없으므로 이 라우트를 쓰지 않습니다(regenerate가 그대로 담당).
     Route::post('/reports/{report}/chapters/{chapterKey}/regenerate', [ReportController::class, 'regenerateChapter'])->name('reports.chapters.regenerate');
+});
+
+// (2026-08-31 신설) "오늘의 운세" 구독 — 생년월일시 프로필 저장, 토스 빌링(정기결제)
+// 카드 등록/해지, 오늘의 운세 열람. 전부 로그인 사용자 전용.
+Route::middleware('auth')->prefix('fortune')->name('fortune.')->group(function () {
+    Route::get('/', [SubscriptionController::class, 'index'])->name('index');
+    Route::post('/profile', [SubscriptionController::class, 'saveProfile'])->name('profile');
+    Route::post('/checkout', [SubscriptionController::class, 'checkout'])->name('checkout');
+    Route::get('/confirm', [SubscriptionController::class, 'confirm'])->name('confirm');
+    Route::post('/cancel', [SubscriptionController::class, 'cancel'])->name('cancel');
+    Route::get('/today', [SubscriptionController::class, 'today'])->name('today');
 });
 
 // 관리자 대시보드(방문자/전환율/매출) + 상담 내용 열람. users.is_admin = true 인 계정만 접근 가능.

@@ -36,12 +36,17 @@
                   'href' => route('calculator.index', ['tab' => 'compat']), 'price' => '무료로 시작',
               ],
               [
+                  'badge' => '코', 'title' => '연애 코치',
+                  'desc' => '내 사주 맥락을 아는 AI 코치와 실시간으로 연애 상담.',
+                  'href' => route('calculator.index', ['tab' => 'chat']), 'price' => '코인으로 상담',
+              ],
+              [
                   // (2026-08-31 추가) App\ReportTypes\Definitions\UnrequitedLoveReportType.
                   // 궁합 보기와 같은 폼(#panel-compat)을 그대로 재사용하는 탭이라
                   // ?tab=unrequited로 들어간다(public/js/app.js 참고).
                   'badge' => '짝', 'title' => '짝사랑의 다음 장',
                   'desc' => '짝사랑을 연애로 바꾸는 인연의 흐름.',
-                  'href' => route('calculator.index', ['tab' => 'unrequited']), 'price' => '무료로 시작',
+                  'href' => route('calculator.index', ['tab' => 'unrequited']), 'price' => '23,900원',
               ],
               [
                   // (2026-08-31 추가) App\ReportTypes\Definitions\ReunionStrategyReportType.
@@ -49,12 +54,14 @@
                   // 궁합 폼을 재사용하지 않고 별도 패널(#panel-reunion)을 새로 만들었다.
                   'badge' => '재', 'title' => '다시, 우리',
                   'desc' => '재회 가능성과 다시 만나는 전략.',
-                  'href' => route('calculator.index', ['tab' => 'reunion']), 'price' => '무료로 시작',
+                  'href' => route('calculator.index', ['tab' => 'reunion']), 'price' => '25,900원',
               ],
               [
-                  'badge' => '코', 'title' => '연애 코치',
-                  'desc' => '내 사주 맥락을 아는 AI 코치와 실시간으로 연애 상담.',
-                  'href' => route('calculator.index', ['tab' => 'chat']), 'price' => '코인으로 상담',
+                  // (2026-08-31 신설) 구독형 상품이라 다른 항목들과 달리 결제/생성이 계산기
+                  // 흐름(saju.blade.php)이 아니라 별도 SubscriptionController(/fortune)로 간다.
+                  'badge' => '운', 'title' => '오늘의 운세',
+                  'desc' => '매일 새벽, 그날의 사주 흐름을 이메일로.',
+                  'href' => route('fortune.index'), 'price' => '월 3,900원',
               ],
           ],
       ],

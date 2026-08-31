@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -45,5 +46,22 @@ class User extends Authenticatable
     public function reports(): HasMany
     {
         return $this->hasMany(Report::class)->latest();
+    }
+
+    // (2026-08-31 추가) "오늘의 운세" 구독 — SajuProfile/DailyFortune/FortuneSubscription
+    // 자세한 내용은 각 모델 참고.
+    public function sajuProfile(): HasOne
+    {
+        return $this->hasOne(SajuProfile::class);
+    }
+
+    public function fortuneSubscription(): HasOne
+    {
+        return $this->hasOne(FortuneSubscription::class);
+    }
+
+    public function dailyFortunes(): HasMany
+    {
+        return $this->hasMany(DailyFortune::class)->latest('fortune_date');
     }
 }

@@ -51,6 +51,19 @@
       <a class="chip-link" href="{{ route('reports.index') }}">내 리포트함 바로가기 &rarr;</a>
     </div>
 
+    {{-- (2026-08-31 신설) "오늘의 운세" 구독 진입점 --}}
+    <div class="card">
+      <h2>오늘의 운세</h2>
+      <div class="hint" style="margin-bottom:10px;">
+        @if (auth()->user()->fortuneSubscription?->isActive())
+          매일 새벽 이메일로 받아보고 있어요.
+        @else
+          매일 사주 기반 운세를 이메일로 받아보세요.
+        @endif
+      </div>
+      <a class="chip-link" href="{{ route('fortune.index') }}">구독 관리 바로가기 &rarr;</a>
+    </div>
+
     <div class="card">
       <h2>계정</h2>
       {{-- 카카오는 이메일 동의를 안 하면 SocialAuthController가 내부용 더미 이메일
