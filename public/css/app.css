@@ -2993,3 +2993,61 @@
     font-weight: 600;
     white-space: nowrap;
   }
+
+  /* ---------- 짝사랑 탈출 리포트 (2026-08-31 추가) ---------- */
+  /* 궁합 폼(A/B)에 새로 추가한 성별 토글 — 기존 .compat-stage-chip과 같은 문법(테두리 →
+     채워진 색)을 재사용해서 새 CSS 언어를 만들지 않았다. 대운/세운 방향(순행/역행) 계산에
+     성별이 꼭 필요해서 추가했다(public/js/luck-cycle.js 참고). */
+  .compat-gender-row { display: flex; gap: 8px; margin-top: 8px; }
+  .compat-gender-chip {
+    flex: 1;
+    padding: 8px 0;
+    border-radius: 10px;
+    border: 1.4px solid var(--line);
+    background: transparent;
+    color: var(--ink-soft);
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+  .compat-gender-chip:hover { border-color: var(--seal); }
+  .compat-gender-chip.active { background: var(--seal); border-color: var(--seal); color: #fbf3e9; }
+
+  /* priority_timing 블록 — 실제로 계산된 대운/세운 우선순위 시기 카드. .rpt-advice-card와
+     같은 종이 카드 문법을 그대로 쓰고, 순위 배지만 새로 추가했다. */
+  .rpt-timing-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 10px;
+  }
+  .rpt-timing-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .rpt-timing-rank {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #fbf3e9;
+    background: var(--seal);
+    border-radius: 999px;
+    padding: 2px 9px;
+    letter-spacing: 0.03em;
+  }
+  .rpt-timing-period { font-family: 'Gowun Dodum', sans-serif; font-weight: 700; color: var(--ink); font-size: 0.96rem; }
+
+  /* verdict_badge 블록 — "계속해도 되는가"의 🟢/🟡/🔴 신호등 판정. 오행 색이 아니라
+     신호등의 통념적 색(초록/노랑/빨강)을 그대로 쓰는 게 사용자에게 더 직관적이라
+     --wood/--gold/--fire를 신호등 의미로 재활용했다(각 변수는 라이트/다크 테마 모두에서
+     이미 정의돼 있어 별도 다크모드 대응이 필요 없다). */
+  .rpt-verdict {
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-top: 10px;
+    border: 1px solid var(--line);
+  }
+  .rpt-verdict--go { background: color-mix(in srgb, var(--wood) 14%, transparent); border-color: var(--wood); }
+  .rpt-verdict--slow { background: var(--gold-tint); border-color: var(--gold); }
+  .rpt-verdict--stop { background: color-mix(in srgb, var(--fire) 14%, transparent); border-color: var(--fire); }
+  .rpt-verdict--neutral { background: var(--paper); }
+  .rpt-verdict-badge { font-family: 'Gowun Dodum', sans-serif; font-weight: 700; font-size: 1.02rem; color: var(--ink); }

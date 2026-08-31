@@ -32,6 +32,8 @@ class DashboardController extends Controller
         'compat' => '프리미엄 궁합 리포트',
         'love_fortune' => '연애운분석',
         'compatibility' => '궁합분석',
+        // (2026-08-31 추가) App\ReportTypes\Definitions\UnrequitedLoveReportType.
+        'unrequited_love' => '짝사랑 탈출',
     ];
 
     // 가입 경로(users.provider) 라벨. provider가 없는 행(과거 시드 데이터 등)은 "기타"로 묶는다.

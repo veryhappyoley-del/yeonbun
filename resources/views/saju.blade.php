@@ -9,7 +9,7 @@
   // 그대로 재사용하기 때문이다(display:none이어도 JS로 호출하는 .click()은 정상 동작함).
   // 값이 없거나 모르는 값이면(직접 "/calculator"로 들어온 경우 등) 평소대로 다 보여준다.
   $incomingTab = request()->query('tab');
-  $hideCalcChrome = in_array($incomingTab, ['single', 'compat', 'chat'], true);
+  $hideCalcChrome = in_array($incomingTab, ['single', 'compat', 'unrequited', 'chat'], true);
 
   // 결제 CTA(public/js/reports.js buildCTA)의 "목차 미리보기"에 쓸 정적 데이터.
   // AI 콘텐츠는 전혀 포함하지 않고, 이미 코드로 정의된 챕터 제목/티저만 그대로 노출한다.
@@ -73,6 +73,10 @@
   <div class="tabs @if ($hideCalcChrome) is-hidden @endif" role="tablist">
     <button class="tab-btn active" data-tab="single" role="tab">나의 연애 사주</button>
     <button class="tab-btn" data-tab="compat" role="tab">궁합 보기</button>
+    {{-- (2026-08-31 추가) "짝사랑 탈출" — #panel-compat을 그대로 재사용하는 탭이라
+         data-tab 값은 unrequited지만 실제로 보여줄 패널은 app.js의 탭 클릭 핸들러가
+         panel-compat으로 매핑한다. --}}
+    <button class="tab-btn" data-tab="unrequited" role="tab">짝사랑 탈출</button>
     <button class="tab-btn" data-tab="chat" role="tab">연애 코치</button>
   </div>
   <!-- "고민 상담 가이드" 탭은 상단 메뉴에서 뺐습니다(완성도가 낮다는 판단, 2026-08-24).
@@ -161,6 +165,16 @@
             <div><label for="c-sido-a">출생 지역 — 시/도</label><select id="c-sido-a"></select></div>
             <div><label for="c-sigungu-a">시/군/구</label><select id="c-sigungu-a"></select></div>
           </div>
+          {{-- (2026-08-31 추가) "짝사랑 탈출" 리포트의 대운/세운 방향(순행/역행) 계산에
+               성별이 필요해서 추가(public/js/luck-cycle.js 참고). 궁합 보기 탭에서는
+               쓰지 않는 값이라 그 탭에선 app.js가 이 줄을 숨긴다(is-hidden). --}}
+          <div class="compat-gender-only-unrequited is-hidden" id="c-gender-section-a">
+            <label style="margin-top:8px; display:block;">성별</label>
+            <div class="compat-gender-row" id="c-gender-row-a">
+              <button type="button" class="compat-gender-chip" data-gender="male">남자</button>
+              <button type="button" class="compat-gender-chip" data-gender="female">여자</button>
+            </div>
+          </div>
         </div>
         <div class="compat-person compat-person-b">
           <div class="compat-person-label">B</div>
@@ -183,6 +197,13 @@
             <div><label for="c-sido-b">출생 지역 — 시/도</label><select id="c-sido-b"></select></div>
             <div><label for="c-sigungu-b">시/군/구</label><select id="c-sigungu-b"></select></div>
           </div>
+          <div class="compat-gender-only-unrequited is-hidden" id="c-gender-section-b">
+            <label style="margin-top:8px; display:block;">성별</label>
+            <div class="compat-gender-row" id="c-gender-row-b">
+              <button type="button" class="compat-gender-chip" data-gender="male">남자</button>
+              <button type="button" class="compat-gender-chip" data-gender="female">여자</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -191,7 +212,11 @@
            buildTwoPersonInput이 relationshipStage/primaryConcern/concernDetail로 전송,
            App\ReportTypes\Definitions\CompatibilityReportType가 프롬프트에 반영).
            둘 다 선택 안 해도 궁합 보기는 그대로 동작한다(선택 사항). -->
-      <div class="compat-context">
+      {{-- (2026-08-31 수정) "짝사랑 탈출" 탭은 아직 사귀는 사이가 아닌 상황을 다루므로
+           "현재 관계(커플/부부/헤어짐)"·"지금 가장 궁금한 것" 선택지가 맥락에 안 맞는다
+           — 궁합 보기 탭과 폼(#panel-compat)을 공유하되, app.js가 탭 모드에 따라 이
+           블록 자체를 숨긴다(id로 토글). --}}
+      <div class="compat-context" id="c-relationship-section">
         <div class="compat-context-label">현재 관계</div>
         <div class="compat-context-hint">두 사람이 지금 어떤 사이인지에 따라 리포트가 읽는 톤이 달라져요.</div>
         <div class="compat-stage-row" id="c-stage-row">
@@ -235,6 +260,12 @@
 
     <div id="c-result"></div>
   </section>
+
+  {{-- (2026-08-31 신설) "짝사랑 탈출" 탭은 #panel-compat과 완전히 같은 입력 폼을 그대로
+       재사용한다(사용자 요청: "틀은 현재랑 동일하게"). 별도 패널을 새로 만들지 않고,
+       public/js/app.js의 탭 전환 로직이 data-tab="unrequited" 버튼을 눌렀을 때 이
+       #panel-compat을 보여주면서 모드만 바꾼다 — 폼 필드/궁합 계산 로직을 중복으로
+       유지하지 않기 위함(예: 나중에 궁합 계산 방식이 바뀌면 한 곳만 고치면 됨). --}}
 
   <!-- ===================== 3. 고민 상담 가이드 (룰 기반, 즉시 응답) ===================== -->
   <section class="panel" id="panel-guide">
@@ -337,6 +368,9 @@
 <script src="{{ asset('js/love-character.js') }}"></script>
 <script src="{{ asset('js/compat-character.js') }}"></script>
 <script src="{{ asset('js/app.js') }}"></script>
+<!-- (2026-08-31 추가) "짝사랑 탈출"의 대운/세운 계산 — app.js가 window.YeonbunSajuEngine을
+     노출한 다음에 로드해야 한다(luck-cycle.js가 그 값을 그대로 재사용). -->
+<script src="{{ asset('js/luck-cycle.js') }}"></script>
 <script src="{{ asset('js/reports.js') }}"></script>
 <script src="{{ asset('js/chat.js') }}"></script>
 </body>

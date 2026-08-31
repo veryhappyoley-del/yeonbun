@@ -38,12 +38,16 @@
           @php
             $label = $types[$report->type]['label'] ?? $report->type;
             $isCompat = in_array($report->type, ['compat', 'compatibility'], true);
+            // (2026-08-31 추가) App\ReportTypes\Definitions\UnrequitedLoveReportType.
+            $isUnrequited = $report->type === 'unrequited_love';
             $title = (string) ($report->title ?? '');
             $subjectHtml = null;
 
             if ($isCompat && preg_match('/^(.+?)\s*×\s*(.+?)\s*궁합분석$/u', $title, $m)) {
                 $subjectHtml = e(trim($m[1])).' <span class="report-card-heart">♥</span> '.e(trim($m[2]));
-            } elseif (! $isCompat && preg_match('/^(.+?)님의\s*연애운분석$/u', $title, $m)) {
+            } elseif ($isUnrequited && preg_match('/^(.+?)님의\s*(.+?)\s*짝사랑 탈출$/u', $title, $m)) {
+                $subjectHtml = e(trim($m[1])).' <span class="report-card-heart">♥</span> '.e(trim($m[2]));
+            } elseif (! $isCompat && ! $isUnrequited && preg_match('/^(.+?)님의\s*연애운분석$/u', $title, $m)) {
                 $subjectHtml = e(trim($m[1])).'님';
             }
 
@@ -53,8 +57,8 @@
           @endphp
           <div class="report-card">
             <div class="report-card-top">
-              <div class="report-card-icon" aria-hidden="true">{{ $isCompat ? '💞' : '💘' }}</div>
-              <span class="badge {{ $isCompat ? 'indigo' : 'seal' }}">{{ $label }}</span>
+              <div class="report-card-icon" aria-hidden="true">{{ $isCompat ? '💞' : ($isUnrequited ? '💔' : '💘') }}</div>
+              <span class="badge {{ $isCompat ? 'indigo' : ($isUnrequited ? 'gold' : 'seal') }}">{{ $label }}</span>
             </div>
             <div class="report-card-subject">{!! $subjectHtml !!}</div>
             <div class="report-card-meta">

@@ -651,6 +651,12 @@
   var currentSajuA = null; // 나의 연애 사주 결과 (탭1) — 상담 가이드에서 재사용
   var currentCompat = null; // 궁합 결과 (탭2) — 프리미엄 궁합 리포트/공유 카드에서 재사용
 
+  // (2026-08-31 추가) "짝사랑 탈출" 탭이 #panel-compat 폼을 그대로 재사용하면서 모드만
+  // 구분한다 — 'compat'(궁합 보기, 기본값) 또는 'unrequited'(짝사랑 탈출). c-submit
+  // 클릭 시 이 값으로 renderCompatResult/renderUnrequitedResult 중 어느 쪽을 부를지,
+  // 폼 안의 어느 섹션(현재 관계 선택 vs 성별 선택)을 보여줄지 정한다.
+  var currentCompatMode = 'compat';
+
   /* ============================================================
    * 6. DOM 렌더링 유틸
    * ============================================================ */
@@ -937,6 +943,79 @@
     if (window.YeonbunReports) window.YeonbunReports.attachCompatCTA(card, currentCompat);
   }
 
+  // (2026-08-31 신설) "짝사랑 탈출" — renderCompatResult와 같은 궁합 계산(calcCompat)을
+  // 그대로 재사용하되, 화면 문구를 짝사랑 상황에 맞게 바꾸고 대운/세운 우선순위 시기
+  // (public/js/luck-cycle.js)를 함께 계산해서 리포트 결제 CTA(attachUnrequitedCTA)에
+  // 실어 보낸다. 궁합 보기(renderCompatResult)와 별도 함수로 둔 이유는, 이미 결제
+  // 기능이 붙어 있는 기존 궁합 보기 로직에 이 리포트만의 분기(성별/타이밍 계산)를 섞어
+  // 넣다가 실수로 기존 기능을 건드리는 위험을 피하기 위함이다.
+  function renderUnrequitedResult(sajuA, sajuB, nameA, nameB, genderA, genderB) {
+    var out = document.getElementById('c-result');
+    out.innerHTML = '';
+    var compat = calcCompat(sajuA, sajuB);
+    var card = el('div', { class: 'card' });
+    card.appendChild(txt('h2', '', (nameA || '나') + ' × ' + (nameB || '그 사람')));
+
+    var scoreWrap = el('div', { class: 'compat-score-wrap' });
+    scoreWrap.appendChild(el('div', { class: 'compat-score' }, [
+      document.createTextNode(String(compat.score)), el('span', {}, [document.createTextNode('/100')])
+    ]));
+    scoreWrap.appendChild(txt('div', 'compat-score-label', compat.levelLabel));
+    card.appendChild(scoreWrap);
+
+    var badgeRow = el('div', { class: 'badge-row' }, [
+      el('span', { class: 'badge indigo' }, [document.createTextNode((nameA || '나') + ' 일간: ' + sajuA.day.stem + '(' + sajuA.day.stemElement + ')')]),
+      el('span', { class: 'badge indigo' }, [document.createTextNode((nameB || '그 사람') + ' 일간: ' + sajuB.day.stem + '(' + sajuB.day.stemElement + ')')])
+    ]);
+    card.appendChild(badgeRow);
+
+    var result = el('div', { class: 'result-block' });
+    compat.notes.forEach(function (n, i) {
+      result.appendChild(block('풀이 ' + (i + 1), n));
+    });
+    card.appendChild(result);
+
+    // 무료 티저 — unrequited_overview 챕터 하나만 실제로 생성해서 일부 공개/일부 블러.
+    // 이 챕터는 score/levelLabel/notes/relation만으로 쓰도록 설계했다(personA/personB의
+    // 전체 deep 데이터는 필요 없음, UnrequitedLoveReportType의 unrequited_overview 참고) —
+    // compat_overview와 똑같은 이유로, 결제 전 티저 요청이 두 사람의 전체 사주 요약을 다시
+    // 만들 필요 없이 이미 계산된 궁합 결과만 그대로 보내면 된다.
+    var teaserHost = el('div', { class: 'report-teaser' });
+    card.appendChild(teaserHost);
+    startChapterPreview(teaserHost, 'unrequited_love', 'unrequited_overview', {
+      score: compat.score,
+      levelLabel: compat.levelLabel,
+      notes: compat.notes,
+      relation: compat.rel
+    }, {
+      label: '🔍 이 짝사랑, 더 자세히 보면',
+      ctaMessage: '전체 내용은 짝사랑 탈출 리포트에서 이어져요 — 언제·어떻게 다가가야 할지까지 담겨 있어요.'
+    });
+
+    if (window.YeonbunReports && window.YeonbunReports.buildTocPreview) {
+      var toc = window.YeonbunReports.buildTocPreview('unrequited_love');
+      if (toc) card.appendChild(toc);
+    }
+
+    out.appendChild(card);
+
+    // 대운/세운 기반 우선순위 시기 — personA(나) 기준으로 미리 계산해서 결제 후 챕터
+    // 생성 프롬프트에 "실제 후보"로 넘긴다(AI가 날짜를 지어내지 못하게 하기 위함,
+    // App\ReportTypes\Definitions\UnrequitedLoveReportType의 moving_timing 챕터 참고).
+    var timingCandidates = [];
+    if (window.YeonbunLuckCycle) {
+      timingCandidates = window.YeonbunLuckCycle.priorityWindows(sajuA, genderA, { monthsAhead: 36, topN: 8 }) || [];
+    }
+
+    currentCompat = {
+      sajuA: sajuA, sajuB: sajuB, nameA: nameA, nameB: nameB, compat: compat,
+      genderA: genderA || null, genderB: genderB || null,
+      timingCandidates: timingCandidates
+    };
+
+    if (window.YeonbunReports) window.YeonbunReports.attachUnrequitedCTA(card, currentCompat);
+  }
+
   // "지금 가장 궁금한 것" 카드(4종)의 한글 라벨 — resources/views/reports/partials/blocks/
   // concern_answer.blade.php의 $concernLabels와 반드시 같은 문구를 유지해야, 결제 전
   // 무료 티저와 결제 후 리포트에서 같은 질문 문구가 보인다.
@@ -1205,16 +1284,43 @@
     };
   }
 
+  // (2026-08-31 추가) 궁합 보기 탭에서는 "현재 관계/지금 가장 궁금한 것"을, 짝사랑 탈출
+  // 탭에서는 "성별"을 보여준다 — 같은 폼(#panel-compat)을 공유하므로 맥락에 안 맞는
+  // 섹션은 숨긴다(is-hidden, public/css/app.css 참고).
+  function applyCompatModeUI(mode) {
+    var isUnrequited = mode === 'unrequited';
+    var relSection = document.getElementById('c-relationship-section');
+    var genderA = document.getElementById('c-gender-section-a');
+    var genderB = document.getElementById('c-gender-section-b');
+    var submitBtn = document.getElementById('c-submit');
+    if (relSection) relSection.classList.toggle('is-hidden', isUnrequited);
+    if (genderA) genderA.classList.toggle('is-hidden', !isUnrequited);
+    if (genderB) genderB.classList.toggle('is-hidden', !isUnrequited);
+    if (submitBtn) submitBtn.textContent = isUnrequited ? '짝사랑 탈출 분석 시작' : '궁합 보기';
+  }
+
   function bindEvents() {
     wireSingleSelect('c-stage-row', 'compat-stage-chip');
     wireSingleSelect('c-concern-grid', 'compat-concern-card');
+    wireSingleSelect('c-gender-row-a', 'compat-gender-chip');
+    wireSingleSelect('c-gender-row-b', 'compat-gender-chip');
 
+    // (2026-08-31 수정) "짝사랑 탈출"(data-tab="unrequited")은 별도 패널이 없고
+    // #panel-compat을 그대로 재사용한다 — PANEL_OVERRIDE로 실제 보여줄 패널 id만
+    // 바꾸고, currentCompatMode를 함께 갱신해서 폼 안의 섹션 표시/제출 동작을 구분한다.
+    var PANEL_OVERRIDE = { unrequited: 'compat' };
     document.querySelectorAll('.tab-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
         document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
         document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('active'); });
         btn.classList.add('active');
-        document.getElementById('panel-' + btn.getAttribute('data-tab')).classList.add('active');
+        var tab = btn.getAttribute('data-tab');
+        document.getElementById('panel-' + (PANEL_OVERRIDE[tab] || tab)).classList.add('active');
+
+        if (tab === 'compat' || tab === 'unrequited') {
+          currentCompatMode = tab;
+          applyCompatModeUI(tab);
+        }
       });
     });
 
@@ -1259,6 +1365,17 @@
         hour: unknownB ? null : hb, minute: unknownB ? null : nb,
         unknownTime: unknownB, longitude: isNaN(lonB) ? 126.978 : lonB
       });
+
+      if (currentCompatMode === 'unrequited') {
+        var genderA = getSingleSelectValue('c-gender-row-a', 'gender');
+        var genderB = getSingleSelectValue('c-gender-row-b', 'gender');
+        if (!genderA) {
+          alert('대운/세운 계산에 필요해서, 나(A)의 성별을 먼저 선택해 주세요.');
+          return;
+        }
+        renderUnrequitedResult(sajuA, sajuB, nameA, nameB, genderA, genderB);
+        return;
+      }
 
       var stage = getSingleSelectValue('c-stage-row', 'stage');
       var concern = getSingleSelectValue('c-concern-grid', 'concern');
@@ -1428,6 +1545,24 @@
   restoreDraft();
   wireDraftAutosave();
   activateTabFromQuery();
+
+  // (2026-08-31 추가) "짝사랑 탈출" 리포트의 대운/세운 계산(public/js/luck-cycle.js)이
+  // 이 파일의 검증된 천문 계산(Meeus 태양 겉보기 황경, 절기 경계)과 60갑자 조견표를
+  // 그대로 재사용할 수 있도록 최소한만 노출한다. 새 계산 로직을 여기 만들지 않고
+  // 별도 파일로 분리한 이유는, 이 엔진(calcSaju 등)은 "생일 하루"만 계산하면 되는
+  // 반면 대운/세운은 "임의의 미래 날짜 여러 개"를 반복 계산해야 해서 관심사가 달라서다.
+  window.YeonbunSajuEngine = {
+    STEMS: STEMS,
+    BRANCHES: BRANCHES,
+    norm: norm,
+    toJD: toJD,
+    sunApparentLongitude: sunApparentLongitude,
+    birthToUT: birthToUT,
+    pillarFrom: pillarFrom,
+    tenGodOf: tenGodOf,
+    EL_GENERATES: EL_GENERATES,
+    EL_CONTROLS: EL_CONTROLS
+  };
 
   // ---- AI 상담 탭(public/js/chat.js)에서 방금 계산한 사주를 읽어갈 수 있도록 노출 ----
   window.YeonbunApp = {

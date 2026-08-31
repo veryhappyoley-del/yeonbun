@@ -22,6 +22,9 @@ final class ReportTypeRegistry
     private const DEFINITIONS = [
         \App\ReportTypes\Definitions\LoveFortuneReportType::class,
         \App\ReportTypes\Definitions\CompatibilityReportType::class,
+        // (2026-08-31 추가) "짝사랑 탈출" — 대운/세운 계산이 필요한 유일한 타입이라
+        // public/js/luck-cycle.js가 계산한 timingCandidates를 입력으로 함께 보낸다.
+        \App\ReportTypes\Definitions\UnrequitedLoveReportType::class,
     ];
 
     /**

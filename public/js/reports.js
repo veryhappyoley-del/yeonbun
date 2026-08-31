@@ -24,7 +24,9 @@
   // 서버 쪽(ReportController)에서 계속 인식합니다.
   var TYPE_INFO = {
     love_fortune: { label: '연애운분석', priceLabel: '27,000원' },
-    compatibility: { label: '궁합분석', priceLabel: '21,900원' }
+    compatibility: { label: '궁합분석', priceLabel: '21,900원' },
+    // (2026-08-31 추가) "짝사랑 탈출" — App\ReportTypes\Definitions\UnrequitedLoveReportType.
+    unrequited_love: { label: '짝사랑 탈출', priceLabel: '23,900원' }
   };
 
   // 결제 전 "이걸 사면 뭘 받는지" 안내용 — 목차 미리보기(제목+티저, 잠금 아이콘)와 FAQ.
@@ -316,6 +318,28 @@
     };
   }
 
+  // (2026-08-31 추가) "짝사랑 탈출" — buildTwoPersonInput과 거의 같은 모양이지만
+  // relationshipStage/primaryConcern/concernDetail(짝사랑 단계엔 안 맞는 개념) 대신
+  // genderA와 timingCandidates(대운/세운 실제 계산 결과, public/js/luck-cycle.js)를
+  // 담는다. app.js의 renderUnrequitedResult가 이미 계산해서 state에 실어 보낸다 —
+  // 이 함수는 계산 자체를 하지 않고 모양만 맞춰서 넘긴다(계산 로직을 두 곳에 두지 않기 위함).
+  function buildUnrequitedInput(state) {
+    var a = state.sajuA, b = state.sajuB, c = state.compat;
+    return {
+      personA: personSummary(a, state.nameA),
+      personB: personSummary(b, state.nameB),
+      score: c.score,
+      levelLabel: c.levelLabel,
+      notes: c.notes,
+      relation: c.rel,
+      genderA: state.genderA || null,
+      genderB: state.genderB || null,
+      // 결정론적으로 미리 계산된 시기 후보(연도/월/점수/이유) — AI는 이 중에서만 골라야
+      // 하고 새로 지어내면 안 된다(UnrequitedLoveReportType의 moving_timing 챕터 참고).
+      timingCandidates: state.timingCandidates || []
+    };
+  }
+
   /* ============================================================
    * CTA(구매 버튼, 필요하면 공유카드 버튼도 함께) 렌더링
    * ============================================================ */
@@ -396,6 +420,14 @@
     var input = buildTwoPersonInput(state);
     var title = (state.nameA || 'A') + ' × ' + (state.nameB || 'B') + ' 궁합분석';
     card.appendChild(buildCTA('compatibility', { input: input, title: title }, null, { showShare: false, includeToc: false }));
+  }
+
+  // (2026-08-31 추가) "짝사랑 탈출" — attachCompatCTA와 같은 틀(무료 티저 → 목차 미리보기
+  // → 구매 버튼)을 그대로 쓰되 typeKey/제목만 다르다.
+  function attachUnrequitedCTA(card, state) {
+    var input = buildUnrequitedInput(state);
+    var title = (state.nameA || '나') + '님의 ' + (state.nameB || '그 사람') + ' 짝사랑 탈출';
+    card.appendChild(buildCTA('unrequited_love', { input: input, title: title }, null, { showShare: false, includeToc: false }));
   }
 
   function truncate(str, n) {
@@ -584,6 +616,7 @@
   window.YeonbunReports = {
     attachSingleCTA: attachSingleCTA,
     attachCompatCTA: attachCompatCTA,
+    attachUnrequitedCTA: attachUnrequitedCTA,
     attachCardShare: attachCardShare,
     buildTocPreview: buildTocPreview,
     // (2026-08-25 추가) app.js의 renderSingleResult가 무료 티저(origin_profile)를 요청할 때

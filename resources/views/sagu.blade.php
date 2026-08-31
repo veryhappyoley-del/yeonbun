@@ -38,6 +38,14 @@
                   'href' => route('calculator.index', ['tab' => 'chat']), 'price' => '코인으로 상담',
               ],
               [
+                  // (2026-08-31 추가) App\ReportTypes\Definitions\UnrequitedLoveReportType.
+                  // 궁합 보기와 같은 폼(#panel-compat)을 그대로 재사용하는 탭이라
+                  // ?tab=unrequited로 들어간다(public/js/app.js 참고).
+                  'badge' => '짝', 'title' => '짝사랑 탈출',
+                  'desc' => '지금 이 마음, 발전 가능성부터 다가갈 시기까지 짚어주는 리포트.',
+                  'href' => route('calculator.index', ['tab' => 'unrequited']), 'price' => '23,900원',
+              ],
+              [
                   'badge' => '재', 'title' => '재회 전략',
                   'desc' => '헤어진 관계를 다시 잇고 싶을 때를 위한 전략 리포트.',
                   'comingSoon' => true,
