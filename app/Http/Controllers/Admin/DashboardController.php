@@ -54,8 +54,88 @@ class DashboardController extends Controller
             defaultDaysBack: 7,
         );
 
-        $totalVisitors = PageView::whereBetween('created_at', [$stDate, $edDate])->distinct()->count('visitor_id');
-        $totalPageViews = PageView::whereBetween('created_at', [$stDate, $edDate])->count();
+        // (2026-09-08 수정) "방문자 수가 실제보다 많아 보인다"는 확인 요청 대응 —
+        // 검색엔진 크롤러/카카오톡 링크 미리보기 봇 등(App\Support\BotDetector가 저장
+        // 시점에 판별해 is_bot에 기록)은 매번 새 visitor_id로 잡혀서 방문자 수를 부풀리는
+        // 흔한 원인이었다. 이제 모든 방문자/페이지뷰 집계에서 제외하고, 투명성을 위해
+        // 제외된 건수를 $botPageViews로 따로 보여준다.
+        $visitorIdsInPeriod = PageView::where('is_bot', false)
+            ->whereBetween('created_at', [$stDate, $edDate])
+            ->distinct()
+            ->pluck('visitor_id');
+        $totalVisitors = $visitorIdsInPeriod->count();
+        $totalPageViews = PageView::where('is_bot', false)->whereBetween('created_at', [$stDate, $edDate])->count();
+        $botPageViews = PageView::where('is_bot', true)->whereBetween('created_at', [$stDate, $edDate])->count();
+
+        // 신규 방문자 vs 재방문 방문자 — 이 기간에 등장한 visitor_id 중, 그 이전에도 방문
+        // 기록이 있던 쿠키면 "재방문"으로 센다. 같은 사람이 테스트 삼아 여러 브라우저/
+        // 시크릿창으로 반복 방문하는 경우를 걸러내진 못하지만(그건 애초에 별개의
+        // visitor_id라 방법이 없다), 적어도 "쿠키 하나가 이 기간에 여러 번 왔는지"는
+        // 구분해서 보여준다.
+        $returningVisitors = $visitorIdsInPeriod->isEmpty() ? 0 : PageView::where('is_bot', false)
+            ->whereIn('visitor_id', $visitorIdsInPeriod)
+            ->where('created_at', '<', $stDate)
+            ->distinct()
+            ->count('visitor_id');
+        $newVisitors = $totalVisitors - $returningVisitors;
+
+        // 페이지별 조회수 — 지금 방문 통계를 남기는 곳은 홈/계산기 두 곳뿐이라(routes/web.php
+        // 의 track.view 미들웨어), 어느 쪽이 더 많이 보이는지 정도는 바로 알 수 있다.
+        $pageViewsByPath = PageView::where('is_bot', false)
+            ->whereBetween('created_at', [$stDate, $edDate])
+            ->selectRaw('path, COUNT(*) as views, COUNT(DISTINCT visitor_id) as visitors')
+            ->groupBy('path')
+            ->orderByDesc('views')
+            ->get()
+            ->map(fn ($row) => [
+                'label' => match ($row->path) {
+                    '/' => '홈',
+                    'calculator' => '계산기',
+                    default => '/'.ltrim($row->path, '/'),
+                },
+                'views' => (int) $row->views,
+                'visitors' => (int) $row->visitors,
+            ]);
+
+        // 유입 경로(리퍼러) 상위 목록 — 검색/카카오톡 공유/SNS 중 뭐가 실제로 트래픽을
+        // 끌어오는지. 리퍼러가 없으면(직접 접속·북마크·주소창 입력·일부 인앱 브라우저가
+        // 리퍼러를 지우는 경우) "직접 접속/알 수 없음"으로 묶는다. 같은 사이트 안에서
+        // 홈→계산기로 넘어간 것처럼 자기 사이트가 리퍼러인 경우는 외부 유입이 아니라서
+        // 별도로 "사이트 내 이동"으로 뺀다.
+        $appHost = parse_url((string) config('app.url'), PHP_URL_HOST);
+        $referrerRows = PageView::where('is_bot', false)
+            ->whereBetween('created_at', [$stDate, $edDate])
+            ->get(['referrer']);
+        $noReferrerCount = $referrerRows->filter(fn ($row) => ! $row->referrer)->count();
+        $internalReferrerCount = 0;
+        $topReferrers = $referrerRows
+            ->filter(fn ($row) => (bool) $row->referrer)
+            ->map(function ($row) {
+                $host = parse_url($row->referrer, PHP_URL_HOST);
+
+                return $host ?: $row->referrer;
+            })
+            ->countBy()
+            ->sortDesc();
+        if ($appHost && $topReferrers->has($appHost)) {
+            $internalReferrerCount = $topReferrers->get($appHost);
+            $topReferrers = $topReferrers->forget($appHost);
+        }
+        $topReferrers = $topReferrers->take(8)->map(fn ($count, $host) => ['host' => $host, 'count' => $count])->values();
+
+        // 카카오톡/인스타그램 등 "인앱 브라우저" 추정 비율 — 봇은 아니라 방문자 수엔
+        // 그대로 잡히지만, 이런 인앱 브라우저는 쿠키가 자주 초기화돼서 실제로는 같은
+        // 사람인데 여러 명처럼 보이게 만드는 대표적인 원인이라 참고용으로 같이 보여준다.
+        $inAppPageViews = PageView::where('is_bot', false)
+            ->whereBetween('created_at', [$stDate, $edDate])
+            ->where(function ($q) {
+                foreach (['kakaotalk', 'fban', 'fbav', 'instagram', 'line/'] as $needle) {
+                    $q->orWhereRaw('LOWER(user_agent) LIKE ?', ['%'.$needle.'%']);
+                }
+            })
+            ->count();
+        $inAppPct = $totalPageViews > 0 ? round($inAppPageViews / $totalPageViews * 100, 1) : 0;
+
         $totalUsers = User::whereBetween('created_at', [$stDate, $edDate])->count();
         // 매출은 코인 결제(payments)와 프리미엄 리포트 결제(reports) 두 테이블에 걸쳐 있어서 합산합니다.
         $paymentUserIds = Payment::where('status', 'paid')->whereBetween('created_at', [$stDate, $edDate])->pluck('user_id');
@@ -159,7 +239,8 @@ class DashboardController extends Controller
         }
         $chartDayCount = $chartStart->diffInDays($edDate->copy()->startOfDay()) + 1;
 
-        $dailyVisitors = PageView::whereBetween('created_at', [$chartStart, $edDate])
+        $dailyVisitors = PageView::where('is_bot', false)
+            ->whereBetween('created_at', [$chartStart, $edDate])
             ->selectRaw('DATE(created_at) as day, COUNT(DISTINCT visitor_id) as count')
             ->groupBy('day')
             ->pluck('count', 'day');
@@ -219,6 +300,15 @@ class DashboardController extends Controller
             'edDate' => $edDate->format('Y-m-d'),
             'totalVisitors' => $totalVisitors,
             'totalPageViews' => $totalPageViews,
+            'botPageViews' => $botPageViews,
+            'newVisitors' => $newVisitors,
+            'returningVisitors' => $returningVisitors,
+            'pageViewsByPath' => $pageViewsByPath,
+            'topReferrers' => $topReferrers,
+            'noReferrerCount' => $noReferrerCount,
+            'internalReferrerCount' => $internalReferrerCount,
+            'inAppPageViews' => $inAppPageViews,
+            'inAppPct' => $inAppPct,
             'totalUsers' => $totalUsers,
             'payingUsers' => $payingUsers,
             'totalRevenue' => $totalRevenue,

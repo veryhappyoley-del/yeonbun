@@ -44,7 +44,7 @@
     <div class="stat-card">
       <div class="stat-label">누적 방문자</div>
       <div class="stat-value">{{ number_format($totalVisitors) }}<span>명</span></div>
-      <div class="stat-sub">페이지뷰 {{ number_format($totalPageViews) }}회</div>
+      <div class="stat-sub">페이지뷰 {{ number_format($totalPageViews) }}회 · 신규 {{ number_format($newVisitors) }} / 재방문 {{ number_format($returningVisitors) }}</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">가입자</div>
@@ -65,6 +65,76 @@
       <div class="stat-label">객단가 (ARPU)</div>
       <div class="stat-value">{{ number_format($arpu) }}<span>원</span></div>
       <div class="stat-sub">결제 고객 1인당 평균 결제액</div>
+    </div>
+  </div>
+
+  {{-- (2026-09-08 추가) "방문자 수가 실제보다 많아 보인다"는 확인 요청 대응 — 위 누적
+       방문자 숫자는 이미 봇/크롤러를 제외한 값이라는 걸 먼저 밝히고, 그 판단 근거(제외된
+       봇 건수, 인앱 브라우저 비율, 페이지별/유입경로별 분해)를 그대로 보여준다. --}}
+  <div class="card">
+    <h2>방문자 상세 — 이 숫자를 어떻게 셌는지</h2>
+    <p class="chart-note">
+      "누적 방문자"는 브라우저 쿠키(visitor_id)로 구분한 순수 방문자 수예요. 같은 사람이
+      새로고침하거나 페이지를 여러 번 옮겨 다녀도 쿠키가 같으면 1명으로만 셉니다. 대신
+      검색엔진 크롤러나 카카오톡/페이스북 등이 링크 미리보기 카드를 만들려고 서버끼리
+      URL을 가져가 보는 경우(User-Agent로 판별)는 이제 아예 집계에서 뺐어요.
+    </p>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">제외된 봇/크롤러 방문</div>
+        <div class="stat-value">{{ number_format($botPageViews) }}<span>건</span></div>
+        <div class="stat-sub">위 방문자·페이지뷰 숫자에는 포함 안 됨</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">카카오톡 등 인앱 브라우저 추정</div>
+        <div class="stat-value">{{ $inAppPct }}<span>%</span></div>
+        <div class="stat-sub">{{ number_format($inAppPageViews) }}건 · 봇은 아니지만 쿠키가 자주 초기화돼서 같은 사람이 여러 명처럼 잡히기 쉬운 유입</div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-top:14px;">
+      <div>
+        <h3 style="margin-bottom:8px;">페이지별 조회수</h3>
+        @if ($pageViewsByPath->isEmpty())
+          <div class="empty-state">선택한 기간에는 방문 기록이 없어요.</div>
+        @else
+          <table class="admin-table">
+            <thead><tr><th>페이지</th><th>조회수</th><th>고유 방문자</th></tr></thead>
+            <tbody>
+              @foreach ($pageViewsByPath as $row)
+                <tr>
+                  <td>{{ $row['label'] }}</td>
+                  <td>{{ number_format($row['views']) }}</td>
+                  <td>{{ number_format($row['visitors']) }}</td>
+                </tr>
+              @endforeach
+            </tbody>
+          </table>
+        @endif
+      </div>
+
+      <div>
+        <h3 style="margin-bottom:8px;">유입 경로 상위</h3>
+        <p class="chart-note" style="margin-top:0;">
+          직접 접속/북마크/주소창 입력 {{ number_format($noReferrerCount) }}건, 사이트 내 이동
+          {{ number_format($internalReferrerCount) }}건은 제외한 외부 유입 상위예요.
+        </p>
+        @if ($topReferrers->isEmpty())
+          <div class="empty-state">선택한 기간에는 외부 유입 기록이 없어요.</div>
+        @else
+          <table class="admin-table">
+            <thead><tr><th>유입 사이트</th><th>건수</th></tr></thead>
+            <tbody>
+              @foreach ($topReferrers as $row)
+                <tr>
+                  <td>{{ $row['host'] }}</td>
+                  <td>{{ number_format($row['count']) }}</td>
+                </tr>
+              @endforeach
+            </tbody>
+          </table>
+        @endif
+      </div>
     </div>
   </div>
 
@@ -247,7 +317,7 @@
   </div>
 
   <footer>
-    방문자 수는 브라우저 쿠키 기반의 대략적인 집계예요(광고 유입 경로·봇 필터링 등은 포함하지 않음). 정확한 마케팅 분석이 필요하면 GA4 같은 별도 분석 도구를 붙이는 걸 추천해요. 위 매출/결제 통계는 코인 결제와 프리미엄 리포트 결제를 합산한 값이에요.
+    방문자 수는 브라우저 쿠키(visitor_id) 기반의 대략적인 집계예요. User-Agent로 판별한 검색엔진 크롤러·링크 미리보기 봇은 집계에서 제외했지만(위 "제외된 봇/크롤러 방문" 참고), 완벽한 판별은 아니라서 일부 오차는 있을 수 있어요. 광고 매체별 유입 경로 태깅처럼 더 정교한 분석이 필요하면 GA4 같은 별도 분석 도구를 붙이는 걸 추천해요. 위 매출/결제 통계는 코인 결제와 프리미엄 리포트 결제를 합산한 값이에요.
   </footer>
 </div>
 

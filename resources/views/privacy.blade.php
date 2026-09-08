@@ -9,7 +9,10 @@
   - reports.input / reports.content: 프리미엄 리포트 생성용 사주·궁합 입력값 + AI 생성 결과
   - payments / reports (status, payment_key, order_id, amount): 토스페이먼츠 결제 내역
     (카드번호 등 민감한 결제수단 정보 자체는 토스페이먼츠가 처리하고 연록 서버에는 저장되지 않음)
-  - page_views + yeonbun_visitor 쿠키(TrackPageView 미들웨어, 1년): 방문 통계
+  - page_views(path, user_agent, referrer, is_bot) + yeonbun_visitor 쿠키(TrackPageView
+    미들웨어, 1년): 방문 통계. is_bot은 저장 시점에 User-Agent로 판별한 값이라 이용자가
+    직접 준 정보는 아니고, user_agent/referrer는 2026-09-08부터 관리자 대시보드의
+    봇 필터링/유입 경로 집계용으로 추가 수집(그 전 방문 기록은 없음).
   - sessions 테이블: ip_address, user_agent(로그인 세션 유지용)
   - AI 응답 생성을 위해 사주/궁합 입력값과 대화 내용이 AI 모델 API 제공업체(해외 사업자)로
     전송됨 — 국외 이전 관련 문구 포함.
@@ -107,7 +110,7 @@
             </tr>
             <tr>
               <td>서비스 이용 기록</td>
-              <td>방문 페이지, 방문자 식별 쿠키, 접속 IP, 브라우저(User-Agent) 정보</td>
+              <td>방문 페이지, 방문자 식별 쿠키, 접속 IP, 브라우저(User-Agent) 정보, 유입 경로(리퍼러)</td>
               <td>서비스 접속 시 자동 수집</td>
             </tr>
           </tbody>
