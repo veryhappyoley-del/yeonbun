@@ -51,6 +51,25 @@ class SubscriptionController extends Controller
      */
     public function saveProfile(Request $request): RedirectResponse
     {
+        // (2026-09-08 추가) "03시 03분"처럼 앞에 0을 붙인 두 자리 숫자를
+        // <input type="number">에 그대로 입력하면(생년월일시는 1~9월/일/시/분이 흔해서
+        // 실사용자가 바로 겪는 경우), Laravel의 integer 규칙이 내부적으로 쓰는
+        // filter_var($v, FILTER_VALIDATE_INT)가 "03"을 정수로 인정하지 않는다(PHP가
+        // 8진수 표기와 헷갈릴까 봐 앞자리 0이 있으면 무조건 거절함 — "3"/"13"은 통과,
+        // "03"/"09"는 거절). 폼이 어차피 숫자 입력 필드라 순수 숫자 문자열만 오므로,
+        // 검증 직전에 그런 값만 골라 정수로 캐스팅해 정규화한다. 진짜 숫자가 아닌 값
+        // (비어있음/문자 등)은 건드리지 않아서 required·integer 검증이 원래대로 동작한다.
+        $normalizeInt = static function ($value) {
+            return (is_string($value) && preg_match('/^-?\d+$/', $value) === 1) ? (int) $value : $value;
+        };
+        $request->merge([
+            'birth_year' => $normalizeInt($request->input('birth_year')),
+            'birth_month' => $normalizeInt($request->input('birth_month')),
+            'birth_day' => $normalizeInt($request->input('birth_day')),
+            'birth_hour' => $normalizeInt($request->input('birth_hour')),
+            'birth_minute' => $normalizeInt($request->input('birth_minute')),
+        ]);
+
         // (2026-09-08 수정) 이 프로젝트는 lang 파일을 아직 안 둬서(config/app.php locale이
         // 기본 en) 검증에 실패하면 "The gender field is required." 같은 영어 메시지가
         // 그대로 화면에 노출될 뻔했다 — 필드별로 한국어 메시지를 직접 지정해서 막는다.
@@ -68,12 +87,15 @@ class SubscriptionController extends Controller
             'longitude' => ['nullable', 'numeric'],
         ], [
             'birth_year.required' => '태어난 해를 입력해 주세요.',
+            'birth_year.integer' => '태어난 해는 숫자로 입력해 주세요.',
             'birth_year.min' => '태어난 해를 다시 확인해 주세요.',
             'birth_year.max' => '태어난 해를 다시 확인해 주세요.',
             'birth_month.required' => '태어난 월을 입력해 주세요.',
+            'birth_month.integer' => '월은 숫자로 입력해 주세요.',
             'birth_month.min' => '월은 1~12 사이로 입력해 주세요.',
             'birth_month.max' => '월은 1~12 사이로 입력해 주세요.',
             'birth_day.required' => '태어난 일을 입력해 주세요.',
+            'birth_day.integer' => '일은 숫자로 입력해 주세요.',
             'birth_day.min' => '일은 1~31 사이로 입력해 주세요.',
             'birth_day.max' => '일은 1~31 사이로 입력해 주세요.',
             'birth_hour.integer' => '시는 숫자로 입력해 주세요.',
