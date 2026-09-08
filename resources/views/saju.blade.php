@@ -506,6 +506,7 @@
   // 콘텐츠(본문)는 절대 여기 포함되지 않는다 — 결제 전 사용자는 "무엇을 받는지"만 알 수 있다.
   window.YeonbunReportPreview = @json($reportTypePreviews);
 </script>
+<script src="{{ asset('js/reveal.js') }}"></script>
 <script src="{{ asset('js/love-character.js') }}"></script>
 <script src="{{ asset('js/compat-character.js') }}"></script>
 <script src="{{ asset('js/app.js') }}"></script>

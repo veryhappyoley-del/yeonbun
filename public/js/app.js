@@ -853,6 +853,14 @@
     if (window.YeonbunReports) window.YeonbunReports.attachSingleCTA(ctaHost, currentSajuA);
 
     renderGuideEmptyOrKeep();
+
+    // (2026-09-08 추가) 결과가 길어서 아래를 잘 안 내려보는 문제 대응 — out의 각
+    // 최상위 블록(명식 카드/자세히 보기/캐릭터 카드/무료 티저/목차/CTA)이 화면에
+    // 들어올 때마다 순서대로 나타나고, 스크롤 유도 화살표를 띄운다.
+    if (window.YeonbunReveal) {
+      window.YeonbunReveal.init(out, ':scope > *');
+      window.YeonbunReveal.initScrollHint();
+    }
   }
 
   // (2026-08-24 추가) relationshipStage/primaryConcern/concernDetail — 궁합 폼에서 선택한
@@ -941,6 +949,11 @@
     };
 
     if (window.YeonbunReports) window.YeonbunReports.attachCompatCTA(card, currentCompat);
+
+    if (window.YeonbunReveal) {
+      window.YeonbunReveal.init(card, ':scope > *');
+      window.YeonbunReveal.initScrollHint();
+    }
   }
 
   // (2026-08-31 신설) "짝사랑 탈출" — renderCompatResult와 같은 궁합 계산(calcCompat)을
@@ -1014,6 +1027,11 @@
     };
 
     if (window.YeonbunReports) window.YeonbunReports.attachUnrequitedCTA(card, currentCompat);
+
+    if (window.YeonbunReveal) {
+      window.YeonbunReveal.init(card, ':scope > *');
+      window.YeonbunReveal.initScrollHint();
+    }
   }
 
   // (2026-08-31 신설) "다시, 우리"(재회 전략) — renderUnrequitedResult와 같은 이유로
@@ -1098,6 +1116,11 @@
     };
 
     if (window.YeonbunReports) window.YeonbunReports.attachReunionCTA(card, currentCompat);
+
+    if (window.YeonbunReveal) {
+      window.YeonbunReveal.init(card, ':scope > *');
+      window.YeonbunReveal.initScrollHint();
+    }
   }
 
   // "지금 가장 궁금한 것" 카드(4종)의 한글 라벨 — resources/views/reports/partials/blocks/

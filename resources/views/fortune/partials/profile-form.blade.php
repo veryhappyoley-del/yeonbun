@@ -27,5 +27,9 @@
     <button type="button" class="compat-gender-chip @if(old('gender', $profile?->gender) === 'female') active @endif" data-gender="female">여자</button>
   </div>
 
-  <button type="submit" class="btn btn-center" style="margin-top:18px;">저장하기</button>
+  {{-- (2026-09-08 수정) "저장하기"를 눌러도 반응이 없어 보인다는 피드백 — 실제로는
+       성별을 안 고르면 서버 검증에서 조용히 막히고 있었다(위 fortune/index.blade.php의
+       $errors 표시로 이제 그 사유가 보인다). 버튼 문구도 "누르면 다음 단계로 이어진다"는
+       걸 더 분명히 하도록 바꿨다. --}}
+  <button type="submit" class="btn btn-center" style="margin-top:18px;">저장하고 계속하기</button>
 </form>

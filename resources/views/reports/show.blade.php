@@ -94,6 +94,22 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="{{ asset('js/report-pdf.js') }}"></script>
+<script src="{{ asset('js/reveal.js') }}"></script>
+<script>
+  // (2026-09-08 추가) 리포트 본문이 길어서 끝까지 잘 안 내려보는 문제 대응 — 챕터형
+  // (.rpt-section)/레거시 단건(.rpt-section, single-report.blade.php도 같은 클래스를
+  // 씀)/레거시 궁합(원문 그대로인 .report-body)까지 실제로 존재하는 것만 골라 순서대로
+  // 나타나게 하고, 스크롤 유도 화살표를 띄운다.
+  if (window.YeonbunReveal) {
+    var rptRoot = document.querySelector('.rpt');
+    if (rptRoot) window.YeonbunReveal.init(rptRoot, ':scope > .rpt-section');
+
+    var legacyBody = document.querySelector('.report-body');
+    if (legacyBody) window.YeonbunReveal.init(legacyBody, ':scope > *');
+
+    window.YeonbunReveal.initScrollHint();
+  }
+</script>
 <script>
   // (2026-08-26 수정) "PDF로 저장" = 실제 .pdf 파일 다운로드(자세한 배경은 위 주석 참고).
   // 버튼을 직접 눌렀을 때는 언제나 다운로드를 시작하고, 리포트함 목록에서 ?print=1 을

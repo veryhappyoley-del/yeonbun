@@ -41,6 +41,20 @@
   @if (session('fortune_error'))
     <div class="card" style="border-color: var(--seal); color: var(--seal-deep);">{{ session('fortune_error') }}</div>
   @endif
+  {{-- (2026-09-08 추가) "저장하기 눌러도 아무 반응이 없다"는 피드백의 실제 원인 —
+       성별 칩(hidden input)처럼 브라우저가 자체적으로 검증해주지 않는 필수값을
+       빼먹으면 서버 검증에서 막히는데, 이 화면 어디에도 그 실패 사유를 보여주는
+       곳이 없어서 사용자 입장에선 버튼이 그냥 안 눌리는 것처럼 보였다. --}}
+  @if ($errors->any())
+    <div class="card" style="border-color: var(--seal); color: var(--seal-deep);">
+      입력을 다시 확인해 주세요.
+      <ul style="margin:6px 0 0; padding-left:18px;">
+        @foreach ($errors->all() as $message)
+          <li>{{ $message }}</li>
+        @endforeach
+      </ul>
+    </div>
+  @endif
 
   @if ($subscription && $subscription->isActive())
     {{-- 구독 중 --}}

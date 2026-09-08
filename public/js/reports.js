@@ -608,6 +608,12 @@
       return;
     }
 
+    // (2026-09-08 추가) 카드가 아직 스크롤 리빌 전(opacity:0)일 때 캡처하면 빈 이미지가
+    // 나간다 — html2canvas 호출 전에 즉시 보이는 상태로 만든다(reveal.js).
+    if (window.YeonbunReveal && window.YeonbunReveal.revealAllNow) {
+      window.YeonbunReveal.revealAllNow(cardEl);
+    }
+
     // onclone 콜백 안에서 캡처 대상을 정확히 찾기 위한 임시 마커(캡처 후 원상복구).
     var markerAttr = 'data-lc-share-capture';
     var hadMarker = cardEl.hasAttribute(markerAttr);

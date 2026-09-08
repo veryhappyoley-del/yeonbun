@@ -51,6 +51,9 @@ class SubscriptionController extends Controller
      */
     public function saveProfile(Request $request): RedirectResponse
     {
+        // (2026-09-08 수정) 이 프로젝트는 lang 파일을 아직 안 둬서(config/app.php locale이
+        // 기본 en) 검증에 실패하면 "The gender field is required." 같은 영어 메시지가
+        // 그대로 화면에 노출될 뻔했다 — 필드별로 한국어 메시지를 직접 지정해서 막는다.
         $data = $request->validate([
             'name' => ['nullable', 'string', 'max:50'],
             'birth_year' => ['required', 'integer', 'min:1900', 'max:2100'],
@@ -63,6 +66,20 @@ class SubscriptionController extends Controller
             'sido' => ['nullable', 'string', 'max:20'],
             'sigungu' => ['nullable', 'string', 'max:20'],
             'longitude' => ['nullable', 'numeric'],
+        ], [
+            'birth_year.required' => '태어난 해를 입력해 주세요.',
+            'birth_year.min' => '태어난 해를 다시 확인해 주세요.',
+            'birth_year.max' => '태어난 해를 다시 확인해 주세요.',
+            'birth_month.required' => '태어난 월을 입력해 주세요.',
+            'birth_month.min' => '월은 1~12 사이로 입력해 주세요.',
+            'birth_month.max' => '월은 1~12 사이로 입력해 주세요.',
+            'birth_day.required' => '태어난 일을 입력해 주세요.',
+            'birth_day.min' => '일은 1~31 사이로 입력해 주세요.',
+            'birth_day.max' => '일은 1~31 사이로 입력해 주세요.',
+            'birth_hour.integer' => '시는 숫자로 입력해 주세요.',
+            'birth_minute.integer' => '분은 숫자로 입력해 주세요.',
+            'gender.required' => '성별을 선택해 주세요.',
+            'gender.in' => '성별을 선택해 주세요.',
         ]);
 
         $unknownTime = (bool) ($data['birth_time_unknown'] ?? false);

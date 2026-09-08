@@ -150,6 +150,13 @@
       button.textContent = originalLabel;
     }
 
+    // (2026-09-08 추가) 챕터/섹션이 아직 스크롤 리빌 전(opacity:0)이면 html2canvas가
+    // 그 상태 그대로 찍어서 PDF에 빈 칸이 생긴다 — 캡처 시작 전에 전부 즉시 보이는
+    // 상태로 만든다(reveal.js).
+    if (window.YeonbunReveal && window.YeonbunReveal.revealAllNow) {
+      window.YeonbunReveal.revealAllNow(root);
+    }
+
     var sections = pickSections(root).filter(Boolean);
     var pdf = new jsPDFCtor({ unit: 'pt', format: 'a4' });
     var addCanvas = makeFlowWriter(pdf, 28);
