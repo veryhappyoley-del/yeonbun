@@ -30,7 +30,13 @@
     compatibility: { label: '우리의 연애온도', priceLabel: '21,900원' },
     unrequited_love: { label: '짝사랑의 다음 장', priceLabel: '23,900원' },
     // (2026-08-31 추가) "다시, 우리" — App\ReportTypes\Definitions\ReunionStrategyReportType.
-    reunion_strategy: { label: '다시, 우리', priceLabel: '25,900원' }
+    reunion_strategy: { label: '다시, 우리', priceLabel: '25,900원' },
+    // (2026-09-08 추가) "재물운"/"커리어운" — 처음으로 연애 카테고리를 벗어난 리포트.
+    // 가격은 App\ReportTypes\Definitions\{Wealth,Career}FortuneReportType::$price가
+    // 실제 결제 시 서버에서 다시 확인하는 값이라 여기 priceLabel은 버튼 문구 표시용일
+    // 뿐이고, 두 값이 어긋나지 않도록 항상 그 두 파일과 같이 바꿔야 한다.
+    wealth_fortune: { label: '재물운', priceLabel: '21,900원' },
+    career_fortune: { label: '커리어운', priceLabel: '19,900원' }
   };
 
   // 결제 전 "이걸 사면 뭘 받는지" 안내용 — 목차 미리보기(제목+티저, 잠금 아이콘)와 FAQ.
@@ -382,6 +388,47 @@
     };
   }
 
+  // (2026-09-08 추가) "재물운"/"커리어운" — InputShape::Self(한 사람의 deep 사주만
+  // 필요)라는 점은 buildSingleInput과 같지만, 그쪽처럼 연애 캐릭터/신살 요약을 담는 대신
+  // 이 두 리포트가 실제로 요청한 것(격국/신강신약/용신·희신·기신/십성 배치/대운·세운)을
+  // 담아야 해서 별도 함수로 뒀다. state = { saju, name, gender } — public/js/app.js의
+  // renderProfessionalResult가 이 모양으로 넘긴다. saju.deep에는 격국(gyeokguk)·십성
+  // 집계(tenGodTally)·용신/희신/기신(usefulGod, gisin/gusin 포함)이 이미 다 들어있어서
+  // (public/js/app.js analyzeDeepSaju, 2026-09-08 확장) 그대로 넘기기만 하면 된다 —
+  // 대운/세운만 별도 계산이 필요한데, 그건 성별에 따라 순행/역행이 갈리는
+  // window.YeonbunLuckCycle(daeunList/yearlyOutlook/currentDaeunIndex)의 몫이다.
+  //
+  // "제공된 데이터에 기록된 기간만 사용하세요"라는 사용자 지시를 지키기 위해, 대운/세운
+  // 연도는 전부 이 함수가 미리 계산해서 확정된 목록으로 넘기고, AI는 그중에서 골라
+  // 문장으로 풀기만 한다(짝사랑/재회 리포트의 timingCandidates/monthlyCalendar와 같은 원칙).
+  function buildProfessionalInput(state) {
+    var saju = state.saju;
+    var LC = window.YeonbunLuckCycle;
+    var daeun = LC ? LC.daeunList(saju, state.gender, 8) : null;
+    var currentDaeunIndex = (LC && daeun) ? LC.currentDaeunIndex(daeun, saju.input.year) : -1;
+    var yearlyOutlook = LC ? LC.yearlyOutlook(saju, { yearsAhead: 10 }) : [];
+
+    return {
+      name: state.name || null,
+      gender: state.gender || null,
+      pillars: {
+        year: pillarSummary(saju.year), month: pillarSummary(saju.month),
+        day: pillarSummary(saju.day), hour: pillarSummary(saju.hour)
+      },
+      dayElement: saju.day.stemElement,
+      dayYinYang: saju.day.stemYinYang,
+      wuxingCount: saju.wuxingCount,
+      // 격국/십성 배치(tenGods)+집계(tenGodTally)/신강신약(dayMasterStrength)/
+      // 용신·희신·기신(usefulGod)/합충형파해(relations)가 전부 여기 들어있다.
+      deep: saju.deep || null,
+      // 대운 목록(시작 나이 포함) + 그중 "현재" 구간의 인덱스.
+      daeun: daeun,
+      currentDaeunIndex: currentDaeunIndex,
+      // 연도별 세운(올해부터 10년치) — 결정론적으로 미리 계산된 값만 사용.
+      yearlyOutlook: yearlyOutlook
+    };
+  }
+
   /* ============================================================
    * CTA(구매 버튼, 필요하면 공유카드 버튼도 함께) 렌더링
    * ============================================================ */
@@ -477,6 +524,20 @@
     var input = buildReunionInput(state);
     var title = (state.nameA || '나') + ' × ' + (state.nameB || '그 사람') + ' 다시, 우리';
     card.appendChild(buildCTA('reunion_strategy', { input: input, title: title }, null, { showShare: false, includeToc: false }));
+  }
+
+  // (2026-09-08 추가) "재물운"/"커리어운" — attachSingleCTA와 같은 틀(무료 티저 → 목차
+  // 미리보기 → 구매 버튼), typeKey/제목/input만 다르다.
+  function attachWealthCTA(card, state) {
+    var input = buildProfessionalInput(state);
+    var title = (state.name ? state.name + '님의 ' : '') + '재물운 심층 리포트';
+    card.appendChild(buildCTA('wealth_fortune', { input: input, title: title }, null, { showShare: false, includeToc: false }));
+  }
+
+  function attachCareerCTA(card, state) {
+    var input = buildProfessionalInput(state);
+    var title = (state.name ? state.name + '님의 ' : '') + '커리어운 심층 리포트';
+    card.appendChild(buildCTA('career_fortune', { input: input, title: title }, null, { showShare: false, includeToc: false }));
   }
 
   function truncate(str, n) {
@@ -673,11 +734,16 @@
     attachCompatCTA: attachCompatCTA,
     attachUnrequitedCTA: attachUnrequitedCTA,
     attachReunionCTA: attachReunionCTA,
+    attachWealthCTA: attachWealthCTA,
+    attachCareerCTA: attachCareerCTA,
     attachCardShare: attachCardShare,
     buildTocPreview: buildTocPreview,
     // (2026-08-25 추가) app.js의 renderSingleResult가 무료 티저(origin_profile)를 요청할 때
     // 결제용과 똑같은 input을 쓰기 위해 노출 — 같은 input이어야 ChapterGenerator의 입력
     // 해시가 일치해서 미리 본 내용이 결제 후 그대로 이어진다(궁합분석과 같은 보장).
-    buildSingleInput: buildSingleInput
+    buildSingleInput: buildSingleInput,
+    // (2026-09-08 추가) renderWealthResult/renderCareerResult가 무료 티저 요청 시 결제용과
+    // 똑같은 input을 쓰기 위해 노출 — buildSingleInput과 같은 이유.
+    buildProfessionalInput: buildProfessionalInput
   };
 })();

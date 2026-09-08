@@ -34,6 +34,19 @@ final readonly class ReportType
      *                             쓸 챕터 key. null(기본값)이면 이 기능을 쓰지 않는 타입(예:
      *                             연애운분석)입니다 — checkout 전에 결제 유도용 실제 콘텐츠를
      *                             하나도 노출하지 않던 기존 동작 그대로.
+     * @param  string  $personaLabel  (2026-09-08 추가) App\Services\ChapterGenerator::prompt()의
+     *                             페르소나 문장("당신은 사주 명리학과 {$personaLabel}에 모두
+     *                             능숙한 '결'의 코치입니다")에 그대로 끼워 넣는 짧은 명사구.
+     *                             기본값 '연애 상담'은 기존 연애/궁합/재회 리포트 4종의 동작을
+     *                             그대로 유지한다 — "재물운"/"커리어운"처럼 연애가 아닌 리포트가
+     *                             생기면서, AI에게 매 챕터마다 스스로를 "연애 상담"에 능숙하다고
+     *                             소개시키는 게 더 이상 항상 맞지 않아 추가했다.
+     * @param  string  $extraPrinciples  (2026-09-08 추가) ChapterGenerator::prompt()의 "공통
+     *                             원칙" 문단 뒤에 그대로 덧붙는 추가 지침 — 리포트 타입마다
+     *                             다를 수 있는 톤/구성 규칙(예: 재물운/커리어운의 "구체적인
+     *                             직무·업종 예시 제시", "강점/약점/기회/위험 균형", "같은 내용
+     *                             반복 금지")을 여기 담는다. 빈 문자열(기본값)이면 기존 4종
+     *                             리포트처럼 공통 원칙만 쓰고 아무것도 추가되지 않는다.
      */
     public function __construct(
         public string $key,
@@ -44,6 +57,8 @@ final readonly class ReportType
         public int $schemaVersion = 2,
         public array $previewChapterKeys = [],
         public ?string $freePreviewChapterKey = null,
+        public string $personaLabel = '연애 상담',
+        public string $extraPrinciples = '',
     ) {
     }
 

@@ -321,6 +321,12 @@
     신: ['무', '임', '경'], 유: ['신'], 술: ['신', '정', '무'], 해: ['갑', '임']
   };
 
+  // (2026-09-08 추가) 지장간 글자(예: '무','병' 등 천간 한 글자)로부터 오행/음양을 바로
+  // 찾기 위한 조회표 — 격국(월지 정기 지장간 기준) 계산에 필요하다. STEMS 배열은 이미
+  // 위(파일 상단)에 있는 걸 그대로 재사용하고 키만 다시 인덱싱한다.
+  var STEM_BY_CHAR = {};
+  STEMS.forEach(function (s) { STEM_BY_CHAR[s.k] = s; });
+
   var EL_GENERATES = { 목: '화', 화: '토', 토: '금', 금: '수', 수: '목' }; // A가 B를 생함
   var EL_CONTROLS = { 목: '토', 화: '금', 토: '수', 금: '목', 수: '화' }; // A가 B를 극함
 
@@ -394,23 +400,99 @@
     return { label: label, score: score, supportCount: support, drainCount: drain };
   }
 
+  // (2026-09-08 추가) "재물운"/"커리어운" 리포트가 필요로 하는 오행 역방향 조회 —
+  // 특정 오행을 생하는 오행(인성 자리를 구할 때), 특정 오행을 극하는 오행(관성 자리를
+  // 구할 때)을 찾는다. EL_GENERATES/EL_CONTROLS는 "A가 B를 생/극함"을 A 기준으로만
+  // 담고 있어서, "B를 생/극하는 A는 누구인가"를 구하려면 역방향 탐색이 필요하다.
+  function elementThatGenerates(target) {
+    var found = null;
+    Object.keys(EL_GENERATES).forEach(function (el) { if (EL_GENERATES[el] === target) found = el; });
+    return found;
+  }
+  function elementThatControls(target) {
+    var found = null;
+    Object.keys(EL_CONTROLS).forEach(function (el) { if (EL_CONTROLS[el] === target) found = el; });
+    return found;
+  }
+
   // 용희신(간이): 신약이면 일간을 돕는 오행(비겁·인성 계열), 신강이면 일간의 힘을 덜어내는
   // 오행(식상 계열 우선, 관성 보조), 중화면 오행 분포상 가장 부족한 오행을 보완 후보로 제시.
+  // (2026-09-08 수정) 기존엔 용신(primary)·희신(secondary)만 있었는데, "재물운"/"커리어운"
+  // 리포트가 기신·구신까지 요구해서 추가했다 — 기존 필드(primary/secondary)는 그대로 두고
+  // (luck-cycle.js의 scoreMonth가 이미 이 두 이름으로 참조하고 있어 이름을 바꾸면 그쪽이
+  // 깨진다) gisin(기신)/gusin(구신)만 새로 더하는 식으로 순수 추가했다. 신강/신약은 교과서적
+  // 억부법 기준 "비겁·인성=용신/희신, 식상·재성·관성=기신/구신"(신약) 또는 그 반대(신강)
+  // 원칙을 그대로 따른다 — 중화는 이 이분법이 억지스러워서 gisin/gusin을 null로 둔다.
   function simpleUsefulGod(dayEl, strengthLabel, wuxingCount) {
     if (strengthLabel === '신약') {
       var supportEls = [dayEl];
       Object.keys(EL_GENERATES).forEach(function (el) { if (EL_GENERATES[el] === dayEl) supportEls.push(el); });
       var secondary = supportEls.filter(function (e) { return e !== dayEl; })[0] || dayEl;
-      return { primary: dayEl, secondary: secondary, reason: '일간의 힘이 상대적으로 약해서, 같은 오행이나 일간을 생조하는 오행이 도움이 되는 방향이에요.' };
+      var gisin = elementThatControls(dayEl); // 관성 — 신약한 일간을 가장 직접적으로 극하는 오행
+      return {
+        primary: dayEl, secondary: secondary,
+        gisin: gisin, gusin: gisin ? EL_CONTROLS[dayEl] : null, // 재성 — 재생관(財生官)으로 기신(관성)을 돕는 오행
+        reason: '일간의 힘이 상대적으로 약해서, 같은 오행이나 일간을 생조하는 오행이 도움이 되는 방향이에요.'
+      };
     }
     if (strengthLabel === '신강') {
-      return { primary: EL_GENERATES[dayEl], secondary: EL_CONTROLS[dayEl], reason: '일간의 힘이 상대적으로 강해서, 힘을 밖으로 풀어내거나 적절히 눌러주는 오행이 도움이 되는 방향이에요.' };
+      return {
+        primary: EL_GENERATES[dayEl], secondary: EL_CONTROLS[dayEl],
+        gisin: elementThatGenerates(dayEl), gusin: dayEl, // 인성이 기신, 비겁이 구신 — 둘 다 일간을 더 강하게 만드는 쪽
+        reason: '일간의 힘이 상대적으로 강해서, 힘을 밖으로 풀어내거나 적절히 눌러주는 오행이 도움이 되는 방향이에요.'
+      };
     }
     var minEl = null, minCount = Infinity;
     Object.keys(wuxingCount).forEach(function (el) {
       if (wuxingCount[el] < minCount) { minCount = wuxingCount[el]; minEl = el; }
     });
-    return { primary: minEl, secondary: dayEl, reason: '오행 균형이 비교적 고른 편이라, 사주 원국에서 가장 적은 오행을 보완하는 방향을 참고용으로 제시해요.' };
+    return {
+      primary: minEl, secondary: dayEl, gisin: null, gusin: null,
+      reason: '오행 균형이 비교적 고른 편이라, 사주 원국에서 가장 적은 오행을 보완하는 방향을 참고용으로 제시해요.'
+    };
+  }
+
+  // (2026-09-08 추가) 십성 배치의 강약(개수) 집계 — "정재가 2개, 편관이 1개" 식으로
+  // 재물운/커리어운 리포트가 실제 사주 근거를 구체적으로 댈 수 있게 한다. 일간 자신(day
+  // 필러의 stemTenGod은 항상 null)은 자연히 제외되고, 연/월/시의 천간·지지 + 일지, 총
+  // 최대 7곳을 집계한다.
+  var TEN_GOD_CATEGORIES = ['비견', '겁재', '식신', '상관', '편재', '정재', '편관', '정관', '편인', '정인'];
+  function tallyTenGods(tenGodsMap) {
+    var tally = {};
+    TEN_GOD_CATEGORIES.forEach(function (g) { tally[g] = 0; });
+    ['year', 'month', 'day', 'hour'].forEach(function (key) {
+      var pd = tenGodsMap[key];
+      if (!pd) return;
+      if (pd.stemTenGod && tally.hasOwnProperty(pd.stemTenGod)) tally[pd.stemTenGod]++;
+      if (pd.branchTenGod && tally.hasOwnProperty(pd.branchTenGod)) tally[pd.branchTenGod]++;
+    });
+    return tally;
+  }
+
+  // (2026-09-08 추가) 격국(簡易) — 여러 기초 명리 자료가 공통적으로 쓰는 가장 기본적인
+  // 방법: 월지(月支)의 지장간 중 "정기"(正氣, HIDDEN_STEMS 배열의 마지막 값 — 그 지지
+  // 본연의 오행과 늘 일치)를 일간과 대조해 나오는 십성을 격 이름으로 삼는다. 사왕지
+  // (자오묘유)처럼 지장간이 1개뿐이면 그 글자가 곧 정기다. 정기가 비견/겁재로 나오는
+  // 경우는 "격국이 없다"고 하지 않고 관례대로 건록격/양인격이라 부르되, 이 간이 버전임을
+  // 함께 표기한다. 사주 전체가 한쪽으로 극단적으로 쏠린 "종격/화격" 등 특수 격국은
+  // 유파마다 성립 조건이 크게 갈리는 영역이라 이 버전에서는 판단하지 않는다(주석 위,
+  // analyzeDeepSaju 상단의 기존 "격국/조후 생략" 설명 참고 — 이번에 정격 10분류만 추가).
+  var GYEOKGUK_SPECIAL_LABEL = { 비견: '비견격(건록격)', 겁재: '겁재격(양인격)' };
+  function simpleGyeokguk(dayEl, dayYY, monthBranch) {
+    var hidden = HIDDEN_STEMS[monthBranch] || [];
+    var primaryChar = hidden[hidden.length - 1]; // 정기(正氣) — 배열의 마지막 값
+    if (!primaryChar) return null;
+    var stemInfo = STEM_BY_CHAR[primaryChar];
+    if (!stemInfo) return null;
+    var tenGod = tenGodOf(dayEl, dayYY, stemInfo.el, stemInfo.yy);
+    if (!tenGod) return null;
+
+    return {
+      label: (GYEOKGUK_SPECIAL_LABEL[tenGod] || (tenGod + '격')),
+      basis: tenGod,
+      monthHiddenStem: primaryChar,
+      note: '월지 정기(正氣) 지장간 기준의 간이 격국 판정(정격 10분류)이며, 종격/화격 등 특수 격국은 이 버전에서 다루지 않습니다.'
+    };
   }
 
   function analyzeDeepSaju(pillars, wuxingCount) {
@@ -428,16 +510,19 @@
       };
     }
 
+    var tenGods = {
+      year: pillarDeep(year, false), month: pillarDeep(month, false),
+      day: pillarDeep(day, true), hour: pillarDeep(hour, false)
+    };
     var branchesPresent = [year, month, day, hour].filter(Boolean).map(function (p) { return p.branch; });
     var relations = findBranchRelations(branchesPresent);
     var strength = dayMasterStrength(dayEl, wuxingCount, month ? month.branchElement : null);
     var usefulGod = simpleUsefulGod(dayEl, strength.label, wuxingCount);
 
     return {
-      tenGods: {
-        year: pillarDeep(year, false), month: pillarDeep(month, false),
-        day: pillarDeep(day, true), hour: pillarDeep(hour, false)
-      },
+      tenGods: tenGods,
+      tenGodTally: tallyTenGods(tenGods),
+      gyeokguk: month ? simpleGyeokguk(dayEl, dayYY, month.branch) : null,
       relations: relations,
       dayMasterStrength: strength,
       usefulGod: usefulGod,
@@ -650,12 +735,25 @@
 
   var currentSajuA = null; // 나의 연애 사주 결과 (탭1) — 상담 가이드에서 재사용
   var currentCompat = null; // 궁합 결과 (탭2) — 프리미엄 궁합 리포트/공유 카드에서 재사용
+  // (2026-09-08 추가) "재물운"/"커리어운" 결과 — currentSajuA와 별도 변수로 둔다.
+  // currentSajuA는 다른 기능(연애 고민 가이드의 concern-grid, 아래 line 1379 근처,
+  // 연애 코치 chat.js 등)이 `.love`(analyzeLove 결과)가 반드시 있다고 가정하고 읽는데,
+  // 재물운/커리어운은 연애 분석을 아예 안 하므로 그 필드가 없다 — currentSajuA를 덮어쓰면
+  // "재물운 탭에 갔다 온 뒤 연애 고민 가이드를 누르면 에러"가 날 수 있어서 분리했다.
+  // compat/unrequited/reunion이 currentCompat 하나를 공유하는 것과 같은 방식으로, wealth/
+  // career도 이 변수 하나를 공유한다(동시에 둘 다 "현재" 결과일 수 없으므로 문제 없음).
+  var currentSajuProfessional = null;
 
   // (2026-08-31 추가) "짝사랑 탈출" 탭이 #panel-compat 폼을 그대로 재사용하면서 모드만
   // 구분한다 — 'compat'(궁합 보기, 기본값) 또는 'unrequited'(짝사랑 탈출). c-submit
   // 클릭 시 이 값으로 renderCompatResult/renderUnrequitedResult 중 어느 쪽을 부를지,
   // 폼 안의 어느 섹션(현재 관계 선택 vs 성별 선택)을 보여줄지 정한다.
   var currentCompatMode = 'compat';
+
+  // (2026-09-08 추가) "재물운"/"커리어운" 탭이 #panel-single 폼을 그대로 재사용하면서
+  // 모드만 구분한다 — currentCompatMode와 완전히 같은 패턴. 'single'(연애의 나침반,
+  // 기본값) / 'wealth'(재물운) / 'career'(커리어운).
+  var currentSingleMode = 'single';
 
   /* ============================================================
    * 6. DOM 렌더링 유틸
@@ -861,6 +959,115 @@
       window.YeonbunReveal.init(out, ':scope > *');
       window.YeonbunReveal.initScrollHint();
     }
+  }
+
+  // (2026-09-08 추가) "재물운"/"커리어운" 무료 화면 상단에 격국/신강신약/용신·희신·기신을
+  // 바로 보여주는 카드 — analyzeDeepSaju()가 이번에 새로 계산해서 saju.deep에 담아준
+  // 값이라(격국은 이번에 처음 추가됨) 화면에서도 "27,000원짜리 리포트가 이런 근거로
+  // 말한다"는 걸 결제 전부터 보여줄 수 있게 됐다. "연애의 나침반"에는 굳이 안 보여준다 —
+  // 그쪽은 오행 분포/신살 위주로 이미 구성이 잡혀 있고 격국/용신 같은 개념이 연애 해석
+  // 흐름과는 결이 달라서, 재물운/커리어운처럼 "왜 이 판단인지" 근거를 전면에 세우는
+  // 리포트에만 넣는다.
+  function renderDeepInsightCard(deep) {
+    var card = el('div', { class: 'card' });
+    card.appendChild(txt('h3', '', '핵심 사주 지표'));
+    var result = el('div', { class: 'result-block' });
+    if (deep.gyeokguk) {
+      result.appendChild(block('격국', deep.gyeokguk.label + ' — 월지 정기(正氣) 지장간 기준의 간이 판정이에요.'));
+    }
+    result.appendChild(block('신강·신약', deep.dayMasterStrength.label + ' — 일간의 힘이 상대적으로 ' +
+      (deep.dayMasterStrength.label === '신강' ? '강한 편' : deep.dayMasterStrength.label === '신약' ? '약한 편' : '고른 편') + '이에요.'));
+    if (deep.usefulGod) {
+      var u = deep.usefulGod;
+      var text = '용신은 ' + u.primary + ', 희신은 ' + u.secondary + ' 오행이에요.';
+      if (u.gisin) text += ' 반대로 ' + u.gisin + (u.gusin ? '·' + u.gusin : '') + ' 오행은 상대적으로 조심하는 게 좋아요.';
+      result.appendChild(block('용신·희신·기신', text));
+    }
+    card.appendChild(result);
+    return card;
+  }
+
+  // (2026-09-08 추가) "재물운"/"커리어운" 공통 화면 렌더러 — renderSingleResult와 같은
+  // 흐름(명식 → 핵심 지표 → 무료 티저 실제 생성 → 목차 미리보기 → 구매 CTA)을 그대로
+  // 따르되, 연애 캐릭터 카드/신살 같은 연애 전용 콘텐츠 대신 renderDeepInsightCard를
+  // 넣는다. wealth/career 두 탭이 typeKey/문구/id만 다르고 구조가 완전히 같아서 함수 하나로
+  // 합쳤다(compat/unrequited/reunion이 각자 별도 함수인 것과 달리, 이쪽은 진짜로 100%
+  // 같은 모양이라 분기할 이유가 없었다).
+  function renderProfessionalResult(saju, name, gender, opts) {
+    var out = document.getElementById('s-result');
+    out.innerHTML = '';
+
+    var state = { saju: saju, name: name, gender: gender };
+    currentSajuProfessional = state;
+
+    var myeongsikCard = el('div', { class: 'card' });
+    myeongsikCard.appendChild(txt('h2', '', (name ? name + '님의 ' : '') + '사주 명식'));
+    myeongsikCard.appendChild(renderMyeongsik(saju));
+    myeongsikCard.appendChild(txt('div', 'day-note', '일간(나를 상징하는 글자) · ' + saju.day.stem + saju.day.stemElement + ' — 아래 ' + opts.shortLabel + ' 해석의 중심이 되는 글자예요'));
+    out.appendChild(myeongsikCard);
+
+    var detailToggle = el('details', { class: 'saju-detail-toggle', open: 'open' });
+    detailToggle.appendChild(txt('summary', '', '자세한 사주 풀이 보기'));
+    var detailCard = el('div', { class: 'card' });
+    detailCard.appendChild(txt('h3', '', '오행 분포'));
+    detailCard.appendChild(renderOheang(saju.wuxingCount));
+    detailToggle.appendChild(detailCard);
+    detailToggle.appendChild(renderDeepInsightCard(saju.deep));
+    out.appendChild(detailToggle);
+
+    // 무료 티저 — 결제용과 똑같은 buildProfessionalInput()을 써서, 미리 본 내용이 결제 후
+    // 그대로 이어지게 한다(다른 탭들과 동일 원칙).
+    var teaserHost = el('div', { class: 'card' });
+    out.appendChild(teaserHost);
+    if (window.YeonbunReports) {
+      startChapterPreview(teaserHost, opts.reportType, opts.freePreviewChapterKey, window.YeonbunReports.buildProfessionalInput(state), {
+        label: opts.teaserLabel,
+        ctaMessage: opts.teaserCtaMessage
+      });
+    }
+
+    if (window.YeonbunReports && window.YeonbunReports.buildTocPreview) {
+      var toc = window.YeonbunReports.buildTocPreview(opts.reportType);
+      if (toc) {
+        toc.style.marginTop = '0';
+        toc.style.paddingTop = '0';
+        toc.style.borderTop = 'none';
+        var tocCard = el('div', { class: 'card' });
+        tocCard.appendChild(toc);
+        out.appendChild(tocCard);
+      }
+    }
+
+    var ctaHost = el('div', { class: 'card' });
+    out.appendChild(ctaHost);
+    if (window.YeonbunReports) opts.attachCTA(ctaHost, state);
+
+    if (window.YeonbunReveal) {
+      window.YeonbunReveal.init(out, ':scope > *');
+      window.YeonbunReveal.initScrollHint();
+    }
+  }
+
+  function renderWealthResult(saju, name, gender) {
+    renderProfessionalResult(saju, name, gender, {
+      shortLabel: '재물운',
+      reportType: 'wealth_fortune',
+      freePreviewChapterKey: 'wealth_overview',
+      teaserLabel: '💰 내 재물운, 더 깊이 보면',
+      teaserCtaMessage: '전체 내용은 재물운 리포트에서 이어져요 — 아래 챕터도 함께 준비돼 있어요.',
+      attachCTA: window.YeonbunReports ? window.YeonbunReports.attachWealthCTA : null
+    });
+  }
+
+  function renderCareerResult(saju, name, gender) {
+    renderProfessionalResult(saju, name, gender, {
+      shortLabel: '커리어운',
+      reportType: 'career_fortune',
+      freePreviewChapterKey: 'career_overview',
+      teaserLabel: '💼 내 커리어운, 더 깊이 보면',
+      teaserCtaMessage: '전체 내용은 커리어운 리포트에서 이어져요 — 아래 챕터도 함께 준비돼 있어요.',
+      attachCTA: window.YeonbunReports ? window.YeonbunReports.attachCareerCTA : null
+    });
   }
 
   // (2026-08-24 추가) relationshipStage/primaryConcern/concernDetail — 궁합 폼에서 선택한
@@ -1409,7 +1616,20 @@
     if (submitBtn) submitBtn.textContent = isUnrequited ? '짝사랑의 다음 장 분석 시작' : '우리의 연애온도 보기';
   }
 
+  // (2026-09-08 추가) applyCompatModeUI와 완전히 같은 패턴 — "재물운"/"커리어운" 탭에서만
+  // 성별 칩(#s-gender-section)을 보여주고 제출 버튼 문구를 바꾼다. "연애의 나침반"
+  // (single)에서는 성별이 필요 없으니 계속 숨겨둔다.
+  var SINGLE_SUBMIT_LABEL = { single: '사주 풀이 보기', wealth: '재물운 풀이 보기', career: '커리어운 풀이 보기' };
+  function applySingleModeUI(mode) {
+    var needsGender = mode === 'wealth' || mode === 'career';
+    var genderSection = document.getElementById('s-gender-section');
+    var submitBtn = document.getElementById('s-submit');
+    if (genderSection) genderSection.classList.toggle('is-hidden', !needsGender);
+    if (submitBtn) submitBtn.textContent = SINGLE_SUBMIT_LABEL[mode] || SINGLE_SUBMIT_LABEL.single;
+  }
+
   function bindEvents() {
+    wireSingleSelect('s-gender-row', 'compat-gender-chip');
     wireSingleSelect('c-stage-row', 'compat-stage-chip');
     wireSingleSelect('c-concern-grid', 'compat-concern-card');
     wireSingleSelect('c-gender-row-a', 'compat-gender-chip');
@@ -1428,7 +1648,9 @@
     // (2026-08-31 수정) "짝사랑 탈출"(data-tab="unrequited")은 별도 패널이 없고
     // #panel-compat을 그대로 재사용한다 — PANEL_OVERRIDE로 실제 보여줄 패널 id만
     // 바꾸고, currentCompatMode를 함께 갱신해서 폼 안의 섹션 표시/제출 동작을 구분한다.
-    var PANEL_OVERRIDE = { unrequited: 'compat' };
+    // (2026-09-08 수정) "재물운"/"커리어운"도 짝사랑 탈출과 같은 방식으로 #panel-single을
+    // 재사용한다.
+    var PANEL_OVERRIDE = { unrequited: 'compat', wealth: 'single', career: 'single' };
     document.querySelectorAll('.tab-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
         document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
@@ -1440,6 +1662,9 @@
         if (tab === 'compat' || tab === 'unrequited') {
           currentCompatMode = tab;
           applyCompatModeUI(tab);
+        } else if (tab === 'single' || tab === 'wealth' || tab === 'career') {
+          currentSingleMode = tab;
+          applySingleModeUI(tab);
         }
       });
     });
@@ -1448,6 +1673,24 @@
       var f = readSingleForm();
       if (!f) return;
       var saju = calcSaju(f);
+
+      // (2026-09-08 추가) "재물운"/"커리어운"은 대운 순행/역행 계산에 성별이 꼭 필요해서
+      // (public/js/luck-cycle.js의 daeunList) 궁합/재회 탭과 같은 방식으로 성별 선택을
+      // 필수로 막는다. "연애의 나침반"(single)은 예전처럼 성별 없이 그대로 진행.
+      if (currentSingleMode === 'wealth' || currentSingleMode === 'career') {
+        var singleGender = getSingleSelectValue('s-gender-row', 'gender');
+        if (!singleGender) {
+          alert('대운 계산에 필요해서, 성별을 먼저 선택해 주세요.');
+          return;
+        }
+        if (currentSingleMode === 'wealth') {
+          renderWealthResult(saju, f.name, singleGender);
+        } else {
+          renderCareerResult(saju, f.name, singleGender);
+        }
+        return;
+      }
+
       renderSingleResult(saju, f.name);
     });
 
@@ -1636,6 +1879,7 @@
   // 이별주도자/이별사유)까지 초안·로그인 후 재개 기능이 되살려야 해서 일반화했다.
   // { container: 칩들을 담는 컨테이너 id, attr: getSingleSelectValue가 읽는 data-* 이름 }
   var DRAFT_CHIP_GROUPS = [
+    { container: 's-gender-row', attr: 'gender' },
     { container: 'c-stage-row', attr: 'stage' },
     { container: 'c-concern-grid', attr: 'concern' },
     { container: 'c-gender-row-a', attr: 'gender' },
@@ -1844,6 +2088,11 @@
     } else if (pending.tab === 'reunion') {
       submitId = 'r-submit';
       ready = isTwoPersonReadyForResume('r') && !!getSingleSelectValue('r-gender-row-a', 'gender');
+    } else if (pending.tab === 'wealth' || pending.tab === 'career') {
+      // (2026-09-08 추가) "재물운"/"커리어운"도 #panel-single을 재사용하지만, s-submit의
+      // 성별 필수 검증(대운 계산용)까지 통과해야 alert() 없이 자동 재계산이 성공한다.
+      submitId = 's-submit';
+      ready = isSingleReadyForResume() && !!getSingleSelectValue('s-gender-row', 'gender');
     } else {
       return;
     }

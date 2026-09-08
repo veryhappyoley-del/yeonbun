@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\ChapterPreview;
 use App\Models\ReportChapter;
 use App\ReportTypes\ChapterSpec;
+use App\ReportTypes\ReportType;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -47,7 +48,7 @@ class ChapterGenerator
      * Tool Use로 스키마를 강제하므로 messages에는 "무엇을 채워야 하는지"에 집중한
      * 프롬프트만 담고, "JSON만 출력하라" 같은 형식 지시는 tool_choice가 대신합니다.
      */
-    public function requestPayload(ChapterSpec $chapter, array $input, ?int $maxTokensOverride = null): array
+    public function requestPayload(ChapterSpec $chapter, array $input, ?int $maxTokensOverride = null, ?ReportType $type = null): array
     {
         return [
             'model' => config('services.anthropic.model'),
@@ -58,7 +59,7 @@ class ChapterGenerator
                 'input_schema' => $this->jsonSchemaFor($chapter->schema),
             ]],
             'tool_choice' => ['type' => 'tool', 'name' => 'fill_chapter'],
-            'messages' => [['role' => 'user', 'content' => $this->prompt($chapter, $input)]],
+            'messages' => [['role' => 'user', 'content' => $this->prompt($chapter, $input, $type)]],
         ];
     }
 
@@ -94,12 +95,14 @@ class ChapterGenerator
         return array_intersect_key($input, array_flip($chapter->inputKeys));
     }
 
-    private function prompt(ChapterSpec $chapter, array $input): string
+    private function prompt(ChapterSpec $chapter, array $input, ?ReportType $type = null): string
     {
         $filtered = $this->filterInput($chapter, $input);
         $json = mb_substr(json_encode($filtered, JSON_UNESCAPED_UNICODE) ?: '{}', 0, self::MAX_INPUT_JSON_LENGTH);
+        $personaLabel = $type?->personaLabel ?? '연애 상담';
+        $extraPrinciples = $type?->extraPrinciples ?? '';
 
-        return "당신은 사주 명리학과 연애 상담에 모두 능숙한 '결'의 코치입니다. ".
+        return "당신은 사주 명리학과 {$personaLabel}에 모두 능숙한 '결'의 코치입니다. ".
             "지금 작성하는 것은 유료 리포트 전체가 아니라, 그 안의 한 챕터('{$chapter->title}')입니다. ".
             "다른 챕터와 내용이 겹치지 않도록 이 챕터의 주제에만 집중하세요. 내용은 반드시 fill_chapter ".
             "도구를 호출해서 전달하세요(텍스트로 직접 답하지 마세요).\n\n".
@@ -109,7 +112,8 @@ class ChapterGenerator
             "운명론적 확언은 피하세요. ".
             "용어 사용 원칙: '일간이 신약하다', '편관·편인·비견·정관·식신·상관·정재·편재' 같은 사주 전문 용어를 설명 없이 그대로 나열하지 마세요. ".
             "명리학 개념(십신/오행/신강신약 등)은 반드시 그 사람의 실제 성향·행동·감정으로 풀어서 쓰고, 전문 용어를 꼭 써야 할 때만 그 문장 안에서 짧고 쉬운 말로 즉시 풀어주세요 ".
-            "(예: '편관 기운이 강해서'가 아니라 '스스로에게 엄격한 잣대를 들이대는 기운이 강해서'처럼). 사주를 전혀 모르는 20~30대 독자가 한 번에 이해할 수 있는 쉬운 한국어로 쓰세요.\n\n".
+            "(예: '편관 기운이 강해서'가 아니라 '스스로에게 엄격한 잣대를 들이대는 기운이 강해서'처럼). 사주를 전혀 모르는 20~30대 독자가 한 번에 이해할 수 있는 쉬운 한국어로 쓰세요.".
+            ($extraPrinciples !== '' ? "\n\n이 리포트만의 추가 원칙: {$extraPrinciples}" : '')."\n\n".
             "이 챕터만의 지침: {$chapter->promptGuidance}";
     }
 

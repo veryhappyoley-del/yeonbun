@@ -1764,6 +1764,19 @@
   .rpt-chip--indigo { background: var(--indigo-tint); color: var(--indigo); }
   .rpt-chip--gold { background: var(--gold-tint); color: var(--gold); }
 
+  /* LABEL GROUPS — (2026-09-08 신설) "재물운"/"커리어운" 결론 챕터의 "핵심 강점 5가지 /
+     적합한 직무 5가지" 같은 여러 그룹 리스트. rpt-chip-row를 그대로 재사용하되 그룹마다
+     제목을 붙이고 카드로 묶는다(.rpt-sw-card와 같은 여백/톤). */
+  .rpt-label-groups { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+  .rpt-label-group {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .rpt-label-group-title { font-size: 0.82rem; font-weight: 700; color: var(--ink-soft); }
+  .rpt-label-group .rpt-chip-row { margin-top: 8px; }
+
   /* COMPARE CARDS — who_attracts_you/opposite_type/compatibility_match의 compare.left/
      right를 VS 구분선을 사이에 둔 세로 스택으로. 폰 프레임 폭(~440px)에서 좌우 2열보다
      세로 스택이 한글 문장 줄바꿈에 훨씬 안전해서 이 레이아웃을 택함. */

@@ -64,7 +64,7 @@ class GenerateChapterPreviewJob implements ShouldQueue
         try {
             $row->update(['status' => 'generating']);
 
-            $payload = $generator->requestPayload($chapterSpec, $row->input ?? []);
+            $payload = $generator->requestPayload($chapterSpec, $row->input ?? [], null, $type);
 
             $response = Http::withHeaders([
                 'x-api-key' => config('services.anthropic.key'),

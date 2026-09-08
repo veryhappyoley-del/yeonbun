@@ -29,6 +29,12 @@ final class ReportTypeRegistry
         // 쓰는 타입. luck-cycle.js의 monthlyCalendar()로 12개월 전체를 계산해서 입력으로
         // 함께 보낸다(재회 타이밍 캘린더 챕터).
         \App\ReportTypes\Definitions\ReunionStrategyReportType::class,
+        // (2026-09-08 추가) "재물운"/"커리어운" — 연애 라인업 밖의 첫 리포트 두 종류.
+        // InputShape::Self + 성별(대운 방향 계산용)만 추가로 받는다. resources/views/
+        // saju.blade.php의 #panel-single(성별 칩 추가)을 재사용, sagu.blade.php의
+        // '재물 · 커리어' 카테고리 카드에서 진입한다.
+        \App\ReportTypes\Definitions\WealthFortuneReportType::class,
+        \App\ReportTypes\Definitions\CareerFortuneReportType::class,
     ];
 
     /**

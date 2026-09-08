@@ -9,7 +9,7 @@
   // 그대로 재사용하기 때문이다(display:none이어도 JS로 호출하는 .click()은 정상 동작함).
   // 값이 없거나 모르는 값이면(직접 "/calculator"로 들어온 경우 등) 평소대로 다 보여준다.
   $incomingTab = request()->query('tab');
-  $hideCalcChrome = in_array($incomingTab, ['single', 'compat', 'unrequited', 'reunion', 'chat'], true);
+  $hideCalcChrome = in_array($incomingTab, ['single', 'compat', 'unrequited', 'reunion', 'wealth', 'career', 'chat'], true);
 
   // 결제 CTA(public/js/reports.js buildCTA)의 "목차 미리보기"에 쓸 정적 데이터.
   // AI 콘텐츠는 전혀 포함하지 않고, 이미 코드로 정의된 챕터 제목/티저만 그대로 노출한다.
@@ -80,6 +80,15 @@
     {{-- (2026-08-31 추가) "다시, 우리" — 이별 히스토리 필드가 필요해서 궁합 폼을 재사용하지
          않고 별도 패널(#panel-reunion)로 뒀다. --}}
     <button class="tab-btn" data-tab="reunion" role="tab">다시, 우리</button>
+    {{-- (2026-09-08 추가) "재물운"/"커리어운" — #panel-single을 그대로 재사용하는 탭이다
+         ("짝사랑의 다음 장"이 #panel-compat을 재사용하는 것과 같은 방식). 생년월일시만
+         있으면 되는 InputShape::Self 리포트라 새 패널이 필요 없고, app.js의 탭 클릭
+         핸들러가 PANEL_OVERRIDE로 panel-single에 매핑한다. 대운 순행/역행 계산에는
+         성별이 필요해서(App\ReportTypes\Definitions\WealthFortuneReportType 등 참고)
+         #panel-single 안에 성별 칩(#s-gender-section, 기본 숨김)을 추가하고 이 두 탭에서만
+         보여준다. --}}
+    <button class="tab-btn" data-tab="wealth" role="tab">재물운</button>
+    <button class="tab-btn" data-tab="career" role="tab">커리어운</button>
     <button class="tab-btn" data-tab="chat" role="tab">연애 코치</button>
   </div>
   <!-- "고민 상담 가이드" 탭은 상단 메뉴에서 뺐습니다(완성도가 낮다는 판단, 2026-08-24).
@@ -141,6 +150,17 @@
       <div class="check-row">
         <input type="checkbox" id="s-unknown">
         <label for="s-unknown" style="margin:0;">태어난 시간을 몰라요 (시주 제외하고 계산)</label>
+      </div>
+      {{-- (2026-09-08 추가) "재물운"/"커리어운" 탭 전용 — 대운 순행/역행(성별에 따라
+           방향이 달라짐)을 정확히 계산하려면 성별이 필요하다. "연애의 나침반" 탭에서는
+           안 쓰는 값이라 기본 숨김이고, public/js/app.js의 applySingleModeUI()가 탭에
+           따라 보이거나 숨긴다(#c-gender-section-a와 같은 패턴). --}}
+      <div class="single-gender-only is-hidden" id="s-gender-section">
+        <label style="margin-top:8px; display:block;">성별</label>
+        <div class="compat-gender-row" id="s-gender-row">
+          <button type="button" class="compat-gender-chip" data-gender="male">남자</button>
+          <button type="button" class="compat-gender-chip" data-gender="female">여자</button>
+        </div>
       </div>
       <button class="btn btn-center" id="s-submit">사주 풀이 보기</button>
       <div class="hint" style="margin-top:10px;">양력 기준으로 입력해 주세요. 음력이면 양력으로 변환 후 입력해 주세요.</div>

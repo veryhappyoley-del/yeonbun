@@ -186,6 +186,18 @@
     });
   }
 
+  // (2026-09-08 추가) "재물운"/"커리어운" 리포트의 연도별 세운 목록에서 "이 해엔 일지와
+  // 충(沖)이 있다"를 표시하기 위한 조견표 — app.js의 findBranchRelations()가 이미 같은
+  // 표를 갖고 있지만 그건 "원국 안에서" 4글자끼리 대조하는 용도라 이 파일에서 재사용하기
+  // 애매해서(내부 헬퍼라 export 안 됨) 여기 로컬로 최소한만 복제했다(육합 표를
+  // YUKHAP_PAIRS로 이미 그렇게 하고 있는 것과 같은 방식).
+  var CHONG_PAIRS = [['자', '오'], ['축', '미'], ['인', '신'], ['묘', '유'], ['진', '술'], ['사', '해']];
+  function isChongWithDay(dayBranch, branch) {
+    return CHONG_PAIRS.some(function (pair) {
+      return (pair[0] === dayBranch && pair[1] === branch) || (pair[1] === dayBranch && pair[0] === branch);
+    });
+  }
+
   // (2026-08-31 리팩터) priorityWindows가 원래 자기 안에서만 쓰던 "한 달 채점" 로직을
   // 별도 함수로 뽑아냈다 — "다시, 우리"(재회 전략) 리포트의 monthlyCalendar()도 똑같은
   // 채점 기준(십신 가중치+용신+육합)을 그대로 써야 해서, 로직을 두 곳에 복사해 두면
@@ -330,11 +342,69 @@
     return { months: months, topWindows: pickTopN(scored, 3, 2) };
   }
 
+  // (2026-09-08 추가) "재물운"/"커리어운" 리포트 전용 — 연도별 세운(歲運)을 결정론적으로
+  // 미리 계산해서 목록으로 제공한다. priorityWindows/monthlyCalendar처럼 연애 관점 십신
+  // 가중치(romanceWeight)로 점수를 매기지 않고, 그 해의 연주(年柱)와 거기서 나온 십신·
+  // 일지와의 합충 여부까지만 "있는 그대로" 담아서 넘긴다 — 재물운/커리어운은 어떤 십신을
+  // 좋게/나쁘게 볼지가 연애보다 훨씬 맥락(직업/자산 상황)에 따라 달라지는 영역이라(예:
+  // 편재가 누군가에겐 기회, 누군가에겐 과소비 위험), 점수를 미리 매겨 AI의 해석 폭을
+  // 좁히기보다 원재료(십신 자체)만 정확히 계산해 주고 해석은 각 챕터의 promptGuidance가
+  // 맡는다 — "제공된 데이터에 기록된 기간만 사용"하라는 원칙을 지키기 위한 결정론적 계산.
+  //
+  // @param {Object} saju calcSaju() 반환값(단일 사주).
+  // @param {Object} [opts] { yearsAhead(기본 10) }
+  // @return {Array<{year, age, pillar, stemTenGod, branchTenGod, yukhapWithDay, chongWithDay}>}
+  function yearlyOutlook(saju, opts) {
+    if (!ready() || !saju || !saju.day || !saju.input) return [];
+    opts = opts || {};
+    var yearsAhead = opts.yearsAhead || 10;
+    var dayEl = saju.day.stemElement, dayYY = saju.day.stemYinYang, dayBranch = saju.day.branch;
+    var E = window.YeonbunSajuEngine;
+    var nowYear = new Date().getFullYear();
+    var birthYear = saju.input.year;
+
+    var list = [];
+    for (var y = nowYear; y <= nowYear + yearsAhead; y++) {
+      var yp = yearPillar(y);
+      list.push({
+        year: y,
+        age: y - birthYear, // 참고용 근사 나이 — 생일 경과 여부까지는 따지지 않는다.
+        pillar: yp,
+        stemTenGod: E.tenGodOf(dayEl, dayYY, yp.stemElement, yp.stemYinYang),
+        branchTenGod: E.tenGodOf(dayEl, dayYY, yp.branchElement, yp.branchYinYang),
+        yukhapWithDay: isYukhapWithDay(dayBranch, yp.branch),
+        chongWithDay: isChongWithDay(dayBranch, yp.branch)
+      });
+    }
+    return list;
+  }
+
+  // (2026-09-08 추가) daeunList()가 만든 대운 목록 중 "지금" 만 나이가 속한 구간(현재
+  // 대운)의 인덱스를 찾는다. 만 나이는 생일 경과 여부를 따지지 않고 "이번 연도 - 태어난
+  // 연도"로 근사한다(yearlyOutlook의 age와 같은 기준 — 콘텐츠용 참고치로 충분한 정밀도).
+  //
+  // @param {Object} daeunResult daeunList()의 반환값.
+  // @param {number} birthYear saju.input.year.
+  // @return {number} list 안에서의 인덱스, 못 찾으면 -1(예: count가 너무 작아서 지금
+  //                  나이를 못 덮는 경우 — 호출부가 daeunList(saju, gender, 더 큰 count)로
+  //                  재시도하거나 그냥 -1을 "정보 없음"으로 다뤄야 한다).
+  function currentDaeunIndex(daeunResult, birthYear) {
+    if (!daeunResult || !daeunResult.list) return -1;
+    var age = new Date().getFullYear() - birthYear;
+    for (var i = 0; i < daeunResult.list.length; i++) {
+      var d = daeunResult.list[i];
+      if (age >= d.startAge && age <= d.endAge) return i;
+    }
+    return -1;
+  }
+
   window.YeonbunLuckCycle = {
     yearPillar: yearPillar,
     monthPillar: monthPillar,
     daeunList: daeunList,
     priorityWindows: priorityWindows,
-    monthlyCalendar: monthlyCalendar
+    monthlyCalendar: monthlyCalendar,
+    yearlyOutlook: yearlyOutlook,
+    currentDaeunIndex: currentDaeunIndex
   };
 })();
