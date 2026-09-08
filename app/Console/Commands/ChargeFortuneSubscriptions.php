@@ -4,10 +4,10 @@ namespace App\Console\Commands;
 
 use App\Models\FortuneSubscription;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 
 /**
  * 매일 실행되어 "오늘 청구해야 할" 구독(next_billing_date <= 오늘, status=active)을
@@ -19,6 +19,18 @@ use Illuminate\Support\Str;
  *
  * 실패 처리는 1단계 범위에 맞춰 단순하게: 2회 연속 실패하면 past_due로 전환하고
  * 안내 메일을 시도한다(정교한 재시도 스케줄/쿠폰 등은 이번 범위 밖).
+ *
+ * (보안 점검 대응 — 이중 청구 방지) 이 커맨드가 겹쳐 실행되면(수동 재실행과 스케줄러가
+ * 겹치거나, 여러 서버에서 각자 스케줄러가 돌면) 같은 구독이 실제로 두 번 결제될 수
+ * 있었다. 세 겹으로 막는다:
+ *   1) routes/console.php의 스케줄 등록에 ->withoutOverlapping()->onOneServer() 적용.
+ *   2) 이 파일: 구독 행을 lockForUpdate로 잠그고, Toss 호출 "전에" next_billing_date를
+ *      먼저 다음 달로 원자적으로 당겨서(예약) 같은 트랜잭션 안에서 커밋 — 그 사이
+ *      다른 프로세스가 같은 행을 집어도 이미 조건(status=active, next_billing_date<=오늘)에
+ *      안 맞아 걸러진다. 실패 시에는 이 예약을 되돌린다.
+ *   3) Toss 청구 요청 자체에 구독+청구월로 결정되는 Idempotency-Key를 실어서, 그래도
+ *      같은 청구가 중복 전송되는 극단적인 경우 Toss 쪽에서 최초 응답을 그대로 돌려주게
+ *      한다(토스 문서: 같은 멱등키 재요청은 재처리되지 않고 첫 응답과 동일한 응답을 반환).
  */
 class ChargeFortuneSubscriptions extends Command
 {
@@ -60,11 +72,46 @@ class ChargeFortuneSubscriptions extends Command
 
     private function chargeOne(FortuneSubscription $subscription, string $secretKey): bool
     {
-        $orderId = 'yeonbun_fortune_'.Str::uuid()->toString();
+        // 이번에 청구하려는 "청구월"을 먼저 고정해 둡니다 — 아래에서 next_billing_date를
+        // 선반영(예약)해버리면 원래 값을 잃어버리므로, orderId/Idempotency-Key와 실패 시
+        // 되돌릴 원래 날짜 모두 이 값을 기준으로 계산합니다.
+        $billingPeriod = $subscription->next_billing_date->format('Y-m');
+        $originalNextBillingDate = $subscription->next_billing_date->copy();
+
+        // 행을 잠그고, "지금도 정말 청구 대상이 맞는지" 다시 확인한 뒤 next_billing_date를
+        // 다음 달로 먼저 당겨(예약) 커밋합니다. 외부 API(Toss) 호출은 트랜잭션/잠금 밖에서
+        // 하므로(DB 커넥션을 오래 붙잡지 않기 위해), 이 예약이 "같은 구독을 두 번 집어서
+        // 처리하는 것"을 막는 실질적인 방어선입니다.
+        $reserved = DB::transaction(function () use ($subscription) {
+            $fresh = FortuneSubscription::whereKey($subscription->id)->lockForUpdate()->first();
+
+            if (! $fresh
+                || $fresh->status !== 'active'
+                || ! $fresh->toss_billing_key
+                || $fresh->next_billing_date->gt(now()->toDateString())
+            ) {
+                return null; // 이미 다른 프로세스가 처리했거나, 그 사이 상태가 바뀜
+            }
+
+            $fresh->update([
+                'next_billing_date' => $fresh->next_billing_date->copy()->addMonthNoOverflow(),
+            ]);
+
+            return $fresh;
+        });
+
+        if (! $reserved) {
+            // "실패"가 아니라 "이미 처리됨"이라 실패 카운트(재시도 알림)에는 넣지 않습니다.
+            return true;
+        }
+
+        $orderId = "yeonbun_fortune_{$subscription->id}_{$billingPeriod}";
+        $idempotencyKey = "fortune-sub-{$subscription->id}-{$billingPeriod}";
 
         $response = Http::withHeaders([
             'Authorization' => 'Basic '.base64_encode($secretKey.':'),
             'Content-Type' => 'application/json',
+            'Idempotency-Key' => $idempotencyKey,
         ])->timeout(30)->post("https://api.tosspayments.com/v1/billing/{$subscription->toss_billing_key}", [
             'customerKey' => $subscription->toss_customer_key,
             'orderId' => $orderId,
@@ -73,15 +120,26 @@ class ChargeFortuneSubscriptions extends Command
         ]);
 
         if ($response->successful()) {
-            $subscription->update([
-                'next_billing_date' => $subscription->next_billing_date->copy()->addMonthNoOverflow(),
-                'failed_attempts' => 0,
-            ]);
+            $reserved->update(['failed_attempts' => 0]);
 
             return true;
         }
 
-        $subscription->increment('failed_attempts');
+        // 청구 실패 — 위에서 선반영해 둔 next_billing_date를 원래대로 되돌리고 실패를 기록합니다.
+        DB::transaction(function () use ($subscription, $originalNextBillingDate) {
+            $fresh = FortuneSubscription::whereKey($subscription->id)->lockForUpdate()->first();
+
+            if (! $fresh) {
+                return;
+            }
+
+            $fresh->update([
+                'next_billing_date' => $originalNextBillingDate,
+                'failed_attempts' => $fresh->failed_attempts + 1,
+            ]);
+        });
+
+        $subscription->refresh();
 
         Log::warning('오늘의 운세 구독 청구 실패', [
             'subscription_id' => $subscription->id,

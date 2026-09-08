@@ -5,6 +5,8 @@
 
   <div class="field-row" style="margin-top:8px;">
     <div><label for="fortune-year">태어난 해</label><input type="number" id="fortune-year" name="birth_year" min="1900" max="2100" required value="{{ old('birth_year', $profile?->birth_date?->format('Y')) }}"></div>
+  </div>
+  <div class="field-row" style="margin-top:8px;">
     <div><label for="fortune-month">월</label><input type="number" id="fortune-month" name="birth_month" min="1" max="12" required value="{{ old('birth_month', $profile?->birth_date?->format('n')) }}"></div>
     <div><label for="fortune-day">일</label><input type="number" id="fortune-day" name="birth_day" min="1" max="31" required value="{{ old('birth_day', $profile?->birth_date?->format('j')) }}"></div>
   </div>

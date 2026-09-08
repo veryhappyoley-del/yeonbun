@@ -99,10 +99,18 @@
           <label for="s-name">이름 (선택)</label>
           <input type="text" id="s-name" placeholder="예: 올리">
         </div>
+      </div>
+      {{-- (생년월일 입력 레이아웃 통일) "태어난 해"는 항상 단독 한 줄, "월/일"은 항상
+           한 줄에 나란히 — 이전엔 이 field-row 하나에 이름까지 4칸이 들어있어서 화면
+           너비에 따라 년/월이 붙기도 하고 년이 이름과 붙기도 하는 등 폼마다 줄바꿈이
+           들쭉날쭉했다. 사주 계산기/궁합/재회/오늘의 운세 프로필 폼 전부 이 구조로 맞췄다. --}}
+      <div class="field-row">
         <div>
           <label for="s-year">태어난 해</label>
           <input type="number" id="s-year" placeholder="1995" min="1900" max="2100">
         </div>
+      </div>
+      <div class="field-row">
         <div>
           <label for="s-month">월</label>
           <input type="number" id="s-month" placeholder="5" min="1" max="12">
@@ -152,7 +160,9 @@
           <label for="c-name-a">이름</label>
           <input type="text" id="c-name-a" placeholder="나">
           <div class="field-row" style="margin-top:8px;">
-            <div><label for="c-year-a">해</label><input type="number" id="c-year-a" placeholder="1995"></div>
+            <div><label for="c-year-a">태어난 해</label><input type="number" id="c-year-a" placeholder="1995"></div>
+          </div>
+          <div class="field-row" style="margin-top:8px;">
             <div><label for="c-month-a">월</label><input type="number" id="c-month-a" placeholder="5"></div>
             <div><label for="c-day-a">일</label><input type="number" id="c-day-a" placeholder="15"></div>
           </div>
@@ -184,7 +194,9 @@
           <label for="c-name-b">이름</label>
           <input type="text" id="c-name-b" placeholder="상대">
           <div class="field-row" style="margin-top:8px;">
-            <div><label for="c-year-b">해</label><input type="number" id="c-year-b" placeholder="1996"></div>
+            <div><label for="c-year-b">태어난 해</label><input type="number" id="c-year-b" placeholder="1996"></div>
+          </div>
+          <div class="field-row" style="margin-top:8px;">
             <div><label for="c-month-b">월</label><input type="number" id="c-month-b" placeholder="9"></div>
             <div><label for="c-day-b">일</label><input type="number" id="c-day-b" placeholder="2"></div>
           </div>
@@ -290,7 +302,9 @@
           <label for="r-name-a">이름</label>
           <input type="text" id="r-name-a" placeholder="나">
           <div class="field-row" style="margin-top:8px;">
-            <div><label for="r-year-a">해</label><input type="number" id="r-year-a" placeholder="1995"></div>
+            <div><label for="r-year-a">태어난 해</label><input type="number" id="r-year-a" placeholder="1995"></div>
+          </div>
+          <div class="field-row" style="margin-top:8px;">
             <div><label for="r-month-a">월</label><input type="number" id="r-month-a" placeholder="5"></div>
             <div><label for="r-day-a">일</label><input type="number" id="r-day-a" placeholder="15"></div>
           </div>
@@ -319,7 +333,9 @@
           <label for="r-name-b">이름</label>
           <input type="text" id="r-name-b" placeholder="전 연인">
           <div class="field-row" style="margin-top:8px;">
-            <div><label for="r-year-b">해</label><input type="number" id="r-year-b" placeholder="1996"></div>
+            <div><label for="r-year-b">태어난 해</label><input type="number" id="r-year-b" placeholder="1996"></div>
+          </div>
+          <div class="field-row" style="margin-top:8px;">
             <div><label for="r-month-b">월</label><input type="number" id="r-month-b" placeholder="9"></div>
             <div><label for="r-day-b">일</label><input type="number" id="r-day-b" placeholder="2"></div>
           </div>

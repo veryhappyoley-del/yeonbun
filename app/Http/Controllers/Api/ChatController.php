@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChatSession;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
+use Throwable;
 
 /**
  * "AI 상담" 탭을 구동하는 컨트롤러. routes/web.php 에서 auth 미들웨어로 감싸져 있어
@@ -111,45 +113,66 @@ class ChatController extends Controller
             ], 422);
         }
 
-        $chatSession->messages()->create([
-            'role' => 'user',
-            'content' => $data['message'],
-        ]);
-        $chatSession->touch();
+        // (보안 점검 대응) AI 호출 "전"에 코인을 먼저 원자적으로 차감합니다(선차감).
+        // WHERE credits > 0 조건이 걸린 단일 UPDATE라 MySQL이 그 한 행에 대해 잠금을
+        // 걸고 순차 처리하므로, 동시에 여러 요청이 와도 실제 남은 credits 개수만큼만
+        // 성공합니다 — 이전에는 "credits 확인(needsPayment) → (비용이 드는) Anthropic
+        // 호출 → 맨 끝에서 decrement" 순서라, 두 요청이 차감 전에 동시에 credits=1을
+        // 읽으면 둘 다 통과해서 코인 1개로 AI 응답을 여러 번 받아갈 수 있는 경쟁
+        // 조건(TOCTOU)이 있었습니다. Anthropic 호출이 실패하면 아래에서 환불합니다.
+        $charged = User::where('id', $request->user()->id)
+            ->where('credits', '>', 0)
+            ->decrement('credits') > 0;
 
-        // 세션 시작 시 만들어 둔 인사말(assistant)은 실제 AI가 생성한 턴이 아니므로
-        // Anthropic API에는 첫 메시지가 반드시 user 여야 하는 규칙에 맞춰 제외합니다.
-        $filtered = $chatSession->messages()
-            ->get()
-            ->skipWhile(fn ($m) => $m->role !== 'user')
-            ->values();
+        if (! $charged) {
+            return $this->paymentRequiredResponse();
+        }
 
-        // 대화가 길어지면(기본 약 25턴 이상) 오래된 구간을 요약해서 history_summary에 접어 넣고,
-        // 최근 구간(RECENT_WINDOW)만 그대로 전송합니다. 매 턴 전체 히스토리를 재전송하면
-        // 대화가 길어질수록 턴당 비용이 끝없이 커지는 문제를 막기 위함이에요.
-        $this->compressHistoryIfNeeded($chatSession, $filtered);
+        try {
+            $chatSession->messages()->create([
+                'role' => 'user',
+                'content' => $data['message'],
+            ]);
+            $chatSession->touch();
 
-        $history = $filtered->slice($chatSession->summarized_count)
-            ->map(fn ($m) => ['role' => $m->role, 'content' => $m->content])
-            ->values()
-            ->all();
+            // 세션 시작 시 만들어 둔 인사말(assistant)은 실제 AI가 생성한 턴이 아니므로
+            // Anthropic API에는 첫 메시지가 반드시 user 여야 하는 규칙에 맞춰 제외합니다.
+            $filtered = $chatSession->messages()
+                ->get()
+                ->skipWhile(fn ($m) => $m->role !== 'user')
+                ->values();
 
-        $response = Http::withHeaders([
-            'x-api-key' => config('services.anthropic.key'),
-            'anthropic-version' => '2023-06-01',
-            'content-type' => 'application/json',
-        ])->timeout(60)->post('https://api.anthropic.com/v1/messages', [
-            'model' => config('services.anthropic.model'),
-            'max_tokens' => config('services.anthropic.max_tokens'),
-            'system' => $this->systemPrompt($chatSession),
-            'messages' => $history,
-        ]);
+            // 대화가 길어지면(기본 약 25턴 이상) 오래된 구간을 요약해서 history_summary에 접어 넣고,
+            // 최근 구간(RECENT_WINDOW)만 그대로 전송합니다. 매 턴 전체 히스토리를 재전송하면
+            // 대화가 길어질수록 턴당 비용이 끝없이 커지는 문제를 막기 위함이에요.
+            $this->compressHistoryIfNeeded($chatSession, $filtered);
 
-        if ($response->failed()) {
-            return response()->json([
-                'error' => 'AI 응답을 받아오지 못했어요. (status '.$response->status().')',
-                'detail' => $response->json('error.message'),
-            ], 502);
+            $history = $filtered->slice($chatSession->summarized_count)
+                ->map(fn ($m) => ['role' => $m->role, 'content' => $m->content])
+                ->values()
+                ->all();
+
+            $response = Http::withHeaders([
+                'x-api-key' => config('services.anthropic.key'),
+                'anthropic-version' => '2023-06-01',
+                'content-type' => 'application/json',
+            ])->timeout(60)->post('https://api.anthropic.com/v1/messages', [
+                'model' => config('services.anthropic.model'),
+                'max_tokens' => config('services.anthropic.max_tokens'),
+                'system' => $this->systemPrompt($chatSession),
+                'messages' => $history,
+            ]);
+
+            if ($response->failed()) {
+                $request->user()->increment('credits'); // 호출 실패 시 선차감분 환불
+                return response()->json([
+                    'error' => 'AI 응답을 받아오지 못했어요. (status '.$response->status().')',
+                    'detail' => $response->json('error.message'),
+                ], 502);
+            }
+        } catch (Throwable $e) {
+            $request->user()->increment('credits'); // 예외 발생 시에도 환불
+            throw $e;
         }
 
         $reply = collect($response->json('content', []))
@@ -166,9 +189,7 @@ class ChatController extends Controller
             'content' => $reply,
         ]);
 
-        // AI 응답 1회 = 코인 1개. 실패한 호출은 위에서 이미 return 됐으므로 성공한 턴만 차감됩니다.
-        $request->user()->decrement('credits');
-
+        // 코인은 이미 위에서 선차감했습니다(성공한 호출이라 환불하지 않음).
         return response()->json([
             'message' => $reply,
             'credits' => $request->user()->fresh()->credits,
