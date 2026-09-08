@@ -85,7 +85,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                 promptGuidance: '일간(dayElement/dayYinYang)과 격국(deep.gyeokguk), 십성 배치(deep.tenGodTally)를 '.
                     '근거로 이 사람의 핵심적인 직업 성향을 정확히 3문단(각 1~2문장, 90자 이내)으로 압축하세요. '.
                     '첫 문단은 이 사람을 한 문장으로 규정하는 강한 문장으로 시작하세요.',
-                maxTokens: 900,
+                maxTokens: 1800,
                 inputKeys: $selfBase,
                 blocks: ['paragraphs'],
             ),
@@ -99,7 +99,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                     'summary(한 줄, 25자 이내)로 압축하고 detail(2문단, 각 90자 이내)에서 왜 그런 기질이 업무 '.
                     '현장에서 어떻게 드러나는지 구체적 행동으로 설명하세요. basis에는 그 십성/신강신약 근거를, '.
                     'application에는 이 기질을 업무에서 어떻게 활용하면 좋을지 1문장(70자 이내)을 쓰세요.',
-                maxTokens: 1100,
+                maxTokens: 2600,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -111,7 +111,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                 promptGuidance: '용신·희신(deep.usefulGod)과 십성 배치를 근거로, 이 사람이 남들보다 자연스럽게 '.
                     '잘할 수 있는 능력과 커리어 자산을 summary(한 줄)로 압축하고 detail(2문단)에서 구체적으로 '.
                     '설명하세요. basis/application도 위와 같은 형식으로 채우세요.',
-                maxTokens: 1100,
+                maxTokens: 2600,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -125,7 +125,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                     '피로 등 중 해당하는 것)을 summary·detail로 설명하세요. 단정적으로 "이 사람은 무조건 이렇다"가 '.
                     '아니라 "이런 상황에서 이런 경향이 나타날 수 있다"는 조건부 어조를 쓰세요. application에는 '.
                     '이 약점을 관리하는 구체적 방법을 쓰세요.',
-                maxTokens: 1100,
+                maxTokens: 2600,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -138,7 +138,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                     '환경에서 어떻게 행동하는 편인지 설명하세요. 정관이 뚜렷하면 체계를 편하게 여기는 편, 편관이 '.
                     '뚜렷하면 압박 속에서 오히려 힘을 내는 편, 관성이 약하면 자율적인 환경을 선호하는 편이라는 '.
                     '일반적 해석을 참고하되 이 사람의 실제 배치에 맞게 조정하세요.',
-                maxTokens: 1100,
+                maxTokens: 2600,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -155,7 +155,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                     'text(1문장, 70자 이내)로 쓰세요. 완전히 한쪽으로 단정하지 말고 두 side 모두 자연스러운 '.
                     '설명을 채우되, 실제로 더 강한 쪽이 자연스럽게 드러나게 쓰세요. tags에는 각 side를 대표하는 '.
                     '역할 명사 정확히 2개씩(예: "팀장", "기획 리드")을 쓰세요.',
-                maxTokens: 800,
+                maxTokens: 1800,
                 inputKeys: $selfBase,
                 blocks: ['compare_cards'],
             ),
@@ -170,7 +170,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                 promptGuidance: '비겁(독립성)과 식상·재성(협업/소통) 배치를 근거로, 혼자 일할 때와 팀으로 일할 때 '.
                     '각각 어떤 모습을 보이는지 left/right의 text(1문장, 70자 이내)에 쓰세요. tags에는 각 상황에서 '.
                     '이 사람이 발휘하는 능력을 정확히 2개씩 짧은 명사로 쓰세요.',
-                maxTokens: 800,
+                maxTokens: 1800,
                 inputKeys: $selfBase,
                 blocks: ['compare_cards'],
             ),
@@ -182,7 +182,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                 promptGuidance: '관성(권위/상사)과 인성(인정 욕구)의 관계를 근거로, 이 사람이 상사를 대하는 태도와 '.
                     '갈등이 생기기 쉬운 지점을 설명하세요. application에는 상사와의 관계를 더 편하게 만드는 '.
                     '구체적 행동 1가지를 쓰세요.',
-                maxTokens: 1100,
+                maxTokens: 2600,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -193,7 +193,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                 schema: $insightSchema2,
                 promptGuidance: '비견·겁재(동료/경쟁)와 식상(표현/육성) 배치를 근거로, 동료·부하직원과의 협업 방식과 '.
                     '사람을 이끄는 방식을 설명하세요.',
-                maxTokens: 1100,
+                maxTokens: 2600,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -208,7 +208,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                 promptGuidance: '정관(안정적 조직)과 편관·편재(사업/변동)의 상대적 비중, 신강신약을 근거로 이 사람이 '.
                     '직장인·전문직과 사업가·프리랜서 중 상대적으로 어느 쪽에 더 잘 맞는지 두 side를 균형 있게 '.
                     '설명하세요(완전히 한쪽만 가능하다고 단정하지 마세요).',
-                maxTokens: 800,
+                maxTokens: 1800,
                 inputKeys: $selfBase,
                 blocks: ['compare_cards'],
             ),
@@ -222,7 +222,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                     'steps 각 항목은 "직무명 — 왜 잘 맞는지 1문장(30자 이내)" 형태(예: "서비스 기획 — 구조화와 '.
                     '실행 계획을 짜는 힘이 강해요")로, 전체 45자 이내로 쓰세요. key_point에는 이 5가지를 관통하는 '.
                     '공통점 1문장(70자 이내)을 쓰세요.',
-                maxTokens: 1500,
+                maxTokens: 2400,
                 inputKeys: $selfBase,
                 blocks: ['timeline'],
             ),
@@ -235,7 +235,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                     '구체적으로 정확히 6개 고르세요(예: "IT/소프트웨어", "교육/에듀테크", "금융/투자" 처럼 실제 '.
                     '업종명). steps 각 항목은 "업종명 — 이유 1문장(30자 이내)" 형태로 45자 이내로 쓰세요. '.
                     'key_point에는 왜 이런 산업들이 공통적으로 잘 맞는지 오행/십성 근거 1문장(90자 이내)을 쓰세요.',
-                maxTokens: 1700,
+                maxTokens: 2400,
                 inputKeys: $selfBase,
                 blocks: ['timeline'],
             ),
@@ -248,7 +248,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                     '어렵거나 스트레스가 누적되기 쉬운 조직·업무환경의 구체적 특징(예: "성과가 매일 숫자로 '.
                     '공개되는 곳", "혼자 결정할 여지가 없는 곳")을 설명하세요. 추상적으로 "안 맞는 곳"이라고만 '.
                     '쓰지 말고 구체적 환경을 예로 드세요.',
-                maxTokens: 1100,
+                maxTokens: 2600,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -260,7 +260,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                 promptGuidance: '용신·희신(deep.usefulGod)을 근거로, 이 사람에게 적합한 성공 전략을 일정 관리/'.
                     '의사결정/목표 설정/협업 방식 4가지 관점에서 각 1개씩 steps(각 40자 이내)로 구체적으로 '.
                     '쓰세요. key_point에 가장 중요한 태도 1문장(90자 이내)을 쓰세요.',
-                maxTokens: 900,
+                maxTokens: 2000,
                 inputKeys: $selfBase,
                 blocks: ['step_flow'],
             ),
@@ -272,7 +272,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                 promptGuidance: '지지 합충(deep.relations)과 십성 배치를 근거로, 한 직업을 오래 유지하는 유형인지 '.
                     '변화하며 성장하는 유형인지 설명하세요. application에는 이직을 고려할 때 주의할 점 1가지를 '.
                     '쓰세요.',
-                maxTokens: 1100,
+                maxTokens: 2600,
                 inputKeys: ['deep'],
                 blocks: ['insight_block'],
             ),
@@ -283,7 +283,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                 schema: $insightSchema2,
                 promptGuidance: '관성·인성 배치를 근거로, 직위 상승/권한 확대/명예와 평판을 얻는 방식과 그에 유리한 '.
                     '조건을 설명하세요.',
-                maxTokens: 1100,
+                maxTokens: 2600,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -295,7 +295,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                 promptGuidance: '재성·식상 배치와 신강신약을 근거로, 창업 적성이 있는지, 창업한다면 어떤 역할(전략/'.
                     '실행/영업 등)을 맡는 게 좋은지, 혼자 할 때와 동업할 때 중 무엇이 더 잘 맞는지, 주의할 위험은 '.
                     '무엇인지를 detail 1문단(120자 이내)에 압축해서 담으세요.',
-                maxTokens: 900,
+                maxTokens: 2200,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -309,7 +309,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                     '흐름으로 대체해서 쓰세요). 그 대운 간지의 오행/십성(dayElement 대비)을 근거로 지금 이 10년이 '.
                     '직업·조직생활·성취욕에 어떤 영향을 주는지 detail 1문단(120자 이내)으로 쓰세요. 대운 목록에 '.
                     '없는 연도나 간지를 지어내지 마세요.',
-                maxTokens: 900,
+                maxTokens: 2200,
                 inputKeys: ['dayElement', 'dayYinYang', 'daeun', 'currentDaeunIndex'],
                 blocks: ['insight_block'],
             ),
@@ -322,7 +322,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                     '쓰세요. 그 해 세운의 십성(stemTenGod/branchTenGod)과 일지와의 합충 여부(yukhapWithDay/'.
                     'chongWithDay)를 근거로 취업/이직/승진/창업/계약/인간관계 관점의 기회와 주의점을 detail '.
                     '1문단(120자 이내)으로 쓰세요. yearlyOutlook에 없는 연도를 언급하지 마세요.',
-                maxTokens: 900,
+                maxTokens: 2200,
                 inputKeys: ['dayElement', 'dayYinYang', 'yearlyOutlook'],
                 blocks: ['insight_block'],
             ),
@@ -342,7 +342,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                     '마세요), "특징" 줄에는 그 구간의 십신 근거를 바탕으로 한 특징을 40자 이내로 쓰세요. title '.
                     '필드는 이미 고정 표시되므로 절대 바꾸지 마세요(내용만 채우세요). 4개 구간이 서로 겹치지 않게 '.
                     '연도를 나누세요.',
-                maxTokens: 1600,
+                maxTokens: 3000,
                 inputKeys: ['dayElement', 'dayYinYang', 'yearlyOutlook', 'daeun'],
                 blocks: ['stage_grid'],
             ),
@@ -358,7 +358,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                     '흐름이 들어올 때 나타나는 구체적 신호(left)와 무리한 선택을 경계해야 할 때 나타나는 구체적 '.
                     '신호(right)를 각각 text(1문장, 70자 이내)로 쓰세요. tags에는 각 side를 대표하는 상황 키워드 '.
                     '정확히 2개씩을 쓰세요.',
-                maxTokens: 800,
+                maxTokens: 1800,
                 inputKeys: ['deep', 'yearlyOutlook'],
                 blocks: ['compare_cards'],
             ),
@@ -385,7 +385,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
                     '5/3/3)로 짧은 명사구(8자 이내)로 채우세요. 이미 앞 챕터에서 쓴 문장을 그대로 복사하지 말고 '.
                     '핵심만 압축하세요. keywords에는 이 리포트 전체를 압축하는 최종 키워드 정확히 5개(각 8자 '.
                     '이내)를 쓰세요.',
-                maxTokens: 2200,
+                maxTokens: 4000,
                 inputKeys: ['name', 'dayElement', 'dayYinYang', 'wuxingCount', 'deep', 'daeun', 'currentDaeunIndex', 'yearlyOutlook'],
                 blocks: ['quote', 'label_groups', 'keyword_chips'],
             ),

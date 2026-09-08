@@ -71,7 +71,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 promptGuidance: '일간(dayElement/dayYinYang)과 격국(deep.gyeokguk), 재성 관련 십성 배치를 근거로 '.
                     '이 사람의 재물을 얻고 관리하는 전체적인 성향을 정확히 3문단(각 1~2문장, 90자 이내)으로 '.
                     '압축하세요. 첫 문단은 이 사람의 재물 성향을 규정하는 강한 문장으로 시작하세요.',
-                maxTokens: 900,
+                maxTokens: 1800,
                 inputKeys: $selfBase,
                 blocks: ['paragraphs'],
             ),
@@ -83,7 +83,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 promptGuidance: '재성(정재/편재)의 배치와 신강신약을 근거로, 이 사람이 돈을 바라보는 기본적인 심리적 '.
                     '태도(안정 지향/성취 지향/소비 성향/위험 감수 수준)를 설명하세요. 정재가 뚜렷하면 안정 지향, '.
                     '편재가 뚜렷하면 기회·확장 지향이라는 일반적 해석을 참고하되 실제 배치에 맞게 조정하세요.',
-                maxTokens: 1100,
+                maxTokens: 2600,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -94,7 +94,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 schema: $insightSchema2,
                 promptGuidance: '식상(식신/상관, 재성을 만들어내는 힘)과 용신(deep.usefulGod)을 근거로, 이 사람이 '.
                     '소득을 만들어내는 힘과 기회 포착력을 설명하세요.',
-                maxTokens: 1100,
+                maxTokens: 2600,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -105,7 +105,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 schema: $insightSchema2,
                 promptGuidance: '정재(안정적 축적)와 비겁(소비 성향)의 균형을 근거로, 저축·예산관리·장기 축적에 '.
                     '유리한 성향인지 설명하세요.',
-                maxTokens: 1100,
+                maxTokens: 2600,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -117,7 +117,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 promptGuidance: '기신(deep.usefulGod.gisin)과 비겁 과다 여부를 근거로, 이 사람이 재물을 지키는 데 '.
                     '취약해지는 "성향적" 이유(충동적 지출/인간관계 지출/투자 손실 경향 등, 구체적 상황은 다음 '.
                     '챕터(leak_points)에서 다룰 것이므로 여기선 기질 자체에 집중)를 설명하세요.',
-                maxTokens: 1100,
+                maxTokens: 2600,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -128,7 +128,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 schema: $insightSchema1,
                 promptGuidance: '재성·식상·관성의 비중을 근거로, 근로소득/사업소득/성과급/수수료/투자/자산 축적 중 '.
                     '이 사람에게 상대적으로 잘 맞는 방식을 detail 1문단(120자 이내)에 압축하세요.',
-                maxTokens: 900,
+                maxTokens: 2200,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -142,7 +142,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 ]],
                 promptGuidance: '정재(안정)와 편재(변동·기회)의 상대적 비중을 근거로 두 side를 균형 있게 설명하세요. '.
                     'text는 각 1문장(70자 이내), tags는 각 side를 대표하는 키워드 정확히 2개씩.',
-                maxTokens: 800,
+                maxTokens: 1800,
                 inputKeys: $selfBase,
                 blocks: ['compare_cards'],
             ),
@@ -153,7 +153,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 schema: $insightSchema1,
                 promptGuidance: '정관·정인(안정적 지위/전문성)의 비중을 근거로, 직장·전문기술·자격증·승진을 통한 '.
                     '안정적인 수입 가능성을 detail 1문단(120자 이내)으로 설명하세요.',
-                maxTokens: 900,
+                maxTokens: 2200,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -164,7 +164,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 schema: $insightSchema1,
                 promptGuidance: '편재·식상(영업력/확장성)의 비중을 근거로, 사업/영업/중개/거래/인센티브 등 성과에 '.
                     '따라 커지는 소득 구조와의 적합성을 detail 1문단(120자 이내)으로 설명하세요.',
-                maxTokens: 900,
+                maxTokens: 2200,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -175,7 +175,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 schema: $insightSchema1,
                 promptGuidance: '식상·편재의 비중을 근거로, 본업 외 수입원(부업/프리랜서/콘텐츠/온라인 사업)을 '.
                     '여러 개 운영하는 방식이 이 사람에게 잘 맞는지 detail 1문단(120자 이내)으로 설명하세요.',
-                maxTokens: 900,
+                maxTokens: 2200,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -186,7 +186,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 schema: $insightSchema2,
                 promptGuidance: '신강신약과 편재 비중을 근거로, 공격형/균형형/안정형 중 이 사람에게 나타나는 투자 '.
                     '태도를 설명하고, 주의할 심리적 패턴(과신/손절 지연 등)을 application에 쓰세요.',
-                maxTokens: 1100,
+                maxTokens: 2600,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -198,7 +198,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 promptGuidance: '토(土) 오행의 비중과 정재 배치를 근거로, 부동산·현물자산·장기 보유와 관련된 성향이 '.
                     '있는지를 조건부로("~라면 ~한 경향") 해석하세요. 오행 데이터가 뚜렷하지 않으면 단정하지 말고 '.
                     '"이 부분은 사주만으로 뚜렷하게 나타나지 않는다"고 솔직히 쓰세요.',
-                maxTokens: 900,
+                maxTokens: 2200,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -211,7 +211,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                     'right' => ['label' => '장기 자산축적', 'text' => '', 'tags' => ['', '']],
                 ]],
                 promptGuidance: '식상(현금 창출력)과 정재(축적)의 비중을 근거로 두 side를 균형 있게 설명하세요.',
-                maxTokens: 800,
+                maxTokens: 1800,
                 inputKeys: $selfBase,
                 blocks: ['compare_cards'],
             ),
@@ -223,7 +223,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 promptGuidance: '십성 배치를 근거로, 실력/인맥/조직/이동/변화/계약/사업 중 이 사람에게 재물 기회가 '.
                     '생기기 쉬운 경로를 우선순위 정확히 5개로 골라 steps(각 "경로 — 이유", 45자 이내)에 쓰세요. '.
                     'key_point에 이 경로들의 공통점 1문장(90자 이내)을 쓰세요.',
-                maxTokens: 1500,
+                maxTokens: 2400,
                 inputKeys: $selfBase,
                 blocks: ['timeline'],
             ),
@@ -236,7 +236,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                     '나가기 쉬운 구체적 상황을 정확히 5가지 고르세요(situation=구체적 상황, problem=왜 위험한지, '.
                     'action=대신 할 수 있는 대응, 각 필드 1문장 40~60자 이내). 소비/투자/가족/지인/동업/보증/'.
                     '과도한 확장 중에서 실제로 이 사람의 사주 데이터에 맞는 것을 고르세요.',
-                maxTokens: 1600,
+                maxTokens: 2800,
                 inputKeys: $selfBase,
                 blocks: ['advice_cards'],
             ),
@@ -250,7 +250,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 ]],
                 promptGuidance: '식상·재성(인맥을 통한 소득)과 비겁·기신(사람 관련 지출/손실)의 비중을 근거로 두 '.
                     'side를 설명하세요.',
-                maxTokens: 800,
+                maxTokens: 1800,
                 inputKeys: $selfBase,
                 blocks: ['compare_cards'],
             ),
@@ -261,7 +261,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 schema: $insightSchema1,
                 promptGuidance: '비겁(동업 상대)과 재성의 관계를 근거로, 동업 적성과 수익 배분·공동투자에서 주의할 '.
                     '점을 detail 1문단(120자 이내)으로 설명하세요.',
-                maxTokens: 900,
+                maxTokens: 2200,
                 inputKeys: $selfBase,
                 blocks: ['insight_block'],
             ),
@@ -272,7 +272,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 schema: ['steps' => ['', '', '', ''], 'key_point' => ''],
                 promptGuidance: '용신·희신(deep.usefulGod)을 근거로, 이 사람의 사주 장점을 실제 소득·자산으로 '.
                     '연결하기 위해 필요한 환경·능력·습관 4가지를 steps(각 40자 이내)로 구체적으로 쓰세요.',
-                maxTokens: 900,
+                maxTokens: 2000,
                 inputKeys: $selfBase,
                 blocks: ['step_flow'],
             ),
@@ -285,7 +285,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                     '(currentDaeunIndex가 -1이면 목록에 해당 구간이 없다는 뜻이니 일반적인 현재 시점 흐름으로 '.
                     '대체하세요). 그 대운 간지의 오행/십성을 근거로 수입·지출·사업·투자·자산축적에 주는 영향을 '.
                     'detail 1문단(120자 이내)으로 쓰세요. 목록에 없는 연도나 간지를 지어내지 마세요.',
-                maxTokens: 900,
+                maxTokens: 2200,
                 inputKeys: ['dayElement', 'dayYinYang', 'daeun', 'currentDaeunIndex'],
                 blocks: ['insight_block'],
             ),
@@ -297,7 +297,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 promptGuidance: 'input.yearlyOutlook 배열의 첫 번째 항목(이번 연도)만 골라 그 십성/합충 여부를 '.
                     '근거로 수입 확대/계약/사업/투자/지출과 손실 위험을 detail 1문단(120자 이내)으로 쓰세요. '.
                     'yearlyOutlook에 없는 연도를 언급하지 마세요.',
-                maxTokens: 900,
+                maxTokens: 2200,
                 inputKeys: ['dayElement', 'dayYinYang', 'yearlyOutlook'],
                 blocks: ['insight_block'],
             ),
@@ -317,7 +317,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                     'yearlyOutlook에 실제로 있는 연도만 범위로 쓰고(없는 연도를 지어내지 마세요), "특징" 줄에는 '.
                     '그 구간의 십신 근거를 바탕으로 한 특징을 40자 이내로 쓰세요. title 필드는 절대 바꾸지 '.
                     '마세요(내용만 채우세요). 5개 구간이 서로 겹치지 않게 연도를 나누세요.',
-                maxTokens: 1900,
+                maxTokens: 3000,
                 inputKeys: ['dayElement', 'dayYinYang', 'yearlyOutlook', 'daeun'],
                 blocks: ['stage_grid'],
             ),
@@ -332,7 +332,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 promptGuidance: '용신/기신과 현재 세운(yearlyOutlook의 첫 항목)을 근거로, 기회를 활용하기 좋은 '.
                     '구체적 신호(left)와 손실을 경계해야 하는 구체적 신호(right)를 각각 text(1문장, 70자 이내)로 '.
                     '쓰세요. tags에는 각 side를 대표하는 상황 키워드 정확히 2개씩을 쓰세요.',
-                maxTokens: 800,
+                maxTokens: 1800,
                 inputKeys: ['deep', 'yearlyOutlook'],
                 blocks: ['compare_cards'],
             ),
@@ -344,7 +344,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                 promptGuidance: '앞선 챕터들의 분석(용신/기신, 재성 성향)을 종합해서 예산관리/수입 구조/투자 원칙/'.
                     '계약 습관 4가지 관점에서 각 1개씩 현실적인 전략을 steps(각 40자 이내)로 구체적으로 쓰세요. '.
                     'key_point에 가장 중요한 원칙 1문장(90자 이내)을 쓰세요.',
-                maxTokens: 900,
+                maxTokens: 2000,
                 inputKeys: $selfBase,
                 blocks: ['step_flow'],
             ),
@@ -374,7 +374,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
                     '압축하는 최종 키워드 정확히 5개(각 8자 이내)를 쓰세요. 마지막으로, 실제 재물의 결과는 사주 '.
                     '성향뿐 아니라 노력·시장 상황·경제 환경의 영향도 받는다는 점을 quote나 groups 어딘가에 '.
                     '자연스럽게 짧게 담으세요.',
-                maxTokens: 2400,
+                maxTokens: 4000,
                 inputKeys: ['name', 'dayElement', 'dayYinYang', 'wuxingCount', 'deep', 'daeun', 'currentDaeunIndex', 'yearlyOutlook'],
                 blocks: ['quote', 'label_groups', 'keyword_chips'],
             ),

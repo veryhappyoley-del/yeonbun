@@ -39,9 +39,13 @@ class ChapterGenerator
     // 필요하므로, 레거시 ReportGenerator::MAX_INPUT_JSON_LENGTH(4000)보다 작게 잡음.
     private const MAX_INPUT_JSON_LENGTH = 3000;
 
-    // 재시도 시 max_tokens를 올려도 되는 상한(과금 폭주 방지). 어떤 챕터든 이 값을
-    // 넘지 않는다 — claude-sonnet-5는 128k 출력 토큰을 지원하므로 8000은 여전히 여유 있음.
-    private const MAX_RETRY_TOKENS = 8000;
+    // 재시도 시 max_tokens를 올려도 되는 상한. 실제 과금은 max_tokens(상한) 자체가 아니라
+    // 실제로 생성된 토큰 수 기준이라(모델이 이 상한값을 알지도 못하므로 상한을 올린다고
+    // 짧게 끝날 응답이 괜히 길어지지 않음) 이 값 자체를 넉넉하게 잡아도 비용 부작용이
+    // 없다. 그래서 8000 → 12000으로 올려, 어떤 챕터든(특히 final_verdict처럼 base
+    // maxTokens가 4000인 챕터) 재시도로 충분히 더 여유를 받을 수 있게 했다(2026-09-08).
+    // claude-sonnet-5는 128k 출력 토큰을 지원하므로 12000도 여전히 여유 있음.
+    private const MAX_RETRY_TOKENS = 12000;
 
     /**
      * Http::pool()의 각 요청에 그대로 넘길 Anthropic Messages API 요청 바디.
