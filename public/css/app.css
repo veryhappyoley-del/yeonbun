@@ -3150,7 +3150,34 @@
   50% { transform: translateY(5px); }
 }
 
+/* (2026-09-08 추가) 로그인 후 결제 재개(public/js/app.js maybeResumeCheckoutAfterLogin)
+   완료를 알리는 짧은 안내 토스트. */
+.resume-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  line-height: 1.4;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 9999;
+  max-width: 88vw;
+  text-align: center;
+  pointer-events: none;
+}
+.resume-toast.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .reveal-item { opacity: 1; transform: none; transition: none; }
   .scroll-hint svg { animation: none; }
+  .resume-toast { transition: none; }
 }

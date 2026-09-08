@@ -1613,28 +1613,56 @@
     's-name', 's-year', 's-month', 's-day', 's-hour', 's-minute', 's-sido', 's-sigungu',
     'c-name-a', 'c-year-a', 'c-month-a', 'c-day-a', 'c-hour-a', 'c-minute-a', 'c-sido-a', 'c-sigungu-a',
     'c-name-b', 'c-year-b', 'c-month-b', 'c-day-b', 'c-hour-b', 'c-minute-b', 'c-sido-b', 'c-sigungu-b',
-    'c-concern-detail'
+    'c-concern-detail',
+    // (2026-09-08 추가) "다시, 우리"(재회 전략) 탭 — 로그인 후 결제 재개(아래
+    // markPendingCheckoutResume/maybeResumeCheckoutAfterLogin) 기능이 이 탭에서도
+    // 동작하려면 이 탭 필드들도 초안에 포함돼야 한다. 기존에는 단일/궁합 탭만 커버했었음.
+    'r-name-a', 'r-year-a', 'r-month-a', 'r-day-a', 'r-hour-a', 'r-minute-a', 'r-sido-a', 'r-sigungu-a',
+    'r-name-b', 'r-year-b', 'r-month-b', 'r-day-b', 'r-hour-b', 'r-minute-b', 'r-sido-b', 'r-sigungu-b',
+    'r-reason-detail'
   ];
-  var DRAFT_CHECKBOX_FIELDS = ['s-unknown', 'c-unknown-a', 'c-unknown-b'];
+  var DRAFT_CHECKBOX_FIELDS = ['s-unknown', 'c-unknown-a', 'c-unknown-b', 'r-unknown-a', 'r-unknown-b'];
   // 시/군/구는 시/도가 바뀌어야 옵션 목록 자체가 다시 채워지는 종속 관계라, 복원할 때도
   // 반드시 시/도 값 설정 → change 이벤트(옵션 재생성) → 시/군/구 값 설정 순서를 지켜야 한다.
-  var DRAFT_SIDO_SIGUNGU_PAIRS = [['s-sido', 's-sigungu'], ['c-sido-a', 'c-sigungu-a'], ['c-sido-b', 'c-sigungu-b']];
+  var DRAFT_SIDO_SIGUNGU_PAIRS = [
+    ['s-sido', 's-sigungu'], ['c-sido-a', 'c-sigungu-a'], ['c-sido-b', 'c-sigungu-b'],
+    ['r-sido-a', 'r-sigungu-a'], ['r-sido-b', 'r-sigungu-b']
+  ];
   var DRAFT_SIGUNGU_IDS = DRAFT_SIDO_SIGUNGU_PAIRS.map(function (pair) { return pair[1]; });
+
+  // (2026-09-08 추가) 클릭으로 값이 정해지는 칩/카드형 선택지 전부를 한 군데서 관리.
+  // 예전엔 "관계 단계"/"궁금한 것" 두 개만 draft.stage/draft.concern으로 따로 저장했는데,
+  // 성별 칩(궁합 A/B, 짝사랑, 재회)과 재회 탭의 이별 히스토리 칩(교제기간/이별시점/
+  // 이별주도자/이별사유)까지 초안·로그인 후 재개 기능이 되살려야 해서 일반화했다.
+  // { container: 칩들을 담는 컨테이너 id, attr: getSingleSelectValue가 읽는 data-* 이름 }
+  var DRAFT_CHIP_GROUPS = [
+    { container: 'c-stage-row', attr: 'stage' },
+    { container: 'c-concern-grid', attr: 'concern' },
+    { container: 'c-gender-row-a', attr: 'gender' },
+    { container: 'c-gender-row-b', attr: 'gender' },
+    { container: 'r-gender-row-a', attr: 'gender' },
+    { container: 'r-gender-row-b', attr: 'gender' },
+    { container: 'r-duration-row', attr: 'duration' },
+    { container: 'r-timing-row', attr: 'timing' },
+    { container: 'r-initiator-row', attr: 'initiator' },
+    { container: 'r-reason-row', attr: 'reason' }
+  ];
 
   var draftSaveTimer = null;
 
   function collectDraft() {
-    var draft = { savedAt: Date.now(), text: {}, checked: {}, stage: null, concern: null };
+    var draft = { savedAt: Date.now(), text: {}, checked: {}, chips: {} };
     DRAFT_TEXT_FIELDS.forEach(function (id) {
       var node = document.getElementById(id);
       if (node) draft.text[id] = node.value;
+    });
+    DRAFT_CHIP_GROUPS.forEach(function (g) {
+      draft.chips[g.container] = getSingleSelectValue(g.container, g.attr);
     });
     DRAFT_CHECKBOX_FIELDS.forEach(function (id) {
       var node = document.getElementById(id);
       if (node) draft.checked[id] = node.checked;
     });
-    draft.stage = getSingleSelectValue('c-stage-row', 'stage');
-    draft.concern = getSingleSelectValue('c-concern-grid', 'concern');
     return draft;
   }
 
@@ -1674,10 +1702,11 @@
       var node = document.getElementById(id);
       if (node) node.addEventListener('change', scheduleDraftSave);
     });
-    // 관계 단계 칩 / 궁금한 것 카드는 클릭으로 토글되는 커스텀 UI라 change/input이 아니라
-    // 클릭 시점에 저장해야 한다(위 wireSingleSelect가 active 클래스를 먼저 바꾼 뒤라 순서 문제 없음).
-    ['c-stage-row', 'c-concern-grid'].forEach(function (containerId) {
-      var container = document.getElementById(containerId);
+    // 칩/카드형 선택지(관계 단계, 궁금한 것, 성별, 이별 히스토리 등)는 클릭으로 토글되는
+    // 커스텀 UI라 change/input이 아니라 클릭 시점에 저장해야 한다(위 wireSingleSelect가
+    // active 클래스를 먼저 바꾼 뒤라 순서 문제 없음).
+    DRAFT_CHIP_GROUPS.forEach(function (g) {
+      var container = document.getElementById(g.container);
       if (container) container.addEventListener('click', scheduleDraftSave);
     });
   }
@@ -1710,21 +1739,159 @@
       if (sigunguVal) sigunguNode.value = sigunguVal;
     });
 
-    if (draft.stage) {
-      var stageBtn = document.querySelector('#c-stage-row [data-stage="' + draft.stage + '"]');
-      if (stageBtn) stageBtn.click();
+    // (2026-09-08 수정) 예전엔 draft.stage/draft.concern 두 개만 따로 복원했는데,
+    // 성별 칩/이별 히스토리 칩까지 커버하도록 draft.chips로 일반화했다. 예전 형태로
+    // 저장된 초안(draft.chips가 없는 경우)도 최대 24시간 안엔 그대로 남아있을 수 있어서
+    // 하위호환으로 한 번 더 받아준다.
+    var chips = draft.chips || {};
+    if (!draft.chips) {
+      if (draft.stage) chips['c-stage-row'] = draft.stage;
+      if (draft.concern) chips['c-concern-grid'] = draft.concern;
     }
-    if (draft.concern) {
-      var concernCard = document.querySelector('#c-concern-grid [data-concern="' + draft.concern + '"]');
-      if (concernCard) concernCard.click();
+    DRAFT_CHIP_GROUPS.forEach(function (g) {
+      var val = chips[g.container];
+      if (!val) return;
+      try {
+        var item = document.querySelector('#' + g.container + ' [data-' + g.attr + '="' + CSS.escape(val) + '"]');
+        if (item) item.click();
+      } catch (e) {
+        // 이상한 값이 들어와도 나머지 복원이 멈추지 않게 조용히 무시.
+      }
+    });
+  }
+
+  /* ============================================================
+   * 7-1. 로그인 후 결제 재개 (2026-09-08 추가)
+   *
+   *    배경: 로그인 없이 계산 → 구매 버튼 → 로그인 게이트 → 로그인하고 돌아오면
+   *    "어느 탭인지"는 이미 복원됐지만(activateTabFromQuery) 결과 자체는 다시 계산 전
+   *    상태라, 사용자가 사주풀이 버튼을 한 번 더 눌러야 구매까지 갈 수 있었다.
+   *    (public/js/reports.js의 startCheckout이 로그인 안 됨을 감지하는 바로 그 순간
+   *    markPendingCheckoutResume()을 불러서 "이 탭을 로그인 후 다시 계산해야 함"이라는
+   *    표시만 남기고, 실제 재계산은 이 파일이 로그인 왕복 후 페이지가 새로 열릴 때
+   *    수행한다 — 두 파일이 이 하나의 localStorage 키로 협업한다.)
+   *
+   *    의도적으로 "구매" 버튼 자체는 자동으로 누르지 않는다 — 토스페이먼츠 결제창은
+   *    진짜 사용자 클릭(user gesture)에서 열어야 동작하고, 그것과 별개로 로그인
+   *    직후 아무 확인 없이 바로 결제가 나가면 신뢰 문제가 생길 수 있어서 마지막 구매
+   *    클릭만은 사용자가 직접 하도록 남겨뒀다(2026-09-08 논의에서 합의된 방식).
+   * ============================================================ */
+
+  var RESUME_KEY = 'yeonbunResumeCheckout.v1';
+  // 로그인 왕복은 보통 수십 초 안에 끝난다 — 15분보다 오래 걸렸다면 사용자가 중간에
+  // 다른 걸 했을 가능성이 커서, 그런 경우까지 자동으로 재계산이 튀어나오지 않게 한다.
+  var RESUME_TTL_MS = 15 * 60 * 1000;
+
+  function markPendingCheckoutResume() {
+    saveDraftNow(); // 로그인으로 튕겨나가기 직전이라, 디바운스 기다리지 않고 지금 값을 바로 저장
+    try {
+      var activeTabBtn = document.querySelector('.tab-btn.active');
+      var tab = activeTabBtn ? activeTabBtn.getAttribute('data-tab') : null;
+      if (!tab) return;
+      localStorage.setItem(RESUME_KEY, JSON.stringify({ tab: tab, savedAt: Date.now() }));
+    } catch (e) {
+      // localStorage를 못 쓰는 환경 — 자동 재계산만 포기, 로그인 자체는 그대로 진행돼야 한다.
     }
   }
+
+  function isSingleReadyForResume() {
+    var y = document.getElementById('s-year'), m = document.getElementById('s-month'), d = document.getElementById('s-day');
+    return !!(y && m && d && y.value && m.value && d.value);
+  }
+
+  function isTwoPersonReadyForResume(prefix) {
+    return ['year-a', 'month-a', 'day-a', 'year-b', 'month-b', 'day-b'].every(function (suffix) {
+      var node = document.getElementById(prefix + '-' + suffix);
+      return !!(node && node.value);
+    });
+  }
+
+  // 되살린 초안에 필수값이 빠져있으면(자동저장 실패 등 드문 경우) 제출 버튼의 자체
+  // alert() 안내가 로그인 직후 갑자기 튀어나오지 않도록, 조용히 자동 재계산을 포기하고
+  // 사용자가 직접 채워서 누르게 둔다.
+  function maybeResumeCheckoutAfterLogin() {
+    var raw;
+    try {
+      raw = localStorage.getItem(RESUME_KEY);
+    } catch (e) {
+      return;
+    }
+    if (!raw) return;
+
+    // 먼저 지운다 — 아래에서 어떤 이유로 중단되더라도 다음 방문에 엉뚱하게 다시
+    // 튀어나오지 않게 하기 위함(1회성 재개 표시).
+    try { localStorage.removeItem(RESUME_KEY); } catch (e) {}
+
+    var pending;
+    try { pending = JSON.parse(raw); } catch (e) { return; }
+    if (!pending || !pending.tab || !pending.savedAt) return;
+    if (Date.now() - pending.savedAt > RESUME_TTL_MS) return;
+
+    var activeTabBtn = document.querySelector('.tab-btn.active');
+    var activeTab = activeTabBtn ? activeTabBtn.getAttribute('data-tab') : null;
+    if (activeTab !== pending.tab) return; // 안전장치: 돌아온 탭이 다르면 자동 재계산하지 않음
+
+    var submitId, ready;
+    if (pending.tab === 'single') {
+      submitId = 's-submit';
+      ready = isSingleReadyForResume();
+    } else if (pending.tab === 'compat') {
+      submitId = 'c-submit';
+      ready = isTwoPersonReadyForResume('c');
+    } else if (pending.tab === 'unrequited') {
+      submitId = 'c-submit';
+      ready = isTwoPersonReadyForResume('c') && !!getSingleSelectValue('c-gender-row-a', 'gender');
+    } else if (pending.tab === 'reunion') {
+      submitId = 'r-submit';
+      ready = isTwoPersonReadyForResume('r') && !!getSingleSelectValue('r-gender-row-a', 'gender');
+    } else {
+      return;
+    }
+    if (!ready) return;
+
+    var submitBtn = document.getElementById(submitId);
+    if (!submitBtn) return;
+
+    submitBtn.click();
+    showResumeToast();
+
+    // 결과가 다시 그려진 다음 구매 버튼까지 스크롤해서, 사주풀이를 한 번 더 본다는
+    // 느낌 없이 바로 결제로 이어지도록 안내한다(구매 클릭 자체는 사용자가 직접).
+    setTimeout(function () {
+      var buyBtn = document.querySelector('.btn-buy');
+      if (buyBtn) buyBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 250);
+  }
+
+  function showResumeToast() {
+    try {
+      var toast = document.createElement('div');
+      toast.className = 'resume-toast';
+      toast.textContent = '로그인 완료! 방금 보던 결과를 다시 불러왔어요. 구매 버튼을 눌러 진행해 주세요.';
+      document.body.appendChild(toast);
+      setTimeout(function () { toast.classList.add('is-visible'); }, 10);
+      setTimeout(function () {
+        toast.classList.remove('is-visible');
+        setTimeout(function () { toast.remove(); }, 400);
+      }, 4200);
+    } catch (e) {
+      // 토스트 표시는 부가 기능 — 실패해도 재계산/스크롤 자체는 이미 끝난 뒤라 조용히 무시.
+    }
+  }
+
+  // public/js/reports.js의 startCheckout()이 로그인 안 됨을 감지하는 시점에
+  // markPendingCheckoutResume()을 호출할 수 있도록 노출.
+  window.YeonbunDraft = {
+    saveNow: saveDraftNow,
+    markPendingCheckoutResume: markPendingCheckoutResume
+  };
 
   fillCitySelects();
   bindEvents();
   restoreDraft();
   wireDraftAutosave();
   activateTabFromQuery();
+  maybeResumeCheckoutAfterLogin();
 
   // (2026-08-31 추가) "짝사랑 탈출" 리포트의 대운/세운 계산(public/js/luck-cycle.js)이
   // 이 파일의 검증된 천문 계산(Meeus 태양 겉보기 황경, 절기 경계)과 60갑자 조견표를

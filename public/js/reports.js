@@ -162,6 +162,13 @@
 
   function startCheckout(type, input, title, statusBox) {
     if (!window.YeonbunAuth || !window.YeonbunAuth.loggedIn) {
+      // (2026-09-08 추가) 로그인 안 된 걸 감지한 바로 이 순간이 "구매하려던 참이었다"는
+      // 신호라, public/js/app.js에 지금 탭 상태를 저장하고 "로그인 후 돌아오면 이 탭을
+      // 다시 계산해 달라"는 표시를 남겨달라고 요청한다 — 그래야 로그인하고 돌아왔을 때
+      // 사주풀이 버튼을 한 번 더 누르지 않고 바로 구매 버튼까지 갈 수 있다.
+      if (window.YeonbunDraft && window.YeonbunDraft.markPendingCheckoutResume) {
+        window.YeonbunDraft.markPendingCheckoutResume();
+      }
       showLoginGate(statusBox);
       return;
     }
