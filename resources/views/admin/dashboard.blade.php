@@ -47,6 +47,11 @@
       <div class="stat-sub">페이지뷰 {{ number_format($totalPageViews) }}회 · 신규 {{ number_format($newVisitors) }} / 재방문 {{ number_format($returningVisitors) }}</div>
     </div>
     <div class="stat-card">
+      <div class="stat-label">미리보기 조회 (결제 전)</div>
+      <div class="stat-value">{{ number_format($previewViewersTotal) }}<span>명</span></div>
+      <div class="stat-sub">방문자 → 미리보기 {{ $visitorToPreview }}% · 미리보기 → 가입 {{ $previewToSignup }}%</div>
+    </div>
+    <div class="stat-card">
       <div class="stat-label">가입자</div>
       <div class="stat-value">{{ number_format($totalUsers) }}<span>명</span></div>
       <div class="stat-sub">방문자 → 가입 {{ $visitorToSignup }}%</div>
@@ -138,6 +143,35 @@
     </div>
   </div>
 
+  {{-- (2026-09-08 추가) "결제 단계 전에, 정보를 입력하고 미리보기를 보는 사람들까지 다
+       집계해줘"라는 요청 대응 — App\Models\PreviewView(방문자 쿠키 기준)로 타입별 실제
+       인원 수를 센다. 아래 "무료 미리보기 생성 현황" 카드는 여전히 남겨뒀는데, 그건
+       "생성 시도/성공/실패 건수"(AI 생성 품질 지표)라서 "몇 명이 봤는지"인 이 카드와
+       목적이 다르다. --}}
+  <div class="card">
+    <h2>타입별 미리보기 조회자</h2>
+    <p class="chart-note">
+      정보를 입력하고 결제 전 무료 미리보기까지 연 사람 수예요(방문자 쿠키 기준, 같은
+      사람이 폴링·재조회해도 타입당 1명으로만 셉니다). 이 사람들이 실제로 결제까지
+      가는 비율은 위 "상품별 매출"의 건수와 비교해 보면 가늠할 수 있어요.
+    </p>
+    @if ($previewViewersByType->isEmpty())
+      <div class="empty-state">선택한 기간에는 미리보기 조회 기록이 없어요.</div>
+    @else
+      <table class="admin-table">
+        <thead><tr><th>리포트 종류</th><th>미리보기 조회자</th></tr></thead>
+        <tbody>
+          @foreach ($previewViewersByType as $row)
+            <tr>
+              <td>{{ $row['label'] }}</td>
+              <td>{{ number_format($row['count']) }}명</td>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+    @endif
+  </div>
+
   {{-- (2026-08-26 추가) 상품별 매출 / 결제 퍼널 / 가입 경로 / 무료 미리보기 현황.
        사용자가 "관리자 대시보드에 더 다양한 데이터를 보고 싶다"고 요청해서 추가했다. --}}
   <div class="card">
@@ -210,7 +244,7 @@
 
   <div class="card">
     <h2>무료 미리보기(챕터 프리뷰) 생성 현황</h2>
-    <p class="chart-note">결제 전 무료로 보여주는 챕터 1개가 실제로 얼마나 생성되는지, AI 생성 실패율은 얼마나 되는지예요. 로그인 없이 익명으로 동작해서 개별 이용자로는 연결되지 않고 전체 건수만 집계돼요.</p>
+    <p class="chart-note">이건 "몇 명이 봤는지"가 아니라 "AI 생성이 얼마나 잘 되는지" 보는 카드예요 — 결제 전 무료로 보여주는 챕터 1개가 실제로 얼마나 생성되는지, AI 생성 실패율은 얼마나 되는지를 봅니다(입력값이 같으면 여러 사람이 캐시 1건을 공유해서 전체 건수만 집계돼요). 실제 조회 인원은 위 "타입별 미리보기 조회자" 카드를 보세요.</p>
     <div class="stat-grid">
       <div class="stat-card">
         <div class="stat-label">생성 시도</div>

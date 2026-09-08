@@ -8,6 +8,7 @@ use App\Models\ChapterPreview;
 use App\Models\ChatSession;
 use App\Models\PageView;
 use App\Models\Payment;
+use App\Models\PreviewView;
 use App\Models\Report;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -136,7 +137,32 @@ class DashboardController extends Controller
             ->count();
         $inAppPct = $totalPageViews > 0 ? round($inAppPageViews / $totalPageViews * 100, 1) : 0;
 
+        // (2026-09-08 추가) "결제 전, 정보를 입력하고 무료 미리보기까지 본 사람"도 퍼널에
+        // 넣어 달라는 요청 — App\Models\ChapterPreview는 (입력값이 같으면) 서로 다른
+        // 사람이 캐시 1건을 공유해서 "몇 명"과는 다른 숫자라, 방문자 쿠키 기준으로 사람을
+        // 세는 별도 테이블(preview_views, App\Http\Controllers\ChapterPreviewController가
+        // 기록)을 쓴다. 한 사람이 같은 타입을 여러 번 열어봐도(폴링 포함) 딱 1행만
+        // 남으므로, COUNT(DISTINCT visitor_id)는 사실상 COUNT(*)와 같지만 명시적으로
+        // distinct를 써서 의도를 분명히 한다.
+        $previewViewersByType = PreviewView::where('is_bot', false)
+            ->whereBetween('created_at', [$stDate, $edDate])
+            ->selectRaw('report_type, COUNT(DISTINCT visitor_id) as cnt')
+            ->groupBy('report_type')
+            ->get()
+            ->map(fn ($row) => [
+                'label' => self::REPORT_TYPE_LABELS[$row->report_type] ?? $row->report_type,
+                'count' => (int) $row->cnt,
+            ])
+            ->sortByDesc('count')
+            ->values();
+        $previewViewersTotal = (int) $previewViewersByType->sum('count');
+        $visitorToPreview = $totalVisitors > 0 ? round($previewViewersTotal / $totalVisitors * 100, 1) : 0;
+
         $totalUsers = User::whereBetween('created_at', [$stDate, $edDate])->count();
+        // "미리보기까지 본 사람" 중 몇 %가 실제 가입까지 갔는지 — $totalUsers가 막 정의된
+        // 바로 다음 줄에서 계산해야 순서가 맞는다(위 $visitorToPreview는 $totalUsers 없이도
+        // 계산 가능해서 먼저 뒀다).
+        $previewToSignup = $previewViewersTotal > 0 ? round($totalUsers / $previewViewersTotal * 100, 1) : 0;
         // 매출은 코인 결제(payments)와 프리미엄 리포트 결제(reports) 두 테이블에 걸쳐 있어서 합산합니다.
         $paymentUserIds = Payment::where('status', 'paid')->whereBetween('created_at', [$stDate, $edDate])->pluck('user_id');
         $reportUserIds = Report::where('status', 'paid')->whereBetween('created_at', [$stDate, $edDate])->pluck('user_id');
@@ -309,6 +335,10 @@ class DashboardController extends Controller
             'internalReferrerCount' => $internalReferrerCount,
             'inAppPageViews' => $inAppPageViews,
             'inAppPct' => $inAppPct,
+            'previewViewersByType' => $previewViewersByType,
+            'previewViewersTotal' => $previewViewersTotal,
+            'visitorToPreview' => $visitorToPreview,
+            'previewToSignup' => $previewToSignup,
             'totalUsers' => $totalUsers,
             'payingUsers' => $payingUsers,
             'totalRevenue' => $totalRevenue,

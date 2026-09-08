@@ -26,7 +26,11 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class TrackPageView
 {
-    private const COOKIE = 'yeonbun_visitor';
+    // (2026-09-08 수정) private -> public — App\Http\Controllers\ChapterPreviewController가
+    // "결제 전 미리보기까지 본 사람" 집계(PreviewView)에 같은 방문자 쿠키를 그대로
+    // 재사용하려고 이 상수를 참조한다. 쿠키 이름을 두 군데에 따로 하드코딩해두면 나중에
+    // 이름을 바꿀 때 한쪽만 고치는 실수가 나기 쉬워서 하나로 합쳤다.
+    public const COOKIE = 'yeonbun_visitor';
 
     public function handle(Request $request, Closure $next): Response
     {
