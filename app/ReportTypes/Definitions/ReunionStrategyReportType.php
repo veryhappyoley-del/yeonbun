@@ -54,8 +54,8 @@ class ReunionStrategyReportType implements ReportTypeDefinition
     {
         return new ReportType(
             key: 'reunion_strategy',
-            label: '다시, 우리',
-            price: 23900,
+            label: '다시 만날 수 있을까?',
+            price: 14900,
             inputShape: InputShape::TwoPersonWithHistory,
             chapters: self::chapters(),
             previewChapterKeys: [

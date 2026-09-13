@@ -751,7 +751,7 @@
   var currentCompatMode = 'compat';
 
   // (2026-09-08 추가) "재물운"/"커리어운" 탭이 #panel-single 폼을 그대로 재사용하면서
-  // 모드만 구분한다 — currentCompatMode와 완전히 같은 패턴. 'single'(연애의 나침반,
+  // 모드만 구분한다 — currentCompatMode와 완전히 같은 패턴. 'single'(나의 연애 나침반,
   // 기본값) / 'wealth'(재물운) / 'career'(커리어운).
   var currentSingleMode = 'single';
 
@@ -923,7 +923,7 @@
     if (window.YeonbunReports) {
       startChapterPreview(teaserHost, 'love_fortune', 'origin_profile', window.YeonbunReports.buildSingleInput(currentSajuA), {
         label: '🔍 내 연애, 더 깊이 보면',
-        ctaMessage: '전체 내용은 연애의 나침반 리포트에서 이어져요 — 아래 20개 챕터도 함께 준비돼 있어요.'
+        ctaMessage: '전체 내용은 나의 연애 나침반 리포트에서 이어져요 — 아래 20개 챕터도 함께 준비돼 있어요.'
       });
     }
 
@@ -964,7 +964,7 @@
   // (2026-09-08 추가) "재물운"/"커리어운" 무료 화면 상단에 격국/신강신약/용신·희신·기신을
   // 바로 보여주는 카드 — analyzeDeepSaju()가 이번에 새로 계산해서 saju.deep에 담아준
   // 값이라(격국은 이번에 처음 추가됨) 화면에서도 "27,000원짜리 리포트가 이런 근거로
-  // 말한다"는 걸 결제 전부터 보여줄 수 있게 됐다. "연애의 나침반"에는 굳이 안 보여준다 —
+  // 말한다"는 걸 결제 전부터 보여줄 수 있게 됐다. "나의 연애 나침반"에는 굳이 안 보여준다 —
   // 그쪽은 오행 분포/신살 위주로 이미 구성이 잡혀 있고 격국/용신 같은 개념이 연애 해석
   // 흐름과는 결이 달라서, 재물운/커리어운처럼 "왜 이 판단인지" 근거를 전면에 세우는
   // 리포트에만 넣는다.
@@ -1209,7 +1209,7 @@
       relation: compat.rel
     }, {
       label: '🔍 이 짝사랑, 더 자세히 보면',
-      ctaMessage: '전체 내용은 짝사랑의 다음 장 리포트에서 이어져요 — 언제·어떻게 다가가야 할지까지 담겨 있어요.'
+      ctaMessage: '전체 내용은 나를 좋아할까.? 리포트에서 이어져요 — 언제·어떻게 다가가야 할지까지 담겨 있어요.'
     });
 
     if (window.YeonbunReports && window.YeonbunReports.buildTocPreview) {
@@ -1241,7 +1241,7 @@
     }
   }
 
-  // (2026-08-31 신설) "다시, 우리"(재회 전략) — renderUnrequitedResult와 같은 이유로
+  // (2026-08-31 신설) "다시 만날 수 있을까?"(재회 전략) — renderUnrequitedResult와 같은 이유로
   // 별도 함수로 뒀다(기존 궁합 계산 로직을 안 건드리기 위함). 짝사랑 탈출과 다른 점 2가지:
   //   1) 이별 히스토리(history 인자 — datingDuration/breakupTiming/breakupInitiator/
   //      breakupReason/breakupReasonDetail)를 함께 받아서 그대로 currentCompat에 싣는다.
@@ -1292,7 +1292,7 @@
       breakupReasonDetail: history.breakupReasonDetail
     }, {
       label: '🔍 우리 관계, 더 자세히 보면',
-      ctaMessage: '전체 내용은 다시, 우리 리포트에서 이어져요 — 타이밍 캘린더부터 30일 행동 계획까지 담겨 있어요.'
+      ctaMessage: '전체 내용은 다시 만날 수 있을까? 리포트에서 이어져요 — 타이밍 캘린더부터 30일 행동 계획까지 담겨 있어요.'
     });
 
     if (window.YeonbunReports && window.YeonbunReports.buildTocPreview) {
@@ -1499,7 +1499,7 @@
     card.appendChild(header);
 
     var elKey = currentSajuA ? currentSajuA.love.dayEl : null;
-    var patternText = elKey ? CONCERN_PATTERN[concernKey][elKey] : '아직 사주 정보가 없어서 일반적인 경향으로 안내할게요. ‘연애의 나침반’ 탭에서 먼저 풀이를 보면 이 부분이 더 맞춤화돼요.';
+    var patternText = elKey ? CONCERN_PATTERN[concernKey][elKey] : '아직 사주 정보가 없어서 일반적인 경향으로 안내할게요. ‘나의 연애 나침반’ 탭에서 먼저 풀이를 보면 이 부분이 더 맞춤화돼요.';
     var nameLabel = currentSajuA && currentSajuA.name ? currentSajuA.name + '님은' : '지금';
 
     card.appendChild(txt('div', 'field-label', '상황 요약'));
@@ -1575,7 +1575,7 @@
     wireSidoSigungu('s-sido', 's-sigungu');
     wireSidoSigungu('c-sido-a', 'c-sigungu-a');
     wireSidoSigungu('c-sido-b', 'c-sigungu-b');
-    // (2026-08-31 추가) "다시, 우리" 전용 패널(#panel-reunion)의 A/B 출생 지역 셀렉트.
+    // (2026-08-31 추가) "다시 만날 수 있을까?" 전용 패널(#panel-reunion)의 A/B 출생 지역 셀렉트.
     wireSidoSigungu('r-sido-a', 'r-sigungu-a');
     wireSidoSigungu('r-sido-b', 'r-sigungu-b');
   }
@@ -1613,11 +1613,11 @@
     if (relSection) relSection.classList.toggle('is-hidden', isUnrequited);
     if (genderA) genderA.classList.toggle('is-hidden', !isUnrequited);
     if (genderB) genderB.classList.toggle('is-hidden', !isUnrequited);
-    if (submitBtn) submitBtn.textContent = isUnrequited ? '짝사랑의 다음 장 분석 시작' : '우리의 연애온도 보기';
+    if (submitBtn) submitBtn.textContent = isUnrequited ? '나를 좋아할까.? 분석 시작' : '우리의 연애온도 보기';
   }
 
   // (2026-09-08 추가) applyCompatModeUI와 완전히 같은 패턴 — "재물운"/"커리어운" 탭에서만
-  // 성별 칩(#s-gender-section)을 보여주고 제출 버튼 문구를 바꾼다. "연애의 나침반"
+  // 성별 칩(#s-gender-section)을 보여주고 제출 버튼 문구를 바꾼다. "나의 연애 나침반"
   // (single)에서는 성별이 필요 없으니 계속 숨겨둔다.
   var SINGLE_SUBMIT_LABEL = { single: '사주 풀이 보기', wealth: '재물운 풀이 보기', career: '커리어운 풀이 보기' };
   function applySingleModeUI(mode) {
@@ -1635,7 +1635,7 @@
     wireSingleSelect('c-gender-row-a', 'compat-gender-chip');
     wireSingleSelect('c-gender-row-b', 'compat-gender-chip');
 
-    // (2026-08-31 추가) "다시, 우리" 전용 패널(#panel-reunion)의 성별/이별 히스토리
+    // (2026-08-31 추가) "다시 만날 수 있을까?" 전용 패널(#panel-reunion)의 성별/이별 히스토리
     // 선택지 — 컨테이너 id가 서로 달라서 같은 아이템 클래스(compat-gender-chip/
     // compat-stage-chip)를 재사용해도 wireSingleSelect가 컨테이너별로 독립적으로 동작한다.
     wireSingleSelect('r-gender-row-a', 'compat-gender-chip');
@@ -1676,7 +1676,7 @@
 
       // (2026-09-08 추가) "재물운"/"커리어운"은 대운 순행/역행 계산에 성별이 꼭 필요해서
       // (public/js/luck-cycle.js의 daeunList) 궁합/재회 탭과 같은 방식으로 성별 선택을
-      // 필수로 막는다. "연애의 나침반"(single)은 예전처럼 성별 없이 그대로 진행.
+      // 필수로 막는다. "나의 연애 나침반"(single)은 예전처럼 성별 없이 그대로 진행.
       if (currentSingleMode === 'wealth' || currentSingleMode === 'career') {
         var singleGender = getSingleSelectValue('s-gender-row', 'gender');
         if (!singleGender) {
@@ -1747,7 +1747,7 @@
       renderCompatResult(sajuA, sajuB, nameA, nameB, stage, concern, concernDetail);
     });
 
-    // (2026-08-31 추가) "다시, 우리"(재회 전략) 전용 패널(#panel-reunion) 제출 —
+    // (2026-08-31 추가) "다시 만날 수 있을까?"(재회 전략) 전용 패널(#panel-reunion) 제출 —
     // #panel-compat과 완전히 별도의 폼이라 필드/검증 로직을 그대로 복제했다(성별 둘 다
     // 필수 — 대운/세운 방향 계산에 A/B 모두 필요하다).
     var reunionSubmit = document.getElementById('r-submit');
@@ -1857,7 +1857,7 @@
     'c-name-a', 'c-year-a', 'c-month-a', 'c-day-a', 'c-hour-a', 'c-minute-a', 'c-sido-a', 'c-sigungu-a',
     'c-name-b', 'c-year-b', 'c-month-b', 'c-day-b', 'c-hour-b', 'c-minute-b', 'c-sido-b', 'c-sigungu-b',
     'c-concern-detail',
-    // (2026-09-08 추가) "다시, 우리"(재회 전략) 탭 — 로그인 후 결제 재개(아래
+    // (2026-09-08 추가) "다시 만날 수 있을까?"(재회 전략) 탭 — 로그인 후 결제 재개(아래
     // markPendingCheckoutResume/maybeResumeCheckoutAfterLogin) 기능이 이 탭에서도
     // 동작하려면 이 탭 필드들도 초안에 포함돼야 한다. 기존에는 단일/궁합 탭만 커버했었음.
     'r-name-a', 'r-year-a', 'r-month-a', 'r-day-a', 'r-hour-a', 'r-minute-a', 'r-sido-a', 'r-sigungu-a',

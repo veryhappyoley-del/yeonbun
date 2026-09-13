@@ -70,18 +70,23 @@
     </div>
   </div>
 
+  {{-- (2026-09-13 수정) 이름/순서 2차 개편 — 01.나의 연애 나침반/02.우리의 연애온도/
+       03.나를 좋아할까.?/04.다시 만날 수 있을까?/05.연애 코치 순서로 재배치하고(연애 코치를
+       재회 다음, 재물운/커리어운보다 앞으로 옮김), 3번·4번 이름을 바꿨다. data-tab 값(내부
+       키)은 그대로라 결제·리포트 조회 로직은 전혀 영향받지 않는다. --}}
   <div class="tabs @if ($hideCalcChrome) is-hidden @endif" role="tablist">
-    <button class="tab-btn active" data-tab="single" role="tab">연애의 나침반</button>
+    <button class="tab-btn active" data-tab="single" role="tab">나의 연애 나침반</button>
     <button class="tab-btn" data-tab="compat" role="tab">우리의 연애온도</button>
-    {{-- (2026-08-31 추가) "짝사랑의 다음 장" — #panel-compat을 그대로 재사용하는 탭이라
+    {{-- (2026-08-31 추가) "나를 좋아할까.?" — #panel-compat을 그대로 재사용하는 탭이라
          data-tab 값은 unrequited지만 실제로 보여줄 패널은 app.js의 탭 클릭 핸들러가
          panel-compat으로 매핑한다. --}}
-    <button class="tab-btn" data-tab="unrequited" role="tab">짝사랑의 다음 장</button>
-    {{-- (2026-08-31 추가) "다시, 우리" — 이별 히스토리 필드가 필요해서 궁합 폼을 재사용하지
-         않고 별도 패널(#panel-reunion)로 뒀다. --}}
-    <button class="tab-btn" data-tab="reunion" role="tab">다시, 우리</button>
+    <button class="tab-btn" data-tab="unrequited" role="tab">나를 좋아할까.?</button>
+    {{-- (2026-08-31 추가) "다시 만날 수 있을까?" — 이별 히스토리 필드가 필요해서 궁합 폼을
+         재사용하지 않고 별도 패널(#panel-reunion)로 뒀다. --}}
+    <button class="tab-btn" data-tab="reunion" role="tab">다시 만날 수 있을까?</button>
+    <button class="tab-btn" data-tab="chat" role="tab">연애 코치</button>
     {{-- (2026-09-08 추가) "재물운"/"커리어운" — #panel-single을 그대로 재사용하는 탭이다
-         ("짝사랑의 다음 장"이 #panel-compat을 재사용하는 것과 같은 방식). 생년월일시만
+         ("나를 좋아할까.?"가 #panel-compat을 재사용하는 것과 같은 방식). 생년월일시만
          있으면 되는 InputShape::Self 리포트라 새 패널이 필요 없고, app.js의 탭 클릭
          핸들러가 PANEL_OVERRIDE로 panel-single에 매핑한다. 대운 순행/역행 계산에는
          성별이 필요해서(App\ReportTypes\Definitions\WealthFortuneReportType 등 참고)
@@ -89,7 +94,6 @@
          보여준다. --}}
     <button class="tab-btn" data-tab="wealth" role="tab">재물운</button>
     <button class="tab-btn" data-tab="career" role="tab">커리어운</button>
-    <button class="tab-btn" data-tab="chat" role="tab">연애 코치</button>
   </div>
   <!-- "고민 상담 가이드" 탭은 상단 메뉴에서 뺐습니다(완성도가 낮다는 판단, 2026-08-24).
        #panel-guide 섹션 자체는 아래에 그대로 남아있어요 — public/js/app.js의 bindEvents()가
@@ -99,7 +103,7 @@
        (.panel은 기본 display:none, .active가 있어야만 보임 — app.css 참고). -->
 
 
-  <!-- ===================== 1. 연애의 나침반 ===================== -->
+  <!-- ===================== 1. 나의 연애 나침반 ===================== -->
   <section class="panel active" id="panel-single">
     <div class="card">
       <h2>생년월일시 입력</h2>
@@ -152,7 +156,7 @@
         <label for="s-unknown" style="margin:0;">태어난 시간을 몰라요 (시주 제외하고 계산)</label>
       </div>
       {{-- (2026-09-08 추가) "재물운"/"커리어운" 탭 전용 — 대운 순행/역행(성별에 따라
-           방향이 달라짐)을 정확히 계산하려면 성별이 필요하다. "연애의 나침반" 탭에서는
+           방향이 달라짐)을 정확히 계산하려면 성별이 필요하다. "나의 연애 나침반" 탭에서는
            안 쓰는 값이라 기본 숨김이고, public/js/app.js의 applySingleModeUI()가 탭에
            따라 보이거나 숨긴다(#c-gender-section-a와 같은 패턴). --}}
       <div class="single-gender-only is-hidden" id="s-gender-section">
@@ -296,13 +300,13 @@
     <div id="c-result"></div>
   </section>
 
-  {{-- (2026-08-31 신설) "짝사랑의 다음 장" 탭은 #panel-compat과 완전히 같은 입력 폼을 그대로
+  {{-- (2026-08-31 신설) "나를 좋아할까.?" 탭은 #panel-compat과 완전히 같은 입력 폼을 그대로
        재사용한다(사용자 요청: "틀은 현재랑 동일하게"). 별도 패널을 새로 만들지 않고,
        public/js/app.js의 탭 전환 로직이 data-tab="unrequited" 버튼을 눌렀을 때 이
        #panel-compat을 보여주면서 모드만 바꾼다 — 폼 필드/궁합 계산 로직을 중복으로
        유지하지 않기 위함(예: 나중에 궁합 계산 방식이 바뀌면 한 곳만 고치면 됨). --}}
 
-  {{-- ===================== 3. 다시, 우리 (재회 전략) =====================
+  {{-- ===================== 3. 다시 만날 수 있을까? (재회 전략) =====================
        (2026-08-31 신설) 이 탭은 #panel-compat을 재사용하지 않고 별도 패널을 새로 만들었다
        — 이유는 App\ReportTypes\Definitions\ReunionStrategyReportType이 필요로 하는 이별
        히스토리(교제기간/이별시점/이별주도자/이별사유)가 궁합/짝사랑 탈출 폼의 "현재
@@ -422,7 +426,7 @@
         <input type="text" id="r-reason-detail" maxlength="60" placeholder="예) 서로 바빠지면서 연락이 뜸해졌어요">
       </div>
 
-      <button class="btn btn-center" id="r-submit" style="margin-top:18px;">다시, 우리 분석 시작</button>
+      <button class="btn btn-center" id="r-submit" style="margin-top:18px;">다시 만날 수 있을까? 분석 시작</button>
     </div>
 
     <div id="r-result"></div>
@@ -432,7 +436,7 @@
   <section class="panel" id="panel-guide">
     <div class="card">
       <h2>지금 어떤 고민이 있나요?</h2>
-      <div class="hint" style="margin-bottom:14px;">먼저 '연애의 나침반' 탭에서 풀이를 한 번 보면, 아래 조언이 내 사주 기질에 맞춰 나와요. 아직 안 봤다면 일반적인 조언으로 보여드릴게요.</div>
+      <div class="hint" style="margin-bottom:14px;">먼저 '나의 연애 나침반' 탭에서 풀이를 한 번 보면, 아래 조언이 내 사주 기질에 맞춰 나와요. 아직 안 봤다면 일반적인 조언으로 보여드릴게요.</div>
       <div class="concern-grid" id="concern-grid"></div>
       <div id="guide-result"></div>
 
@@ -466,7 +470,7 @@
 
         <div id="chat-setup">
           <p class="hint" style="margin-bottom:14px;">
-            '연애의 나침반' 탭에서 먼저 사주를 계산해 두면, 코치가 그 정보를 참고해서 훨씬 더 맞춤화된 조언을 줘요.
+            '나의 연애 나침반' 탭에서 먼저 사주를 계산해 두면, 코치가 그 정보를 참고해서 훨씬 더 맞춤화된 조언을 줘요.
             (계산해 두지 않아도 일반 상담으로 바로 시작할 수 있어요.)
           </p>
           <button class="btn btn-center" id="chat-start">새 상담 시작하기</button>
@@ -490,7 +494,7 @@
   </section>
 
   <footer>
-    사주는 태양의 움직임(절기)을 기준으로 한 전통 역법 계산에 성격 해석을 더한 것으로, 통계적·문화적 참고용 콘텐츠입니다. 연애의 실제 결과를 보장하지 않으며, 중요한 결정은 실제 관계와 대화를 통해 내리시길 권해요. 절기 경계(입춘 등) 부근 출생은 계산이 실제 만세력과 몇 분 이내로 달라질 수 있어요. 연애 코치 탭과 프리미엄 리포트(연애의 나침반·우리의 연애온도·짝사랑의 다음 장·다시, 우리)의 답변은 고전 명리학 이론을 폭넓게 학습한 AI가 생성한 것으로, 전문 심리상담이나 법률·의료 조언을 대체하지 않아요.
+    사주는 태양의 움직임(절기)을 기준으로 한 전통 역법 계산에 성격 해석을 더한 것으로, 통계적·문화적 참고용 콘텐츠입니다. 연애의 실제 결과를 보장하지 않으며, 중요한 결정은 실제 관계와 대화를 통해 내리시길 권해요. 절기 경계(입춘 등) 부근 출생은 계산이 실제 만세력과 몇 분 이내로 달라질 수 있어요. 연애 코치 탭과 프리미엄 리포트(나의 연애 나침반·우리의 연애온도·나를 좋아할까.?·다시 만날 수 있을까?)의 답변은 고전 명리학 이론을 폭넓게 학습한 AI가 생성한 것으로, 전문 심리상담이나 법률·의료 조언을 대체하지 않아요.
     @include('partials.business-footer')
   </footer>
 </div>

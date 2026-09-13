@@ -25,12 +25,16 @@
   // (2026-08-31 수정) 브랜드 개편 — 01.연애의 나침반/02.우리의 연애온도/03.짝사랑의 다음 장/
   // 04.다시, 우리 순서로 라벨을 바꿨다. 키(love_fortune/compatibility/unrequited_love/
   // reunion_strategy)는 그대로라 결제·리포트 조회 로직은 전혀 영향받지 않는다.
+  // (2026-09-13 수정) 이름/가격 2차 개편 — 01.나의 연애 나침반(9,900원)/02.우리의 연애온도
+  // (10,900원)/03.나를 좋아할까.?(12,900원)/04.다시 만날 수 있을까?(14,900원). 실제 결제
+  // 금액은 항상 서버(App\ReportTypes\Definitions\*ReportType::$price)가 최종 확인하므로,
+  // 여기 priceLabel이 그 값과 어긋나지 않도록 항상 두 곳을 같이 바꿔야 한다.
   var TYPE_INFO = {
-    love_fortune: { label: '연애의 나침반', priceLabel: '27,000원' },
-    compatibility: { label: '우리의 연애온도', priceLabel: '21,900원' },
-    unrequited_love: { label: '짝사랑의 다음 장', priceLabel: '23,900원' },
-    // (2026-08-31 추가) "다시, 우리" — App\ReportTypes\Definitions\ReunionStrategyReportType.
-    reunion_strategy: { label: '다시, 우리', priceLabel: '25,900원' },
+    love_fortune: { label: '나의 연애 나침반', priceLabel: '9,900원' },
+    compatibility: { label: '우리의 연애온도', priceLabel: '10,900원' },
+    unrequited_love: { label: '나를 좋아할까.?', priceLabel: '12,900원' },
+    // (2026-08-31 추가) "다시 만날 수 있을까?" — App\ReportTypes\Definitions\ReunionStrategyReportType.
+    reunion_strategy: { label: '다시 만날 수 있을까?', priceLabel: '14,900원' },
     // (2026-09-08 추가) "재물운"/"커리어운" — 처음으로 연애 카테고리를 벗어난 리포트.
     // 가격은 App\ReportTypes\Definitions\{Wealth,Career}FortuneReportType::$price가
     // 실제 결제 시 서버에서 다시 확인하는 값이라 여기 priceLabel은 버튼 문구 표시용일
@@ -494,7 +498,7 @@
   // 무료 티저(origin_profile) 바로 아래에서 별도로 렌더링한다.
   function attachSingleCTA(card, state) {
     var input = buildSingleInput(state);
-    var title = (state.name ? state.name + '님의 ' : '') + '연애의 나침반';
+    var title = (state.name ? state.name + '님의 ' : '') + '나의 연애 나침반';
     card.appendChild(buildCTA('love_fortune', { input: input, title: title }, null, { showShare: false, includeToc: false }));
   }
 
@@ -515,14 +519,14 @@
   // → 구매 버튼)을 그대로 쓰되 typeKey/제목만 다르다.
   function attachUnrequitedCTA(card, state) {
     var input = buildUnrequitedInput(state);
-    var title = (state.nameA || '나') + '님의 ' + (state.nameB || '그 사람') + ' 짝사랑의 다음 장';
+    var title = (state.nameA || '나') + '님의 ' + (state.nameB || '그 사람') + ' 나를 좋아할까.?';
     card.appendChild(buildCTA('unrequited_love', { input: input, title: title }, null, { showShare: false, includeToc: false }));
   }
 
   // (2026-08-31 추가) "다시, 우리" — attachUnrequitedCTA와 같은 틀, typeKey/제목/input만 다르다.
   function attachReunionCTA(card, state) {
     var input = buildReunionInput(state);
-    var title = (state.nameA || '나') + ' × ' + (state.nameB || '그 사람') + ' 다시, 우리';
+    var title = (state.nameA || '나') + ' × ' + (state.nameB || '그 사람') + ' 다시 만날 수 있을까?';
     card.appendChild(buildCTA('reunion_strategy', { input: input, title: title }, null, { showShare: false, includeToc: false }));
   }
 

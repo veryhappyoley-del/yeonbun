@@ -124,7 +124,7 @@
       <a class="sagu-card" href="{{ route('calculator.index', ['tab' => 'single']) }}">
         <span class="sagu-card-badge" aria-hidden="true">연</span>
         <div class="sagu-card-body">
-          <div class="sagu-card-title">연애의 나침반</div>
+          <div class="sagu-card-title">나의 연애 나침반</div>
           <div class="sagu-card-desc">나의 연애 성향과 사랑의 흐름.</div>
         </div>
         <span class="sagu-card-price">무료로 시작</span>
@@ -132,7 +132,7 @@
       <a class="sagu-card" href="{{ route('calculator.index', ['tab' => 'reunion']) }}">
         <span class="sagu-card-badge" aria-hidden="true">재</span>
         <div class="sagu-card-body">
-          <div class="sagu-card-title">다시, 우리</div>
+          <div class="sagu-card-title">다시 만날 수 있을까?</div>
           <div class="sagu-card-desc">재회 가능성과 다시 만나는 전략.</div>
         </div>
         <span class="sagu-card-price">무료로 시작</span>
@@ -140,7 +140,7 @@
       <a class="sagu-card" href="{{ route('calculator.index', ['tab' => 'unrequited']) }}">
         <span class="sagu-card-badge" aria-hidden="true">짝</span>
         <div class="sagu-card-body">
-          <div class="sagu-card-title">짝사랑의 다음장</div>
+          <div class="sagu-card-title">나를 좋아할까.?</div>
           <div class="sagu-card-desc">짝사랑을 연애로 바꾸는 인연의 흐름.</div>
         </div>
         <span class="sagu-card-price">무료로 시작</span>

@@ -21,12 +21,16 @@
           'key' => 'love',
           'label' => '연애 · 재회',
           'available' => true,
-          // (2026-08-31 수정) "연애 재회 사주" 4종 브랜드 개편 — 01.연애의 나침반/
-          // 02.우리의 연애온도/03.짝사랑의 다음 장/04.다시, 우리 순서로 이름을 바꾸고,
-          // 그동안 comingSoon placeholder였던 04번을 실제 구매 가능한 카드로 바꿨다.
+          // (2026-09-13 수정) 이름/순서/가격 2차 개편 — 01.나의 연애 나침반(9,900원)/
+          // 02.우리의 연애온도(10,900원)/03.나를 좋아할까.?(12,900원)/04.다시 만날 수
+          // 있을까?(14,900원)/05.연애 코치 순서로 재배치하고(연애 코치를 3번째에서
+          // 재회 다음으로 옮김), 01·03·04번 이름을 바꿨다. 가격 표시는
+          // App\ReportTypes\Definitions\*ReportType::$price가 실제 결제 시 서버에서
+          // 다시 확인하는 값이라 여기 문자열이 그 값과 어긋나지 않도록 항상 같이 바꿔야
+          // 한다(무료 미리보기가 있는 01·02번은 실제 가격 대신 계속 "무료로 시작"으로 둠).
           'items' => [
               [
-                  'badge' => '나', 'title' => '연애의 나침반',
+                  'badge' => '나', 'title' => '나의 연애 나침반',
                   'desc' => '나의 연애 성향과 사랑의 흐름.',
                   'href' => route('calculator.index', ['tab' => 'single']), 'price' => '무료로 시작',
               ],
@@ -36,25 +40,25 @@
                   'href' => route('calculator.index', ['tab' => 'compat']), 'price' => '무료로 시작',
               ],
               [
-                  'badge' => '코', 'title' => '연애 코치',
-                  'desc' => '내 사주 맥락을 아는 AI 코치와 실시간으로 연애 상담.',
-                  'href' => route('calculator.index', ['tab' => 'chat']), 'price' => '코인으로 상담',
-              ],
-              [
                   // (2026-08-31 추가) App\ReportTypes\Definitions\UnrequitedLoveReportType.
                   // 궁합 보기와 같은 폼(#panel-compat)을 그대로 재사용하는 탭이라
                   // ?tab=unrequited로 들어간다(public/js/app.js 참고).
-                  'badge' => '짝', 'title' => '짝사랑의 다음 장',
+                  'badge' => '짝', 'title' => '나를 좋아할까.?',
                   'desc' => '짝사랑을 연애로 바꾸는 인연의 흐름.',
-                  'href' => route('calculator.index', ['tab' => 'unrequited']), 'price' => '23,900원',
+                  'href' => route('calculator.index', ['tab' => 'unrequited']), 'price' => '12,900원',
               ],
               [
                   // (2026-08-31 추가) App\ReportTypes\Definitions\ReunionStrategyReportType.
                   // 이별 히스토리(교제기간/이별시점/이별주도자/이별사유)까지 받아야 해서
                   // 궁합 폼을 재사용하지 않고 별도 패널(#panel-reunion)을 새로 만들었다.
-                  'badge' => '재', 'title' => '다시, 우리',
+                  'badge' => '재', 'title' => '다시 만날 수 있을까?',
                   'desc' => '재회 가능성과 다시 만나는 전략.',
-                  'href' => route('calculator.index', ['tab' => 'reunion']), 'price' => '25,900원',
+                  'href' => route('calculator.index', ['tab' => 'reunion']), 'price' => '14,900원',
+              ],
+              [
+                  'badge' => '코', 'title' => '연애 코치',
+                  'desc' => '내 사주 맥락을 아는 AI 코치와 실시간으로 연애 상담.',
+                  'href' => route('calculator.index', ['tab' => 'chat']), 'price' => '코인으로 상담',
               ],
               [
                   // (2026-08-31 신설) 구독형 상품이라 다른 항목들과 달리 결제/생성이 계산기
@@ -65,29 +69,34 @@
               ],
           ],
       ],
-      [
-          'key' => 'life',
-          'label' => '평생 · 연간',
-          'available' => false,
-      ],
+      // (2026-09-13 수정) "평생 · 연간" 카테고리는 아직 항목이 없어서 탭 자체를 노출하지
+      // 않기로 함(전에는 available:false로 두되 탭은 계속 보이고 눌러야 "준비 중" 문구가
+      // 나오는 구조였는데, 그러면 사용자가 빈 카테고리를 눌러보게 되니 아예 배열에서
+      // 빼서 탭 자체가 안 보이게 했다). 항목이 실제로 생기면 이 자리에 다시 추가하면 됨.
       [
           'key' => 'wealth',
           'label' => '재물 · 커리어',
           'available' => true,
           // (2026-09-08 추가) App\ReportTypes\Definitions\WealthFortuneReportType /
-          // CareerFortuneReportType. 둘 다 InputShape::Self라 '연애의 나침반'과 같은
+          // CareerFortuneReportType. 둘 다 InputShape::Self라 '나의 연애 나침반'과 같은
           // #panel-single 폼을 재사용하지만, 대운 방향 계산에 성별이 필요해서 성별 칩만
           // 추가로 보인다(public/js/app.js의 applySingleModeUI 참고).
+          // (2026-09-13 수정) 카드에 실제 가격을 바로 노출하던 걸 "연애 · 재회" 카테고리의
+          // 01·02번(무료 미리보기가 있는 항목)과 같은 표기로 통일 — 실제 가격은
+          // 재물운/커리어운도 결제 전 무료 미리보기 → 결제 유도 흐름을 그대로 쓰므로
+          // "무료로 시작"이 맞다(카테고리 픽커 단계에서는 가격을 안 보여주고, 실제
+          // 결제 버튼에서 App\ReportTypes\Definitions\{Wealth,Career}FortuneReportType::
+          // $price 그대로 노출).
           'items' => [
               [
                   'badge' => '재', 'title' => '재물운',
                   'desc' => '돈을 벌고 지키고 불리는 나만의 재물 흐름.',
-                  'href' => route('calculator.index', ['tab' => 'wealth']), 'price' => '21,900원',
+                  'href' => route('calculator.index', ['tab' => 'wealth']), 'price' => '무료로 시작',
               ],
               [
                   'badge' => '커', 'title' => '커리어운',
                   'desc' => '나에게 맞는 일의 방향과 성장 전략.',
-                  'href' => route('calculator.index', ['tab' => 'career']), 'price' => '19,900원',
+                  'href' => route('calculator.index', ['tab' => 'career']), 'price' => '무료로 시작',
               ],
           ],
       ],

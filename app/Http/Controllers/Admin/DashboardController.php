@@ -34,11 +34,11 @@ class DashboardController extends Controller
     public const REPORT_TYPE_LABELS = [
         'single' => '심층 연애 리포트',
         'compat' => '프리미엄 궁합 리포트',
-        'love_fortune' => '연애의 나침반',
+        'love_fortune' => '나의 연애 나침반',
         'compatibility' => '우리의 연애온도',
-        'unrequited_love' => '짝사랑의 다음 장',
+        'unrequited_love' => '나를 좋아할까.?',
         // (2026-08-31 추가) App\ReportTypes\Definitions\ReunionStrategyReportType.
-        'reunion_strategy' => '다시, 우리',
+        'reunion_strategy' => '다시 만날 수 있을까?',
     ];
 
     // 가입 경로(users.provider) 라벨. provider가 없는 행(과거 시드 데이터 등)은 "기타"로 묶는다.
