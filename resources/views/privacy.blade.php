@@ -44,16 +44,10 @@
 
   @include('partials.site-header')
 
-  <div class="hero">
-    <svg class="seal-mark" viewBox="0 0 64 64" aria-hidden="true">
-      <rect x="4" y="4" width="56" height="56" rx="8" fill="none" stroke="var(--seal)" stroke-width="3"></rect>
-      <text x="32" y="39" text-anchor="middle" font-family="Song Myung, serif" font-size="19" letter-spacing="-0.5" fill="var(--seal)">연록</text>
-    </svg>
-    <div class="hero-text">
-      <h1>개인정보 처리방침</h1>
-      <p>연록이 어떤 정보를 왜 모으고, 어떻게 보관·이용하는지 안내드려요.</p>
-    </div>
-  </div>
+  {{-- (2026-09-28 개편) UI 전달본의 화면 상단 구성 — 상단바(제목/뒤로) + 보조 설명.
+       기존 인장 SVG 히어로를 대체했다. 문구는 그대로다. --}}
+  @include('partials.app-topbar', ['title' => '개인정보 처리방침', 'back' => route('my.index')])
+  <p class="page-lead">연록이 어떤 정보를 왜 모으고, 어떻게 보관·이용하는지 안내드려요.</p>
 
   <div class="card">
     <p class="policy-meta">시행일자 : 2026년 8월 26일</p>
@@ -72,7 +66,7 @@
       <h3>2. 수집하는 개인정보 항목 및 수집 방법</h3>
       <p>회사는 서비스 제공을 위해 다음과 같은 개인정보를 수집합니다.</p>
       <div style="overflow-x:auto;">
-        <table class="policy-table">
+        <div class="policy-table-wrap"><table class="policy-table">
           <thead>
             <tr><th>구분</th><th>수집 항목</th><th>수집 방법</th></tr>
           </thead>
@@ -114,7 +108,7 @@
               <td>서비스 접속 시 자동 수집</td>
             </tr>
           </tbody>
-        </table>
+        </table></div>
       </div>
       <p>
         신용카드 번호, 계좌번호 등 결제수단 자체의 민감한 정보는 회사 서버에 저장되지 않으며,

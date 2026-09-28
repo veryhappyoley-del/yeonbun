@@ -17,17 +17,10 @@
 
   @include('partials.site-header')
 
-  <div class="hero">
-    <svg class="seal-mark" viewBox="0 0 64 64" aria-hidden="true">
-      <rect x="4" y="4" width="56" height="56" rx="8" fill="none" stroke="var(--seal)" stroke-width="3"></rect>
-      <text x="32" y="39" text-anchor="middle" font-family="Song Myung, serif" font-size="19" letter-spacing="-0.5" fill="var(--seal)">연록</text>
-    </svg>
-    <div class="hero-text">
-      <h1>코인 충전</h1>
-      <p>연애 코치와 대화할 수 있는 메시지를 충전해요.</p>
-      <p class="sub">지금 남은 메시지: <strong>{{ $credits }}개</strong></p>
-    </div>
-  </div>
+  {{-- (2026-09-28 개편) UI 전달본의 화면 상단 구성 — 상단바(제목/뒤로) + 보조 설명.
+       기존 인장 SVG 히어로를 대체했다. 문구는 그대로다. --}}
+  @include('partials.app-topbar', ['title' => '코인 충전', 'back' => route('my.index')])
+  <p class="page-lead">연애 코치와 대화할 수 있는 메시지를 충전해요. 지금 남은 메시지: <strong>{{ $credits }}개</strong></p>
 
   @if (! $tossConfigured && $isTestMode)
     <div class="placeholder-note">
@@ -46,8 +39,9 @@
   </div>
 
   @if (session('billing_error'))
-    <div class="card" style="border-color: var(--seal); color: var(--seal-deep);">
-      {{ session('billing_error') }}
+    <div class="feedback feedback--error" role="alert">
+      @include('partials.icon', ['name' => 'alert'])
+      <div class="feedback-body">{{ session('billing_error') }}</div>
     </div>
   @endif
 

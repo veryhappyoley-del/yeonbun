@@ -205,7 +205,7 @@
         @endforeach
       </div>
       @if (!empty($data['recurring_pattern']['key_point']))
-        <div class="rpt-quote">💡 {{ $data['recurring_pattern']['key_point'] }}</div>
+        <div class="rpt-quote rpt-quote--tip">@include('partials.icon', ['name' => 'bulb']) <span>{{ $data['recurring_pattern']['key_point'] }}</span></div>
       @endif
     </div>
   @endif

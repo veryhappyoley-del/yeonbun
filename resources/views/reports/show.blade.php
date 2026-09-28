@@ -30,23 +30,30 @@
        화면엔 안 보임), 아래 스크립트가 콘텐츠 준비 완료 상태일 때만 자동으로 다운로드를
        시작한다. 텍스트가 이미지로 캡처되는 방식이라(공유 카드 기능과 동일한 트레이드오프)
        PDF 안 글자는 선택/복사는 안 되지만, 화면에 보이는 모습 그대로 정확하게 나온다. --}}
-  <div class="topbar no-print" style="justify-content:space-between;">
-    <a class="chip-link" href="{{ route('reports.index') }}">&larr; 내 리포트함으로</a>
-    <button type="button" class="chip-link" id="report-pdf-btn" style="cursor:pointer;">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-1px; margin-right:3px;"><path d="M12 3v12"></path><path d="m7 11 5 5 5-5"></path><path d="M5 21h14"></path></svg>
-      PDF로 저장
-    </button>
+  {{-- (2026-09-28 개편) UI 전달본의 상단바 — 뒤로(리포트함) + 화면 제목 + 오른쪽 액션.
+       PDF 저장 버튼의 id(report-pdf-btn)는 public/js/report-pdf.js가 쓰므로 그대로 둔다. --}}
+  <div class="no-print">
+    @include('partials.app-topbar', [
+      'title' => '상세 리포트',
+      'back' => route('reports.index'),
+      'backLabel' => '내 리포트함으로',
+      'actionIcon' => 'share',
+      'actionId' => 'report-pdf-btn',
+      'actionLabel' => 'PDF로 저장',
+    ])
   </div>
 
-  <div class="card" style="margin-top:18px;" id="report-pdf-root">
-    <div id="report-pdf-header">
-      <h2>{{ $report->title ?: ($type['label'] ?? '리포트') }}</h2>
-
-      <div class="report-meta">
-        <span>{{ $type['label'] ?? $report->type }}</span>
+  <div class="card report-shell" id="report-pdf-root">
+    {{-- (2026-09-28 개편) 전달본의 리포트 커버 — 유형 라벨 + 큰 제목 + 궤도 일러스트.
+         표시하는 값(제목/상품명/결제금액/일시)은 기존과 동일하다. --}}
+    <div id="report-pdf-header" class="report-cover">
+      <span>{{ $type['label'] ?? $report->type }}</span>
+      <h1>{{ $report->title ?: ($type['label'] ?? '리포트') }}</h1>
+      <div class="report-cover-meta report-meta">
         <span>{{ number_format($report->amount) }}원 결제완료</span>
         <span>{{ $report->updated_at->format('Y.m.d H:i') }}</span>
       </div>
+      <img src="{{ asset('img/handoff/orbit-hero.png') }}" alt="" aria-hidden="true" loading="lazy" decoding="async">
     </div>
 
     @if ($report->isChaptered())

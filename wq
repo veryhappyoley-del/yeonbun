@@ -1,0 +1,23 @@
+feat : 가격 수정
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch main
+# Your branch is up to date with 'origin/main'.
+#
+# Changes to be committed:
+#	modified:   app/Http/Controllers/Admin/DashboardController.php
+#	modified:   app/ReportTypes/Definitions/CompatibilityReportType.php
+#	modified:   app/ReportTypes/Definitions/LoveFortuneReportType.php
+#	modified:   app/ReportTypes/Definitions/ReunionStrategyReportType.php
+#	modified:   app/ReportTypes/Definitions/UnrequitedLoveReportType.php
+#	modified:   public/js/app.js
+#	modified:   public/js/chat.js
+#	modified:   public/js/reports.js
+#	modified:   resources/views/fortune/index.blade.php
+#	modified:   resources/views/home.blade.php
+#	modified:   resources/views/reports/index.blade.php
+#	modified:   resources/views/reports/show.blade.php
+#	modified:   resources/views/sagu.blade.php
+#	modified:   resources/views/saju.blade.php
+#

@@ -27,10 +27,10 @@
 --}}
 <div class="site-header">
   <a class="site-header-logo" href="{{ route('home') }}">
-    <picture>
-      <source srcset="{{ asset('images/logo/yeonrok-logo-dark.png') }}" media="(prefers-color-scheme: dark)">
-      <img src="{{ asset('images/logo/yeonrok-logo-light.png') }}" alt="연록" class="site-header-logo-img">
-    </picture>
+    {{-- (2026-09-28) UI 전달본은 크림/화이트 단일 라이트 테마다. 기기가 다크 모드여도
+         화면은 라이트로 고정되므로, 어두운 배경용 로고를 함께 물려 두면 밝은 배경에
+         어두운 로고가 겹쳐 안 보이는 문제가 생긴다. 라이트 로고 하나만 쓴다. --}}
+    <img src="{{ asset('images/logo/yeonrok-logo-light.png') }}" alt="연록" class="site-header-logo-img">
   </a>
   @auth
     <a class="site-header-coin" id="topbar-credits" href="{{ route('billing.index') }}">코인 {{ auth()->user()->credits }}개</a>

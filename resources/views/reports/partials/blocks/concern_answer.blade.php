@@ -33,7 +33,7 @@
 @endphp
 @if ($question && $answer !== '')
   <div class="rpt-concern-answer">
-    <div class="rpt-concern-answer-label">🔍 회원님이 가장 궁금해하신 것</div>
+    <div class="rpt-concern-answer-label">회원님이 가장 궁금해하신 것</div>
     <div class="rpt-concern-answer-question">{{ $question }}</div>
     <div class="rpt-concern-answer-body">{{ $answer }}</div>
   </div>

@@ -13,20 +13,23 @@
 
   @include('partials.site-header')
 
-  <div class="hero">
-    <svg class="seal-mark" viewBox="0 0 64 64" aria-hidden="true">
-      <rect x="4" y="4" width="56" height="56" rx="8" fill="none" stroke="var(--seal)" stroke-width="3"></rect>
-      <text x="32" y="39" text-anchor="middle" font-family="Song Myung, serif" font-size="19" letter-spacing="-0.5" fill="var(--seal)">연록</text>
-    </svg>
-    <div class="hero-text">
-      <h1>내 리포트함</h1>
-      <p>구매한 심층 리포트와 프리미엄 궁합 리포트를 여기서 다시 볼 수 있어요.</p>
-    </div>
-  </div>
+  {{-- (2026-09-28 개편) UI 전달본의 화면 상단 구성 — 상단바(제목/뒤로) + 보조 설명.
+       기존 인장 SVG 히어로를 대체했다. 문구는 그대로다. --}}
+  @include('partials.app-topbar', ['title' => '내 리포트함', 'back' => route('my.index')])
+  <p class="page-lead">구매한 심층 리포트와 프리미엄 궁합 리포트를 여기서 다시 볼 수 있어요.</p>
 
-  <div class="card">
+  <div class="card @if ($reports->isEmpty()) card--bare @endif">
     @if ($reports->isEmpty())
-      <div class="empty-state">아직 구매한 리포트가 없어요. '나의 연애 나침반'이나 '우리의 연애온도' 결과 화면 아래에서 프리미엄 리포트를 만나보세요.</div>
+      {{-- (2026-09-19 개편) 한 줄짜리 회색 문구였던 빈 상태를, 시안의 상태 화면 구성
+           (궤도 일러스트 + 명조 제목 + 설명 + 다음 행동)으로 바꿨다. 문구와 이동 경로는
+           기존 그대로다. --}}
+      {{-- (2026-09-28 개편) UI 전달본의 빈 상태 화면(assets/empty-state.svg). --}}
+      <div class="center-state">
+        <img src="{{ asset('img/handoff/empty-state.svg') }}" alt="" aria-hidden="true">
+        <h1>아직 구매한 리포트가 없어요</h1>
+        <p>'나의 연애 나침반'이나 '우리의 연애온도' 결과 화면 아래에서<br>프리미엄 리포트를 만나보세요.</p>
+        <a class="btn narrow" href="{{ route('sagu.index') }}">궁금한 것 고르러 가기</a>
+      </div>
     @else
       {{-- (2026-08-25 추가, 로드맵 4번) 예전엔 관리자 상담 세션 목록용 컴포넌트
            (.chat-session-row)를 그대로 재활용해서 제목/부제 두 줄짜리 밋밋한 리스트였다.
@@ -43,6 +46,13 @@
             // (2026-08-31 추가) App\ReportTypes\Definitions\ReunionStrategyReportType.
             $isReunion = $report->type === 'reunion_strategy';
             $title = (string) ($report->title ?? '');
+            // (2026-09-19 개편) 리포트 종류별 아이콘(이모지 → 얇은 선 아이콘).
+            $cardIcon = match (true) {
+                $isCompat => 'heart',
+                $isUnrequited => 'search',
+                $isReunion => 'refresh',
+                default => 'compass',
+            };
             $subjectHtml = null;
 
             // (2026-08-31 수정, 2026-09-13 갱신) 브랜드 개편으로 title 접미사가 여러 번
@@ -52,11 +62,11 @@
             // 전부 |로 함께 둔다(신규 구매는 항상 최신 이름으로 저장되지만, 기존 구매 고객의
             // title은 구매 당시 이름 그대로다).
             if ($isCompat && preg_match('/^(.+?)\s*×\s*(.+?)\s*(?:궁합분석|연애온도)$/u', $title, $m)) {
-                $subjectHtml = e(trim($m[1])).' <span class="report-card-heart">♥</span> '.e(trim($m[2]));
+                $subjectHtml = e(trim($m[1])).' <span class="report-card-heart" aria-hidden="true">♥</span> '.e(trim($m[2]));
             } elseif ($isUnrequited && preg_match('/^(.+?)님의\s*(.+?)\s*(?:짝사랑 탈출|짝사랑의 다음 장|나를 좋아할까\.\?)$/u', $title, $m)) {
-                $subjectHtml = e(trim($m[1])).' <span class="report-card-heart">♥</span> '.e(trim($m[2]));
+                $subjectHtml = e(trim($m[1])).' <span class="report-card-heart" aria-hidden="true">♥</span> '.e(trim($m[2]));
             } elseif ($isReunion && preg_match('/^(.+?)\s*×\s*(.+?)\s*(?:다시, 우리|다시 만날 수 있을까\?)$/u', $title, $m)) {
-                $subjectHtml = e(trim($m[1])).' <span class="report-card-heart">♥</span> '.e(trim($m[2]));
+                $subjectHtml = e(trim($m[1])).' <span class="report-card-heart" aria-hidden="true">♥</span> '.e(trim($m[2]));
             } elseif (! $isCompat && ! $isUnrequited && ! $isReunion && preg_match('/^(.+?)님의\s*(?:연애운분석|연애의 나침반|나의 연애 나침반)$/u', $title, $m)) {
                 $subjectHtml = e(trim($m[1])).'님';
             }
@@ -67,7 +77,9 @@
           @endphp
           <div class="report-card">
             <div class="report-card-top">
-              <div class="report-card-icon" aria-hidden="true">{{ $isCompat ? '💞' : ($isUnrequited ? '💔' : ($isReunion ? '🔄' : '💘')) }}</div>
+              <div class="report-card-icon" aria-hidden="true">
+                @include('partials.icon', ['name' => $cardIcon])
+              </div>
               <span class="badge {{ $isCompat ? 'indigo' : ($isUnrequited ? 'gold' : ($isReunion ? 'water' : 'seal')) }}">{{ $label }}</span>
             </div>
             <div class="report-card-subject">{!! $subjectHtml !!}</div>

@@ -1,75 +1,121 @@
-@import url('https://fonts.googleapis.com/css2?family=Song+Myung&family=Gowun+Dodum&display=swap');
+/* 연록 사용자 앱 스타일 — 2026-09-28 UI 전달본(yeonrok-web-handoff) 기준 전면 개편.
+   본문/제목: Pretendard(전달본 지정) → 없으면 Noto Sans KR → 시스템 폰트.
+   세리프는 전달본에서 숫자/워드마크/한자에만 쓰이므로 그 용도로만 남긴다. */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@600;700&display=swap');
 
+  /* ============================================================
+     디자인 토큰 — yeonrok-web-handoff/design-tokens.json 기준 (2026-09-28)
+
+     전달본의 의미 기반 토큰이 원본이고, 그 아래 --paper/--ink/--seal 같은
+     예전 이름들은 이 값을 가리키는 별칭이다. 컴포넌트 규칙 3,000여 줄이
+     이미 예전 이름을 쓰고 있어서, 별칭으로 연결해 두면 값은 한 곳(여기)에서만
+     관리하면서 전체가 새 팔레트를 따라온다. 새로 쓰는 규칙은 의미 토큰을 쓴다.
+     ============================================================ */
   :root {
-    --paper: #ede6d6;
-    --paper-2: #e3dac4;
-    --paper-3: #d9cdb0;
-    --ink: #201d1a;
-    --ink-soft: #57524a;
-    --ink-faint: #857e70;
-    --line: rgba(32, 29, 26, 0.14);
-    --seal: #8B5E83;
-    --seal-deep: #6B4460;
-    --seal-tint: rgba(139, 94, 131, 0.1);
-    --indigo: #2b4570;
-    --indigo-tint: rgba(43, 69, 112, 0.12);
-    --gold: #E8735B;
-    --gold-tint: rgba(232, 115, 91, 0.14);
-    --wood: #4c7a52;
-    --fire: #c81e2c;
-    --earth: #b98a3d;
-    --metal: #8d8375;
-    --water: #2b4570;
-    --shadow: 0 1px 2px rgba(32, 24, 16, 0.06), 0 8px 24px -12px rgba(32, 24, 16, 0.22);
-    --radius: 14px;
-  }
+    /* --- 전달본 색상 --- */
+    --bg: #F5F2F3;
+    --surface: #FFFDFC;
+    --surface-2: #FFF7F5;
+    --border: #EADFE3;
+    --text: #231C28;
+    --text-muted: #716875;
+    --brand: #741D58;
+    --brand-dark: #4F153F;
+    --accent-rose: #D85878;
+    --accent-rose-soft: #F8E6EB;
 
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --paper: #1b1712;
-      --paper-2: #242019;
-      --paper-3: #2f2a20;
-      --ink: #ede4d2;
-      --ink-soft: #c2b8a3;
-      --ink-faint: #8d8371;
-      --line: rgba(237, 228, 210, 0.14);
-      --seal: #C48BB8;
-      --seal-deep: #E3A8D9;
-      --seal-tint: rgba(196, 139, 184, 0.16);
-      --indigo: #7e9dd4;
-      --indigo-tint: rgba(126, 157, 212, 0.16);
-      --gold: #FF9478;
-      --gold-tint: rgba(255, 148, 120, 0.18);
-      --wood: #7fb086;
-      --fire: #e6533f;
-      --earth: #d9ae64;
-      --metal: #b6ac9a;
-      --water: #7e9dd4;
-      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.55);
-    }
-  }
+    /* --- 파생 --- */
+    --text-mid: #504752;          /* 리포트 본문 (전달본 .report-section p) */
+    --surface-sunken: #F2ECEF;    /* 세그먼트 트랙·게이지 트랙 (전달본 .segmented) */
+    --border-strong: #CDA7BB;     /* 보조 버튼 테두리 (전달본 .button.secondary) */
+    --on-brand: #FFFFFF;
+    --brand-gradient: linear-gradient(135deg, var(--brand-dark), #87336D);
 
-  :root[data-theme="dark"] {
-    --paper: #1b1712;
-    --paper-2: #242019;
-    --paper-3: #2f2a20;
-    --ink: #ede4d2;
-    --ink-soft: #c2b8a3;
-    --ink-faint: #8d8371;
-    --line: rgba(237, 228, 210, 0.14);
-    --seal: #C48BB8;
-    --seal-deep: #E3A8D9;
-    --seal-tint: rgba(196, 139, 184, 0.16);
-    --indigo: #7e9dd4;
-    --indigo-tint: rgba(126, 157, 212, 0.16);
-    --gold: #FF9478;
-    --gold-tint: rgba(255, 148, 120, 0.18);
-    --wood: #7fb086;
-    --fire: #e6533f;
-    --earth: #d9ae64;
-    --metal: #b6ac9a;
-    --water: #7e9dd4;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.55);
+    /* --- 상태 --- */
+    --success: #1F7A5A;
+    --success-soft: #E4F3EC;
+    --warning: #8A5A12;
+    --warning-soft: #FBF0DC;
+    --error: #B3243F;
+    --error-soft: #FCE8EC;
+    --info: var(--brand);
+    --info-soft: var(--accent-rose-soft);
+    --disabled-bg: #EFE9EC;
+    --disabled-fg: #A79EA6;
+    --focus-ring: rgba(116, 29, 88, 0.28);
+    --overlay: rgba(35, 28, 40, 0.48);
+    --skeleton: #F0E8EB;
+
+    /* --- 모서리 --- */
+    --r-sm: 14px;
+    --r-md: 20px;
+    --r-lg: 28px;
+    --r-pill: 999px;
+    --r-control: 17px;            /* 전달본 .button */
+    --r-field: 12px;              /* 전달본 .form-card input */
+
+    /* --- 간격(4·8·12·16·20·24·32·40) --- */
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 12px;
+    --sp-4: 16px;
+    --sp-5: 20px;
+    --sp-6: 24px;
+    --sp-7: 32px;
+    --sp-8: 40px;
+
+    /* --- 치수 --- */
+    --btn-h: 54px;
+    --field-h: 46px;
+    --nav-h: 76px;
+    --app-pad: 22px;
+    --app-max: 430px;
+
+    /* --- 타이포 --- */
+    --font-sans: "Pretendard Variable", Pretendard, "Noto Sans KR", -apple-system,
+      BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif;
+    --font-serif: "Noto Serif KR", "Apple SD Gothic Neo", serif;
+
+    /* --- 그림자 --- */
+    --shadow: 0 10px 30px -18px rgba(44, 20, 37, 0.28);
+    --shadow-soft: 0 6px 20px -16px rgba(44, 20, 37, 0.22);
+    --shadow-lift: 0 18px 60px rgba(44, 20, 37, 0.12);
+
+    /* --- 예전 이름 별칭 (값은 위 의미 토큰이 원본) --- */
+    --paper: var(--bg);
+    --paper-2: var(--surface);
+    --paper-3: var(--surface-sunken);
+    --ink: var(--text);
+    --ink-soft: var(--text-mid);
+    --ink-faint: var(--text-muted);
+    --line: var(--border);
+    --line-strong: var(--border-strong);
+    --seal: var(--brand);
+    --seal-deep: var(--brand-dark);
+    --seal-tint: var(--accent-rose-soft);
+    --on-seal: var(--on-brand);
+    --indigo: var(--brand-dark);
+    --indigo-tint: rgba(79, 21, 63, 0.08);
+    --gold: var(--accent-rose);
+    --gold-tint: rgba(216, 88, 120, 0.12);
+    --rose: var(--accent-rose);
+    --rose-text: #B23A5C;         /* 로즈를 작은 글자색으로 쓸 때(명암비 확보) */
+    --rose-pale: #F1C7D2;
+    --rose-tint: var(--accent-rose-soft);
+    --danger: var(--error);
+    --danger-tint: var(--error-soft);
+    --radius: var(--r-md);
+
+    /* 오행(목화토금수)은 의미를 가진 데이터 색이라 유지하되 새 팔레트 채도에 맞춤 */
+    --wood: #3F7A5E;
+    --fire: #C0395A;
+    --earth: #A8763B;
+    --metal: #7D7380;
+    --water: #4E5E96;
+
+    /* 전달본은 라이트 단일 테마다. 폼 컨트롤도 라이트로 고정한다. */
+    color-scheme: light;
   }
 
   * { box-sizing: border-box; }
@@ -92,26 +138,38 @@
     html { scroll-behavior: auto; }
   }
 
+  /* (2026-09-19 개편) 예전의 회색 radial 그림자 대신, 크림 바탕 위에 아주 옅은
+     로즈/퍼플 기운만 얹어 종이 질감을 낸다. 텍스트 가독성을 해치지 않도록 최대
+     불투명도를 0.05 이하로 유지한다. */
+  /* 전달본은 배경 그라데이션 장식 없이 단색 #F5F2F3 위에 카드가 얹히는 구조다. */
   body {
-    background:
-      radial-gradient(circle at 12% 8%, rgba(0,0,0,0.035) 0, transparent 40%),
-      radial-gradient(circle at 85% 92%, rgba(0,0,0,0.035) 0, transparent 40%),
-      var(--paper);
-    color: var(--ink);
-    font-family: 'Gowun Dodum', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
-    line-height: 1.6;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.65;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    word-break: keep-all;
+    overflow-wrap: break-word;
   }
 
   ::selection { background: var(--seal-tint); }
 
   a { color: var(--seal); }
 
+  /* ---------- 사용자 앱 셸 ----------
+     모바일: 화면 폭을 그대로 쓰고 외곽 프레임/그림자 없이 꽉 채운다.
+     PC·태블릿: 아래 @media에서 430px 컬럼으로 가운데 배치한다.
+     긴 페이지는 내부 스크롤을 만들지 않고 문서 전체가 스크롤된다. */
   .wrap {
-    max-width: 780px;
+    max-width: var(--app-max);
     margin: 0 auto;
-    padding: 40px 20px 100px;
+    padding: var(--sp-4) var(--app-pad) var(--sp-8);
   }
+
+  /* 관리자 화면(.wrap 단독, phone-app 아님)은 표가 많아 넓은 폭이 유리하므로 예외. */
+  body:not(.phone-app) .wrap { max-width: 780px; }
 
   /* ---------- 폰 프레임 레이아웃(PC/태블릿에서도 모바일 폭으로 고정) ----------
      소비자용 화면(홈/코인 충전/결제 완료/리포트함/리포트 상세)에만 붙는 <body class="phone-app">
@@ -120,27 +178,37 @@
 
      640px 미만(실제 폰 화면)에서는 지금까지와 완전히 동일하게 보입니다 — 이 프레임 연출은
      화면이 넓을 때만 켜지는 장식이라, 이미 좁은 화면에서는 아무 변화도 주지 않습니다. */
+  /* PC·대형 태블릿: 배경 위에 430px 앱 컨테이너를 가운데 띄운다.
+     높이를 844px로 자르지 않으므로 긴 리포트/약관도 페이지가 그대로 이어져 스크롤된다. */
   @media (min-width: 640px) {
     body.phone-app {
       display: flex;
       justify-content: center;
-      padding: 40px 16px;
+      padding: var(--sp-8) var(--sp-4) calc(var(--sp-8) + var(--nav-h));
       min-height: 100vh;
-      /* body 기본 배경(위 radial-gradient 장식)과 같은 결을 유지하되, 마지막 색만 한 톤
-         더 짙은 --paper-3로 바꿔서 그 위에 얹히는 .wrap(카드)이 배경과 구분돼 보이게 함. */
-      background:
-        radial-gradient(circle at 12% 8%, rgba(0, 0, 0, 0.035) 0, transparent 40%),
-        radial-gradient(circle at 85% 92%, rgba(0, 0, 0, 0.035) 0, transparent 40%),
-        var(--paper-3);
+      background: var(--bg);
     }
 
     body.phone-app .wrap {
-      max-width: 440px;
+      max-width: var(--app-max);
       width: 100%;
       margin: 0;
-      background: var(--paper);
-      border-radius: 28px;
-      box-shadow: 0 30px 70px -24px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--line);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-lift);
+      padding-bottom: var(--sp-8);
+    }
+
+    /* PC에서는 앱 컨테이너가 둥근 카드라, 상단 배경도 같은 곡률로 잘라준다. */
+    body.home-page .wrap::before { border-radius: var(--r-lg) var(--r-lg) 0 0; }
+
+    /* 하단 탭바도 같은 폭으로 맞춰 컨테이너 안에 있는 것처럼 보이게 한다. */
+    body.phone-app .site-bottom-nav {
+      max-width: var(--app-max);
+      border-radius: 0 0 var(--r-lg) var(--r-lg);
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
     }
   }
 
@@ -161,8 +229,8 @@
   }
 
   .hero-text h1 {
-    font-family: 'Song Myung', serif;
-    font-weight: 400;
+    font-family: var(--font-sans);
+    font-weight: 750;
     font-size: 2.6rem;
     letter-spacing: 0.04em;
     margin: 0 0 4px;
@@ -182,172 +250,104 @@
     margin-top: 6px;
   }
 
-  /* ---------- 홈 랜딩페이지 히어로 (2026-08-25 추가) ----------
-     계산기 화면의 .hero(좌측 인장+우측 텍스트, 가로 정렬)와 달리, 홈은 첫인상용 페이지라
-     인장을 위에 두고 슬로건을 가운데 정렬로 크게 보여준다 — myeongsado.com의 "중앙 정렬
-     대형 슬로건 + 단일 CTA" 구조를 참고하되 색/타이포는 결 palette 그대로. */
-  .home-hero {
-    text-align: center;
-    padding: 18px 4px 30px;
-    border-bottom: 1px solid var(--line);
-    margin-bottom: 24px;
+  /* ---------- 홈 랜딩페이지 히어로 (2026-09-19 개편) ----------
+     예전에는 "인장이 쾅 찍히는" 중앙 정렬 히어로였는데, 개편 시안의 홈은
+     ① 상단에 브랜드/태그라인 한 줄, ② 왼쪽 정렬 큰 명조 제목, ③ 보조 설명,
+     ④ 궤도 일러스트(산수화 워시 위), ⑤ 폭을 꽉 채운 주요 버튼 순서다.
+     도장 연출과 그에 딸린 keyframes(homeStampDrop/homeStampRing)는 더 이상 쓰지
+     않아 함께 걷어냈다 — 대신 같은 자리를 궤도 일러스트가 맡는다. */
+  .home-brandbar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    padding: 2px 2px 20px;
   }
 
-  .home-hero h1 {
-    font-family: 'Song Myung', serif;
-    font-weight: 400;
-    font-size: 2rem;
-    line-height: 1.4;
-    letter-spacing: 0.02em;
-    margin: 0 0 14px;
+  .home-brandbar-logo {
+    font-family: var(--font-serif);
+    font-size: 1.32rem;
+    letter-spacing: 0.06em;
     color: var(--ink);
   }
 
-  .home-hero p {
-    margin: 0 auto 22px;
-    max-width: 320px;
-    color: var(--ink-soft);
-    font-size: 0.95rem;
-    line-height: 1.65;
+  .home-brandbar-tag {
+    font-size: 0.74rem;
+    color: var(--ink-faint);
+    text-align: right;
   }
+
+  .home-hero {
+    padding: 0 2px 26px;
+    margin-bottom: var(--sp-3);
+  }
+
+  .home-hero h1 {
+    font-family: var(--font-sans);
+    font-weight: 750;
+    font-size: clamp(1.72rem, 7.4vw, 2.1rem);
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+    margin: 0 0 var(--sp-2);
+    color: var(--ink);
+    text-align: left;
+  }
+
+  .home-hero p {
+    margin: 0 0 var(--sp-3);
+    max-width: 330px;
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    line-height: 1.75;
+    text-align: left;
+  }
+
+  .home-hero-art {
+    margin: 0 0 var(--sp-3);
+    padding: 0 var(--sp-1);
+  }
+
+  .home-hero-art .orbit-art { max-width: 300px; margin: 0 auto; }
 
   .home-hero-cta {
-    display: block;
+    display: flex;
     width: 100%;
+  }
+
+  /* .hint 공통 규칙이 margin-top:-4px라(버튼 없이 문단 아래 붙는 용도) 히어로에서는
+     버튼과 겹친다. 여기서 명시적으로 덮어쓴다. */
+  .home-hero .home-hero-hint {
     text-align: center;
-    padding: 15px 20px;
-    font-size: 1.02rem;
+    margin-top: var(--sp-2);
   }
 
-  /* ---------- 홈 히어로: 도장이 "쾅" 찍히는 연출 (2026-08-25 3차 수정) ----------
-     원래는 명사도의 "중앙 로고+네 노드 연결선" 구조를 네 기둥(년/월/일/시)으로 재해석해서
-     썼는데, 사용자가 ① 연결선이 가운데 인장의 투명한 안쪽을 그대로 뚫고 지나가 보이는 문제
-     ② 임팩트가 약하고 명사도와 구조가 너무 비슷하다는 점을 지적했다. 그래서 다이어그램을
-     걷어내고, 결의 기존 브랜드 모티프인 "도장(인장)"이 위에서 회전하며 떨어져 찍히는 순간
-     잉크 파동이 두 겹으로 번져나가는 연출로 바꿨다 — 명사도와는 전혀 다른 모션이라 비슷해
-     보이지 않는다.
-
-     .home-hero-stamp는 정사각형 고정 박스(위치 기준점), 도장(.home-hero-center)과 파동
-     링(.home-hero-stamp-ring) 둘 다 이 박스 안에서 절대좌표로 중앙 정렬된다. 도장의 rect에
-     불투명 배경(fill: var(--paper))을 줘서, 링이 도장 뒤에서 시작해 바깥으로 번질 때 도장
-     안쪽으로 비쳐 보이지 않게 했다(전에 선이 인장 안쪽을 뚫고 지나가 보이던 것과 같은
-     문제를 방지). */
-  .home-hero-stamp {
-    position: relative;
-    width: 84px;
-    height: 84px;
-    margin: 0 auto 18px;
-  }
-
-  .home-hero-center {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 68px;
-    height: 68px;
-    z-index: 2;
-    opacity: 0;
-    transform-origin: 50% 50%;
-    animation: homeStampDrop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  }
-
-  /* 시작(위에서 회전한 채 큼직하게) → 55%(살짝 통통 튀는 "쾅" 착지, 이 지점에 파동 링
-     타이밍을 맞춤) → 75%(가볍게 되튐) → 100%(정착). translate(-50%,-50%)를 매 스텝마다
-     같이 써줘야 중앙 정렬이 유지된다(transform 프로퍼티는 하나만 남기면 앞 값이 사라짐). */
-  @keyframes homeStampDrop {
-    0%   { opacity: 0; transform: translate(-50%, -50%) translateY(-42px) rotate(-12deg) scale(1.18); }
-    55%  { opacity: 1; transform: translate(-50%, -50%) translateY(3px) rotate(1.5deg) scale(1.05); }
-    75%  { opacity: 1; transform: translate(-50%, -50%) translateY(-2px) rotate(-0.5deg) scale(0.98); }
-    100% { opacity: 1; transform: translate(-50%, -50%) translateY(0) rotate(0deg) scale(1); }
-  }
-
-  .home-hero-stamp-ring {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 68px;
-    height: 68px;
-    margin: -34px 0 0 -34px;
-    border-radius: 50%;
-    border: 1.5px solid var(--seal);
-    z-index: 1;
-    opacity: 0;
-    animation: homeStampRing 0.65s ease-out forwards;
-    /* 도장이 착지하는 지점(약 0.33s, 위 keyframe의 55%)에 맞춰 파동이 시작되게 함 */
-    animation-delay: 0.33s;
-  }
-
-  .home-hero-stamp-ring--2 {
-    border-color: var(--gold);
-    animation-delay: 0.42s;
-  }
-
-  @keyframes homeStampRing {
-    0%   { opacity: 0.6; transform: scale(0.55); }
-    100% { opacity: 0; transform: scale(2.3); }
-  }
-
-  /* ---------- 홈 히어로: 스포트라이트 + 스태거드 리빌 (2026-08-25 4차 수정) ----------
-     사용자가 스크린샷에 빨간 박스로 표시한 영역(도장+제목+부제+버튼+안내문구) 전체에
-     애니메이션을 원해서, 도장 하나만 움직이던 것에서 히어로 전체가 함께 "깨어나는" 연출로
-     확장했다. 두 겹으로 구성된다.
-
-     ① .home-hero 자체에 거는 "조명이 켜지는" 스윕 — 시작 시 아주 잠깐 어둡고(brightness
-        낮춤) 흐릿하게(blur) 살짝 작게(scale) 있다가 0.45초에 걸쳐 정상으로 돌아온다.
-        완전히 안 보이는 상태가 아니라 "어둑했다가 밝아지는" 정도라 콘텐츠가 아예 숨는
-        건 아니다.
-     ② 제목→부제→버튼→안내문구가 도장이 착지하는 시점(약 0.33~0.42초) 직후부터 80ms
-        간격으로 아래에서 살짝 떠오르며 나타난다(Linear.app/Stripe.com 로드 리듬 참고).
-
-     버튼(.home-hero-cta)은 직접 애니메이션을 걸지 않고 감싸는 .home-hero-cta-wrap에
-     걸었다 — <a class="btn">에 transform 애니메이션을 forwards로 걸면 그 뒤로
-     .btn:active { transform: scale(0.98) } 같은 클릭 피드백이 눌러도 안 먹는 문제가
-     생기기 때문(애니메이션이 fill-mode:forwards로 transform을 계속 붙잡고 있어서
-     일반 규칙의 transform이 덮어써지지 않음). */
-  .home-hero {
-    animation: homeHeroWake 0.45s ease-out both;
-  }
-
-  @keyframes homeHeroWake {
-    from { filter: brightness(0.55) blur(5px); transform: scale(0.965); }
-    to   { filter: brightness(1) blur(0); transform: scale(1); }
-  }
-
+  /* 입장 연출: 제목 → 설명 → 일러스트 → 버튼 → 안내문구 순서로 아주 짧게 떠오른다.
+     .btn 자체가 아니라 .home-hero-cta-wrap에 애니메이션을 거는 이유는 예전과 같다 —
+     버튼 요소의 transform을 forwards로 붙잡으면 :active 눌림 피드백이 죽는다. */
   .home-hero h1,
   .home-hero p,
+  .home-hero-art,
   .home-hero-cta-wrap,
   .home-hero-hint {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(12px);
     animation: homeTextUp 0.5s ease-out forwards;
   }
 
-  .home-hero h1         { animation-delay: 0.42s; }
-  .home-hero p           { animation-delay: 0.50s; }
-  .home-hero-cta-wrap    { animation-delay: 0.58s; }
-  .home-hero-hint        { animation-delay: 0.66s; }
+  .home-hero h1          { animation-delay: 0.05s; }
+  .home-hero p           { animation-delay: 0.13s; }
+  .home-hero-art         { animation-delay: 0.21s; }
+  .home-hero-cta-wrap    { animation-delay: 0.29s; }
+  .home-hero-hint        { animation-delay: 0.37s; }
 
   @keyframes homeTextUp {
-    from { opacity: 0; transform: translateY(14px); }
-    to   { opacity: 1; transform: translateY(0); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .home-hero-center, .home-hero-stamp-ring {
-      animation: none;
-      opacity: 1;
-    }
-    .home-hero-center { transform: translate(-50%, -50%); }
-    .home-hero-stamp-ring { display: none; }
-
-    .home-hero {
-      animation: none;
-      filter: none;
-      transform: none;
-    }
-
     .home-hero h1,
     .home-hero p,
+    .home-hero-art,
     .home-hero-cta-wrap,
     .home-hero-hint {
       animation: none;
@@ -435,7 +435,7 @@
     appearance: none;
     background: none;
     border: none;
-    font-family: 'Gowun Dodum', sans-serif;
+    font-family: var(--font-sans);
     font-size: 0.95rem;
     color: var(--ink-faint);
     padding: 10px 4px 12px;
@@ -470,18 +470,20 @@
   .card {
     background: var(--paper-2);
     border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 22px;
-    box-shadow: var(--shadow);
-    margin-bottom: 20px;
+    border-radius: var(--r-lg);
+    padding: var(--sp-3);
+    box-shadow: var(--shadow-soft);
+    margin-bottom: var(--sp-3);
   }
 
   .card h2 {
-    font-family: 'Song Myung', serif;
-    font-weight: 400;
-    font-size: 1.3rem;
-    margin: 0 0 14px;
-    letter-spacing: 0.01em;
+    font-family: var(--font-sans);
+    font-weight: 750;
+    font-size: 1.32rem;
+    line-height: 1.45;
+    margin: 0 0 var(--sp-2);
+    letter-spacing: -0.01em;
+    color: var(--ink);
   }
 
   .field-row {
@@ -493,27 +495,60 @@
 
   label {
     display: block;
-    font-size: 0.78rem;
-    color: var(--ink-faint);
-    margin-bottom: 5px;
-    letter-spacing: 0.02em;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin-bottom: var(--sp-1);
+    letter-spacing: 0;
   }
 
-  input[type="number"], input[type="text"], select {
+  /* (2026-09-19 개편) 시안의 입력창: 밝은 표면 + 얇은 테두리 + 넉넉한 내부 여백.
+     터치 영역을 위해 최소 높이를 48px 이상으로 잡는다. */
+  input[type="number"], input[type="text"], input[type="email"], input[type="tel"],
+  input[type="date"], input[type="password"], select, textarea {
     width: 100%;
-    font-family: 'Gowun Dodum', sans-serif;
+    font-family: var(--font-sans);
     font-size: 0.95rem;
-    padding: 9px 10px;
-    border-radius: 9px;
+    min-height: 50px;
+    padding: 13px 14px;
+    border-radius: var(--r-md);
     border: 1px solid var(--line);
-    background: var(--paper);
+    background: var(--paper-2);
     color: var(--ink);
     font-variant-numeric: tabular-nums;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
 
-  input:focus, select:focus, button:focus-visible {
-    outline: 2px solid var(--indigo);
-    outline-offset: 1px;
+  input::placeholder, textarea::placeholder { color: var(--ink-faint); }
+
+  input[type="number"]:hover, input[type="text"]:hover, select:hover, textarea:hover {
+    border-color: var(--line-strong);
+  }
+
+  input[type="number"]:focus, input[type="text"]:focus, input[type="email"]:focus,
+  input[type="tel"]:focus, input[type="date"]:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--seal);
+    box-shadow: 0 0 0 3px var(--seal-tint);
+  }
+
+  /* 오류/비활성 상태 — 시안의 입력 필드 상태 규격. */
+  input[aria-invalid="true"], select[aria-invalid="true"], .is-error input, .is-error select {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px var(--danger-tint);
+  }
+
+  input:disabled, select:disabled, textarea:disabled {
+    background: var(--paper-3);
+    color: var(--ink-faint);
+    cursor: not-allowed;
+  }
+
+  /* 키보드 포커스 표시는 팔레트에 맞춘 플럼 링으로 통일. */
+  a:focus-visible, button:focus-visible, [tabindex]:focus-visible,
+  input:focus-visible, select:focus-visible {
+    outline: 2px solid var(--seal);
+    outline-offset: 2px;
+    border-radius: var(--r-sm);
   }
 
   .check-row {
@@ -527,32 +562,53 @@
 
   .check-row input { width: auto; }
 
+  /* (2026-09-19 개편) 시안의 주요 버튼: 뮤트 퍼플 바탕 + 밝은 텍스트 + 충분한 높이
+     (터치 44px 이상) + 둥근 모서리(pill이 아니라 14px). <a class="btn">도 있어서
+     text-decoration/색 상속을 여기서 확실히 끊는다. */
   .btn {
     appearance: none;
     border: none;
-    border-radius: 999px;
-    padding: 11px 26px;
-    font-family: 'Gowun Dodum', sans-serif;
-    font-size: 0.95rem;
+    border-radius: 14px;
+    min-height: 54px;
+    padding: 15px 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-1);
+    font-family: var(--font-sans);
+    font-size: 1rem;
     font-weight: 700;
+    line-height: 1.3;
     cursor: pointer;
+    text-decoration: none;
     background: var(--seal);
-    color: #fbf3e9;
-    box-shadow: 0 6px 16px -6px var(--seal-tint);
-    transition: transform 0.12s ease, background 0.15s ease;
+    color: var(--on-seal);
+    box-shadow: 0 8px 20px -12px rgba(89, 60, 88, 0.5);
+    transition: transform 0.12s ease, background 0.15s ease, box-shadow 0.15s ease;
   }
 
-  .btn:hover { background: var(--seal-deep); }
-  .btn:active { transform: scale(0.98); }
+  .btn:hover { background: var(--seal-deep); box-shadow: 0 10px 24px -12px rgba(89, 60, 88, 0.55); }
+  .btn:active { transform: scale(0.98); background: var(--seal-deep); }
+  .btn[disabled], .btn:disabled, .btn.is-disabled {
+    background: var(--paper-3);
+    color: var(--ink-faint);
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* 버튼 안의 화살표(시안의 "우리 관계 알아보기 →")는 장식이라 스크린리더에서 제외한다. */
+  .btn .btn-arrow { font-size: 1.05em; line-height: 1; }
 
   .btn.outline {
-    background: transparent;
+    background: var(--paper-2);
     color: var(--seal-deep);
-    border: 1.6px solid var(--seal);
+    border: 1px solid var(--line-strong);
     box-shadow: none;
   }
 
-  .btn.outline:hover { background: var(--seal-tint); }
+  .btn.outline:hover { background: var(--seal-tint); border-color: var(--seal); }
+  .btn.outline:active { background: var(--indigo-tint); }
 
   .btn.secondary {
     background: transparent;
@@ -625,7 +681,7 @@
   }
 
   .pillar .hanja {
-    font-family: 'Song Myung', serif;
+    font-family: var(--font-serif);
     font-size: 1.9rem;
     line-height: 1.15;
   }
@@ -688,7 +744,7 @@
     padding: 5px 12px;
     border-radius: 999px;
     background: var(--gold-tint);
-    color: var(--gold);
+    color: var(--rose-text);
     border: 1px solid var(--gold-tint);
   }
   .badge.seal { background: var(--seal-tint); color: var(--seal); }
@@ -722,8 +778,8 @@
     top: -11px;
     left: 14px;
     background: var(--indigo);
-    color: #fbf3e9;
-    font-family: 'Gowun Dodum', sans-serif;
+    color: var(--on-seal);
+    font-family: var(--font-sans);
     font-size: 0.72rem;
     font-weight: 700;
     line-height: 1;
@@ -738,12 +794,12 @@
     padding: 18px 10px 6px;
   }
   .compat-score {
-    font-family: 'Song Myung', serif;
+    font-family: var(--font-serif);
     font-size: 3.2rem;
     color: var(--seal);
     line-height: 1;
   }
-  .compat-score span { font-size: 1.3rem; color: var(--ink-faint); font-family: 'Gowun Dodum', sans-serif; }
+  .compat-score span { font-size: 1.3rem; color: var(--ink-faint); font-family: var(--font-sans); }
   .compat-score-label { color: var(--ink-soft); font-size: 0.85rem; margin-top: 6px; }
 
   /* (2026-08-24 추가) 궁합 폼의 "현재 관계 단계 / 지금 가장 궁금한 것" 선택 UI — 명사도 같은
@@ -768,7 +824,7 @@
     border: 1px solid var(--line);
     background: var(--paper);
     color: var(--ink-soft);
-    font-family: 'Gowun Dodum', sans-serif;
+    font-family: var(--font-sans);
     font-size: 0.86rem;
     font-weight: 600;
     text-align: center;
@@ -776,7 +832,7 @@
     transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
   }
   .compat-stage-chip:hover { border-color: var(--seal); }
-  .compat-stage-chip.active { background: var(--seal); border-color: var(--seal); color: #fbf3e9; }
+  .compat-stage-chip.active { background: var(--seal); border-color: var(--seal); color: var(--on-seal); }
 
   .compat-concern-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .compat-concern-card {
@@ -804,7 +860,7 @@
     border: 1px solid var(--line);
     background: var(--paper);
     color: var(--ink);
-    font-family: 'Gowun Dodum', sans-serif;
+    font-family: var(--font-sans);
     font-size: 0.86rem;
   }
 
@@ -956,12 +1012,12 @@
     color: var(--ink-faint); background: var(--paper-3);
     padding: 5px 12px; border-radius: 999px;
   }
-  .lc-rarity { font-size: 0.92rem; letter-spacing: 0.04em; color: var(--gold); }
+  .lc-rarity { font-size: 0.92rem; letter-spacing: 0.04em; color: var(--rose-text); }
 
   .lc-greet { font-size: 0.92rem; color: var(--ink-soft); margin-bottom: 2px; position: relative; z-index: 1; }
   .lc-type {
-    font-family: 'Song Myung', serif;
-    font-weight: 400;
+    font-family: var(--font-sans);
+    font-weight: 750;
     font-size: clamp(1.5rem, 6vw, 1.9rem);
     line-height: 1.3;
     margin: 0 0 14px;
@@ -1009,7 +1065,7 @@
   .lc-stat-track { flex: 1; height: 9px; border-radius: 999px; background: var(--paper-3); overflow: hidden; }
   .lc-stat-fill { height: 100%; border-radius: 999px; background: var(--lc-accent, var(--seal)); }
   .lc-stat-value { width: 28px; flex: none; text-align: right; font-size: 0.76rem; font-variant-numeric: tabular-nums; color: var(--ink-faint); }
-  .lc-stat-row--signature .lc-stat-label { color: var(--gold); }
+  .lc-stat-row--signature .lc-stat-label { color: var(--rose-text); }
   .lc-stat-row--signature .lc-stat-fill { background: var(--gold); }
 
   .lc-trait-title, .lc-weakness-title { font-weight: 700; font-size: 0.96rem; margin: 2px 0 4px; color: var(--ink); }
@@ -1044,7 +1100,7 @@
     z-index: 1;
   }
   .lc-share-footer-cta {
-    font-family: 'Song Myung', serif;
+    font-family: var(--font-sans);
     font-size: 1.05rem;
     color: var(--ink);
     margin-bottom: 4px;
@@ -1090,7 +1146,7 @@
     border-radius: 10px;
     padding: 12px 12px;
     cursor: pointer;
-    font-family: 'Gowun Dodum', sans-serif;
+    font-family: var(--font-sans);
     color: var(--ink);
     font-size: 0.88rem;
     transition: border-color 0.15s ease, background 0.15s ease;
@@ -1124,7 +1180,7 @@
     border: 1.6px solid var(--seal);
     border-radius: 6px;
     color: var(--seal);
-    font-family: 'Song Myung', serif;
+    font-family: var(--font-sans);
     font-size: 0.95rem;
     transform: rotate(-4deg);
     flex: none;
@@ -1230,8 +1286,10 @@
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: var(--wood);
-    color: #fbf3e9;
+    /* (2026-09-28) 초록 원은 새 팔레트에서 유일하게 튀어서 브랜드색 링으로 정리했다. */
+    background: var(--accent-rose-soft);
+    border: 1px solid var(--brand);
+    color: var(--brand);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1472,8 +1530,8 @@
   }
 
   .report-body h3 {
-    font-family: 'Song Myung', serif;
-    font-weight: 400;
+    font-family: var(--font-sans);
+    font-weight: 750;
     font-size: 1.08rem;
     color: var(--seal-deep);
     margin: 22px 0 8px;
@@ -1540,8 +1598,8 @@
   .rpt-section:first-child { margin-top: 8px; padding-top: 0; border-top: none; }
 
   .rpt-section-title {
-    font-family: 'Song Myung', serif;
-    font-weight: 400;
+    font-family: var(--font-sans);
+    font-weight: 750;
     font-size: 1.05rem;
     color: var(--seal-deep);
     margin: 0 0 12px;
@@ -1574,11 +1632,11 @@
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.03em;
-    color: var(--gold);
+    color: var(--rose-text);
     margin-bottom: 6px;
   }
   .rpt-concern-answer-question {
-    font-family: 'Song Myung', serif;
+    font-family: var(--font-sans);
     font-size: 0.92rem;
     color: var(--ink);
     margin-bottom: 8px;
@@ -1641,7 +1699,7 @@
   .rpt-sw-line { font-size: 0.88rem; line-height: 1.65; color: var(--ink-soft); margin-top: 6px; }
   .rpt-sw-line:first-child { margin-top: 0; }
   .rpt-sw-line span { display: block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 2px; }
-  .rpt-sw-strength span { color: var(--gold); }
+  .rpt-sw-strength span { color: var(--rose-text); }
   .rpt-sw-escalation span { color: var(--ink-faint); }
   .rpt-sw-weakness span { color: var(--seal); }
 
@@ -1676,7 +1734,7 @@
     padding: 14px 16px;
     margin-top: 10px;
   }
-  .rpt-advice-num { font-size: 0.72rem; font-weight: 700; color: var(--gold); letter-spacing: 0.05em; margin-bottom: 6px; }
+  .rpt-advice-num { font-size: 0.72rem; font-weight: 700; color: var(--rose-text); letter-spacing: 0.05em; margin-bottom: 6px; }
 
   .rpt-final { background: var(--gold-tint); border-radius: 14px; padding: 18px; border-top: none; margin-top: 26px; }
 
@@ -1762,7 +1820,7 @@
   .rpt-chip-row--tight .rpt-chip { padding: 4px 11px; font-size: 0.74rem; }
   .rpt-chip--seal { background: var(--seal-tint); color: var(--seal); }
   .rpt-chip--indigo { background: var(--indigo-tint); color: var(--indigo); }
-  .rpt-chip--gold { background: var(--gold-tint); color: var(--gold); }
+  .rpt-chip--gold { background: var(--gold-tint); color: var(--rose-text); }
 
   /* LABEL GROUPS — (2026-09-08 신설) "재물운"/"커리어운" 결론 챕터의 "핵심 강점 5가지 /
      적합한 직무 5가지" 같은 여러 그룹 리스트. rpt-chip-row를 그대로 재사용하되 그룹마다
@@ -1793,7 +1851,7 @@
   .rpt-compare-side--right { border-left: 4px solid var(--gold); }
   .rpt-compare-label { font-size: 0.76rem; font-weight: 700; letter-spacing: 0.03em; margin-bottom: 6px; }
   .rpt-compare-side--left .rpt-compare-label { color: var(--indigo); }
-  .rpt-compare-side--right .rpt-compare-label { color: var(--gold); }
+  .rpt-compare-side--right .rpt-compare-label { color: var(--rose-text); }
   .rpt-compare-text { font-size: 0.88rem; line-height: 1.65; color: var(--ink-soft); }
   .rpt-compare-divider {
     display: flex;
@@ -1801,7 +1859,7 @@
     justify-content: center;
     padding: 6px 0;
     background: var(--paper-2);
-    font-family: 'Song Myung', serif;
+    font-family: var(--font-sans);
     font-size: 0.78rem;
     font-weight: 700;
     color: var(--ink-faint);
@@ -1925,7 +1983,7 @@
   }
 
   .chapter-toc-badge--ready { background: var(--seal-tint); color: var(--seal); }
-  .chapter-toc-badge--failed { background: var(--gold-tint); color: var(--gold); }
+  .chapter-toc-badge--failed { background: var(--gold-tint); color: var(--rose-text); }
   .chapter-toc-badge--pending, .chapter-toc-badge--generating { background: var(--paper-3); color: var(--ink-faint); }
 
   /* 챕터 리더(chapter-reader.blade.php)에서 아직 준비 안 됐거나 실패한 챕터의 안내. */
@@ -2067,7 +2125,7 @@
   .chat-user {
     align-self: flex-end;
     background: var(--seal);
-    color: #fbf3e9;
+    color: var(--on-seal);
     border-bottom-right-radius: 4px;
   }
 
@@ -2113,7 +2171,7 @@
     border: none;
     border-radius: 8px;
     padding: 8px 14px;
-    font-family: 'Gowun Dodum', sans-serif;
+    font-family: var(--font-sans);
     font-size: 0.84rem;
     font-weight: 700;
     cursor: pointer;
@@ -2131,7 +2189,7 @@
      빠지면서 더 이상 어디서도 쓰이지 않아 제거함(계정 정보/로그아웃은 마이페이지로 이동). */
 
   .chip-link {
-    color: var(--gold);
+    color: var(--rose-text);
     text-decoration: none;
     font-weight: 700;
     border: 1px solid var(--gold-tint);
@@ -2155,7 +2213,7 @@
     margin-bottom: 6px;
   }
   .site-header-logo {
-    font-family: 'Song Myung', serif;
+    font-family: var(--font-serif);
     font-weight: 400;
     font-size: 1.4rem;
     color: var(--ink);
@@ -2169,7 +2227,7 @@
     display: block;
   }
   .site-header-coin {
-    color: var(--gold);
+    color: var(--rose-text);
     text-decoration: none;
     font-weight: 700;
     border: 1px solid var(--gold-tint);
@@ -2232,8 +2290,8 @@
     height: 42px;
     border-radius: 50%;
     background: var(--seal);
-    color: #fbf3e9;
-    font-family: 'Song Myung', serif;
+    color: var(--on-seal);
+    font-family: var(--font-sans);
     font-size: 1.1rem;
     display: flex;
     align-items: center;
@@ -2258,17 +2316,17 @@
     gap: 14px;
   }
   .my-coin-count {
-    font-family: 'Song Myung', serif;
+    font-family: var(--font-serif);
     font-size: 1.8rem;
     color: var(--ink);
   }
-  .my-coin-count span { font-size: 1rem; font-family: 'Gowun Dodum', sans-serif; color: var(--ink-faint); margin-left: 3px; }
+  .my-coin-count span { font-size: 1rem; font-family: var(--font-sans); color: var(--ink-faint); margin-left: 3px; }
 
   /* ---------- 사전 (dictionary.blade.php, 2026-08-24 신설) ---------- */
   .dict-term-list { display: flex; flex-direction: column; gap: 14px; }
   .dict-term { padding-bottom: 14px; border-bottom: 1px dashed var(--line); }
   .dict-term:last-child { border-bottom: none; padding-bottom: 0; }
-  .dict-term-name { font-family: 'Song Myung', serif; font-size: 1rem; color: var(--seal-deep); margin-bottom: 4px; }
+  .dict-term-name { font-family: var(--font-sans); font-size: 1rem; color: var(--seal-deep); margin-bottom: 4px; }
   .dict-term-desc { font-size: 0.86rem; color: var(--ink-soft); line-height: 1.65; }
 
   /* ---------- 코인 충전(결제) 페이지 ---------- */
@@ -2303,7 +2361,7 @@
     left: 50%;
     transform: translateX(-50%);
     background: var(--seal);
-    color: #fbf3e9;
+    color: var(--on-seal);
     font-size: 0.72rem;
     font-weight: 700;
     padding: 4px 12px;
@@ -2311,19 +2369,19 @@
   }
 
   .plan-name {
-    font-family: 'Song Myung', serif;
+    font-family: var(--font-sans);
     font-size: 1.1rem;
     margin-bottom: 8px;
   }
 
   .plan-credits {
-    font-family: 'Song Myung', serif;
+    font-family: var(--font-serif);
     font-size: 2.4rem;
     color: var(--seal);
     line-height: 1;
   }
 
-  .plan-credits span { font-size: 1rem; color: var(--ink-faint); font-family: 'Gowun Dodum', sans-serif; }
+  .plan-credits span { font-size: 1rem; color: var(--ink-faint); font-family: var(--font-sans); }
 
   .plan-desc {
     color: var(--ink-soft);
@@ -2381,7 +2439,7 @@
     font-size: 0.84rem;
     color: var(--ink);
     cursor: pointer;
-    font-family: 'Gowun Dodum', sans-serif;
+    font-family: var(--font-sans);
   }
 
   .chat-history-item:hover { border-color: var(--seal); }
@@ -2395,7 +2453,7 @@
     width: 100%;
     text-align: center;
     color: var(--ink-faint);
-    font-family: 'Gowun Dodum', sans-serif;
+    font-family: var(--font-sans);
     font-size: 0.84rem;
     cursor: pointer;
     margin-bottom: 4px;
@@ -2455,14 +2513,14 @@
   }
 
   .stat-value {
-    font-family: 'Song Myung', serif;
+    font-family: var(--font-serif);
     font-size: 1.9rem;
     color: var(--ink);
     line-height: 1.2;
   }
 
   .stat-value span {
-    font-family: 'Gowun Dodum', sans-serif;
+    font-family: var(--font-sans);
     font-size: 0.9rem;
     color: var(--ink-faint);
     margin-left: 4px;
@@ -2589,7 +2647,7 @@
   }
 
   .filter-field input {
-    font-family: 'Gowun Dodum', sans-serif;
+    font-family: var(--font-sans);
     font-size: 0.84rem;
     padding: 7px 10px;
     border: 1px solid var(--line);
@@ -2602,10 +2660,10 @@
     appearance: none;
     border: none;
     background: var(--seal);
-    color: #fbf3e9;
+    color: var(--on-seal);
     border-radius: 8px;
     padding: 8px 16px;
-    font-family: 'Gowun Dodum', sans-serif;
+    font-family: var(--font-sans);
     font-size: 0.84rem;
     font-weight: 700;
     cursor: pointer;
@@ -2719,7 +2777,7 @@
     border: 1px solid var(--line);
     background: var(--paper-2);
     color: var(--ink-soft);
-    font-family: 'Gowun Dodum', sans-serif;
+    font-family: var(--font-sans);
     font-size: 0.86rem;
     font-weight: 700;
     padding: 9px 18px;
@@ -2728,7 +2786,7 @@
     transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   }
   .sagu-cat-btn:hover { border-color: var(--seal); }
-  .sagu-cat-btn.active { background: var(--seal); border-color: var(--seal); color: #fbf3e9; }
+  .sagu-cat-btn.active { background: var(--seal); border-color: var(--seal); color: var(--on-seal); }
 
   .sagu-panel { display: none; }
   .sagu-panel.active { display: block; animation: fadeIn 0.25s ease; }
@@ -2759,13 +2817,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Song Myung', serif;
+    font-family: var(--font-serif);
     font-size: 1.25rem;
     color: var(--seal);
   }
 
   .sagu-card-body { flex: 1; min-width: 0; }
-  .sagu-card-title { font-family: 'Song Myung', serif; font-weight: 400; font-size: 1.02rem; color: var(--ink); margin-bottom: 3px; }
+  .sagu-card-title { font-family: var(--font-sans); font-weight: 400; font-size: 1.02rem; color: var(--ink); margin-bottom: 3px; }
   .sagu-card-desc { font-size: 0.82rem; color: var(--ink-soft); line-height: 1.5; }
 
   .sagu-card-price {
@@ -2870,8 +2928,8 @@
   }
 
   .report-card-subject {
-    font-family: 'Song Myung', serif;
-    font-weight: 400;
+    font-family: var(--font-sans);
+    font-weight: 750;
     font-size: 1.1rem;
     color: var(--ink);
     margin-bottom: 6px;
@@ -2929,7 +2987,7 @@
 
     .site-header, .site-bottom-nav, .no-print,
     .chapter-tab-strip, .chapter-toc-badge,
-    .home-hero-stamp, .home-hero-hint {
+    .home-hero-art, .home-hero-hint {
       display: none !important;
     }
 
@@ -2971,8 +3029,8 @@
   }
 
   .policy-section h3 {
-    font-family: 'Song Myung', serif;
-    font-weight: 400;
+    font-family: var(--font-sans);
+    font-weight: 750;
     font-size: 1.02rem;
     margin: 0 0 8px;
   }
@@ -3035,7 +3093,7 @@
   .compat-gender-chip.active {
     background: var(--seal);
     border: 2px solid var(--seal);
-    color: #fbf3e9;
+    color: var(--on-seal);
     font-weight: 700;
     box-shadow: 0 0 0 3px var(--seal-tint, rgba(139, 94, 131, 0.25));
   }
@@ -3055,13 +3113,13 @@
     display: inline-block;
     font-size: 0.68rem;
     font-weight: 700;
-    color: #fbf3e9;
+    color: var(--on-seal);
     background: var(--seal);
     border-radius: 999px;
     padding: 2px 9px;
     letter-spacing: 0.03em;
   }
-  .rpt-timing-period { font-family: 'Gowun Dodum', sans-serif; font-weight: 700; color: var(--ink); font-size: 0.96rem; }
+  .rpt-timing-period { font-family: var(--font-sans); font-weight: 700; color: var(--ink); font-size: 0.96rem; }
 
   /* verdict_badge 블록 — "계속해도 되는가"의 🟢/🟡/🔴 신호등 판정. 오행 색이 아니라
      신호등의 통념적 색(초록/노랑/빨강)을 그대로 쓰는 게 사용자에게 더 직관적이라
@@ -3077,7 +3135,7 @@
   .rpt-verdict--slow { background: var(--gold-tint); border-color: var(--gold); }
   .rpt-verdict--stop { background: color-mix(in srgb, var(--fire) 14%, transparent); border-color: var(--fire); }
   .rpt-verdict--neutral { background: var(--paper); }
-  .rpt-verdict-badge { font-family: 'Gowun Dodum', sans-serif; font-weight: 700; font-size: 1.02rem; color: var(--ink); }
+  .rpt-verdict-badge { font-family: var(--font-sans); font-weight: 700; font-size: 1.02rem; color: var(--ink); }
 
   /* ---------- "다시, 우리"(재회 전략) 리포트 (2026-08-31 추가) ---------- */
   /* contact_action 블록의 5번째/6번째 판정(가벼운 연락/진심을 전달할 시점)은 기존
@@ -3194,3 +3252,1145 @@
   .scroll-hint svg { animation: none; }
   .resume-toast { transition: none; }
 }
+
+
+  /* ============================================================
+     UI 전달본(yeonrok-web-handoff) 컴포넌트 레이어 — 2026-09-28
+     전달본 styles.css의 규격을 프로젝트 컴포넌트에 맞춰 옮긴 것이다.
+     색·간격·모서리는 위 :root 토큰만 쓰고 여기서 하드코딩하지 않는다.
+     ============================================================ */
+
+  /* ---------- 타이포 스케일 (전달본 design-tokens.json) ---------- */
+  .t-display { font-size: 34px; line-height: 1.22; font-weight: 750; letter-spacing: -0.045em; }
+  .t-title   { font-size: 28px; line-height: 1.30; font-weight: 750; letter-spacing: -0.04em; }
+  .t-body    { font-size: 15px; line-height: 1.65; font-weight: 400; }
+  .t-caption { font-size: 12px; line-height: 1.45; font-weight: 500; }
+
+  /* ---------- 상단 브랜드 헤더 (전달본 .brand-header) ---------- */
+  .brand-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    padding: var(--sp-2) 0 0;
+  }
+
+  .brand-header .wordmark {
+    font-family: var(--font-serif);
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.08em;
+    line-height: 1.1;
+    color: #1C1720;
+  }
+
+  .brand-header p { margin: 2px 0 0; color: var(--text-muted); font-size: 13px; }
+  /* (2026-09-28) 마크를 PNG로 교체하면서 가로세로비가 바뀌어(가로로 긴 타원 → 거의 정사각)
+     예전 120px 폭 그대로 두면 워드마크 블록보다 훨씬 커진다. 폭을 줄여 균형을 맞춘다. */
+  .brand-header img { width: 92px; height: auto; flex: none; margin-top: -2px; }
+
+  /* ---------- 상단바 (전달본 .topbar) ---------- */
+  .app-topbar {
+    display: grid;
+    grid-template-columns: 40px 1fr 40px;
+    align-items: center;
+    min-height: 58px;
+    margin: 0 calc(var(--app-pad) * -1) var(--sp-2);
+    padding: 6px var(--sp-4);
+    text-align: center;
+  }
+
+  .app-topbar > strong { font-size: 16px; font-weight: 750; letter-spacing: -0.02em; }
+
+  .icon-button {
+    display: grid;
+    place-items: center;
+    width: 44px;              /* 터치 영역 44px 확보 */
+    height: 44px;
+    margin: 0 -2px;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    border-radius: var(--r-field);
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .icon-button:hover { background: var(--surface-2); }
+  .icon-button .yk-icon { width: 22px; height: 22px; }
+
+  /* ---------- 아이콘 ---------- */
+  .yk-icon { width: 24px; height: 24px; flex: none; display: block; }
+
+  .yk-icon-badge {
+    display: inline-grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: var(--r-sm);
+    background: var(--accent-rose-soft);
+    color: var(--brand);
+    flex: none;
+  }
+
+  /* ---------- 아이브로 뱃지 (전달본 .eyebrow) ---------- */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    color: var(--brand);
+    font-weight: 700;
+    font-size: 12px;
+    background: var(--accent-rose-soft);
+    border-radius: var(--r-pill);
+    padding: 7px 10px;
+  }
+
+  /* ---------- 섹션 카피 (전달본 .hero-copy / .section-copy) ---------- */
+  .section-copy { margin: var(--sp-1) 0 var(--sp-6); }
+  .section-copy h1 {
+    margin: 14px 0;
+    font-size: 34px;
+    line-height: 1.22;
+    letter-spacing: -0.045em;
+    font-weight: 750;
+    color: var(--brand-dark);
+  }
+  .section-copy p { margin: 0; color: var(--text-muted); font-size: 15px; line-height: 1.65; }
+  .section-copy.compact h1 { font-size: 28px; }
+  .section-copy.centered { text-align: center; }
+  .section-copy.centered h1 { font-size: 28px; }
+
+  /* ---------- 신뢰 문구 줄 (전달본 .trust-line) ---------- */
+  .trust-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 38px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: #FBF7F8;
+    border-radius: var(--r-field);
+  }
+
+  .trust-line i { width: 1px; height: 12px; background: #D6CCD0; flex: none; }
+
+  /* ---------- 버튼 스택 / 고정 CTA ---------- */
+  .action-stack { display: grid; gap: 10px; }
+
+  .sticky-cta {
+    position: sticky;
+    z-index: 4;
+    bottom: 0;
+    margin: var(--sp-5) calc(var(--app-pad) * -1) 0;
+    padding: var(--sp-3) var(--sp-4) max(var(--sp-4), env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, rgba(255, 253, 252, 0), var(--surface) 22%);
+  }
+
+  .sticky-cta .btn { width: 100%; }
+  .sticky-cta small { display: block; text-align: center; color: var(--text-muted); font-size: 11px; margin-bottom: 7px; }
+
+  /* 하단 탭바가 있는 화면에서는 탭바 위로 올라오게 한다. */
+  body.has-bottom-nav .sticky-cta { bottom: var(--nav-h); }
+
+  /* ---------- 버튼 (전달본 .button) ----------
+     기본 높이 54px, 모서리 17px, primary는 브랜드 그라데이션. */
+  .btn {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    min-height: var(--btn-h);
+    padding: 0 20px;
+    border: 0;
+    border-radius: var(--r-control);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    font-weight: 750;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+    cursor: pointer;
+    color: var(--on-brand);
+    background: var(--brand-gradient);
+    box-shadow: 0 9px 22px rgba(116, 29, 88, 0.2);
+    transition: filter 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+  }
+
+  .btn:hover { filter: brightness(1.08); box-shadow: 0 11px 26px rgba(116, 29, 88, 0.26); }
+  .btn:active { transform: scale(0.985); filter: brightness(0.96); }
+
+  .btn[disabled], .btn:disabled, .btn.is-disabled, .btn[aria-disabled="true"] {
+    background: var(--disabled-bg);
+    color: var(--disabled-fg);
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+    filter: none;
+  }
+
+  /* 로딩 상태 — 제출 중 중복 클릭 방지와 함께 쓴다(public/js/app.js). */
+  .btn.is-loading { color: transparent; pointer-events: none; position: relative; }
+  .btn.is-loading::after {
+    content: "";
+    position: absolute;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-top-color: #fff;
+    animation: btnSpin 0.7s linear infinite;
+  }
+  @keyframes btnSpin { to { transform: rotate(360deg); } }
+
+  .btn .btn-arrow { font-size: 1.05em; line-height: 1; }
+
+  .btn.outline, .btn.secondary {
+    color: var(--brand);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    box-shadow: none;
+  }
+
+  .btn.outline:hover, .btn.secondary:hover { background: var(--accent-rose-soft); filter: none; }
+  .btn.outline:active, .btn.secondary:active { background: #F3DAE2; }
+
+  .btn.narrow { min-width: 190px; width: auto; }
+  .btn-center { display: flex; margin: 0 auto; }
+
+  /* 텍스트 버튼 (전달본 .text-button) */
+  .text-button, .chip-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 10px 6px;
+    border: 0;
+    background: transparent;
+    color: var(--brand);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .text-button:hover, .chip-link:hover { color: var(--brand-dark); text-decoration: underline; }
+
+  /* ---------- 입력 (전달본 .form-card) ---------- */
+  label {
+    display: block;
+    margin-bottom: var(--sp-2);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  input[type="number"], input[type="text"], input[type="email"], input[type="tel"],
+  input[type="date"], input[type="password"], select, textarea {
+    width: 100%;
+    height: var(--field-h);
+    padding: 0 13px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-field);
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  textarea { height: auto; min-height: 92px; padding: 12px 13px; line-height: 1.6; }
+  input::placeholder, textarea::placeholder { color: #A79EA6; }
+  input:hover, select:hover, textarea:hover { border-color: var(--border-strong); }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+
+  input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="true"],
+  .is-error input, .is-error select {
+    border-color: var(--error);
+    box-shadow: 0 0 0 3px rgba(179, 36, 63, 0.14);
+  }
+
+  input:disabled, select:disabled, textarea:disabled {
+    background: var(--disabled-bg);
+    color: var(--disabled-fg);
+    cursor: not-allowed;
+  }
+
+  /* 키보드 포커스 표시 */
+  a:focus-visible, button:focus-visible, [tabindex]:focus-visible,
+  input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: var(--r-field);
+  }
+
+  /* 폼 오류 메시지 (입력 필드와 aria-describedby로 연결해서 쓴다) */
+  .form-error {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    color: var(--error);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .form-error .yk-icon { width: 15px; height: 15px; }
+
+  /* ---------- 카드 ---------- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 18px;
+    box-shadow: none;
+    margin-bottom: var(--sp-4);
+  }
+
+  .card h2 {
+    font-family: var(--font-sans);
+    font-size: 20px;
+    font-weight: 750;
+    letter-spacing: -0.03em;
+    line-height: 1.4;
+    margin: 0 0 var(--sp-3);
+    color: var(--text);
+  }
+
+  .hint { color: var(--text-muted); font-size: 12px; line-height: 1.65; margin-top: 0; margin-bottom: var(--sp-3); }
+
+  /* ---------- 홈 상단 수채 배경 (2026-09-28) ----------
+     사용자가 전달한 수채 구름 이미지를 홈 최상단에만 깐다. 아래쪽은 mask로 서서히
+     사라지게 해서 본문 배경색과 자연스럽게 이어지고, 글자 위를 덮지 않는다.
+     .wrap에 isolation을 줘서 z-index:-1 레이어가 컨테이너 배경 위·본문 아래에 놓이게 한다
+     (PC에서 .wrap이 흰 카드라, 스택 컨텍스트가 없으면 배경에 가려진다). */
+  body.home-page .wrap {
+    position: relative;
+    isolation: isolate;
+  }
+
+  /* 수채 배경 위에 얹히는 작은 글자는 --text-muted(#716875)로는 가장 짙은 구름 위에서
+     AA 4.5:1을 아슬아슬하게 못 넘긴다. 홈 상단 한정으로 한 단계 진한 --text-mid를 쓴다. */
+  body.home-page .brand-header p,
+  body.home-page .home-hero .section-copy p {
+    color: var(--text-mid);
+  }
+
+  body.home-page .wrap::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: -1;
+    height: clamp(240px, 44vh, 380px);
+    /* cover로 채우면 가운데만 확대돼 구름이 잘린다. 폭에 맞춰 전체 그림을 보여준다. */
+    background: url("../img/handoff/hero-bg.jpg") top center / 100% auto no-repeat;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 100%);
+            mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 100%);
+    pointer-events: none;
+  }
+
+  /* ---------- 홈 히어로 (전달본 .hero-copy / .orbit-hero) ---------- */
+  .home-hero { margin-top: var(--sp-6); }
+  .home-hero .section-copy { margin: 0; }
+  .home-hero .section-copy h1 { margin: 0 0 14px; }
+
+  /* (2026-09-28) 히어로 아트워크 — 알파 채널이 있는 PNG라 배경을 깔지 않는다.
+     수채 배경 위에 그대로 떠 있게 두고, contain으로 잘림 없이 전체를 보여준다. */
+  .orbit-hero {
+    display: block;
+    width: 100%;
+    max-width: 380px;
+    height: 210px;
+    margin: var(--sp-3) auto var(--sp-2);
+    object-fit: contain;
+  }
+
+  .home-hero .action-stack { margin-top: var(--sp-4); }
+  .home-hero .action-stack .btn { width: 100%; }
+
+  /* 진입 연출 — 제목 → 설명 → 일러스트 → 버튼 순서로 아주 짧게 떠오른다. */
+  .home-hero .section-copy h1,
+  .home-hero .section-copy p,
+  .orbit-hero,
+  .home-hero .action-stack {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: heroUp 0.45s ease-out forwards;
+  }
+
+  .home-hero .section-copy h1 { animation-delay: 0.04s; }
+  .home-hero .section-copy p  { animation-delay: 0.11s; }
+  .orbit-hero                 { animation-delay: 0.18s; }
+  .home-hero .action-stack    { animation-delay: 0.25s; }
+
+  @keyframes heroUp { to { opacity: 1; transform: translateY(0); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-hero .section-copy h1,
+    .home-hero .section-copy p,
+    .orbit-hero,
+    .home-hero .action-stack { animation: none; opacity: 1; transform: none; }
+  }
+
+  /* ---------- 하단 탭바 (전달본 .bottom-nav) ---------- */
+  .site-bottom-nav {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 30;
+    margin: 0 auto;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    align-items: stretch;
+    height: calc(var(--nav-h) + env(safe-area-inset-bottom));
+    padding: 8px 8px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border);
+    background: rgba(255, 253, 252, 0.96);
+    backdrop-filter: blur(12px);
+  }
+
+  .site-bottom-nav-item {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 3px;
+    border-radius: var(--r-field);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .site-bottom-nav-icon, .site-bottom-nav-item .yk-icon { width: 23px; height: 23px; }
+  .site-bottom-nav-item.active { color: var(--brand); font-weight: 700; }
+  .site-bottom-nav-item:hover { color: var(--brand-dark); }
+
+  /* 고정 탭바에 본문이 가리지 않도록 확보하는 여백 */
+  body.has-bottom-nav .wrap { padding-bottom: calc(var(--nav-h) + var(--sp-6) + env(safe-area-inset-bottom)); }
+
+  /* ---------- 전역 헤더 (하위 화면 상단) ---------- */
+  .site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    min-height: 52px;
+    padding: var(--sp-2) 0 var(--sp-3);
+  }
+
+  .site-header-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-serif);
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.06em;
+    color: #1C1720;
+    text-decoration: none;
+  }
+
+  .site-header-logo-img { height: 24px; width: auto; display: block; }
+
+  .site-header-coin, .site-header-login {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 34px;
+    padding: 0 13px;
+    border-radius: var(--r-pill);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--brand);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .site-header-coin:hover, .site-header-login:hover { background: var(--accent-rose-soft); }
+
+  /* ---------- 단계 표시 (전달본 .step-row) ---------- */
+  .step-row { display: flex; align-items: center; gap: var(--sp-3); margin: 2px 0 var(--sp-6); }
+  .step-row > span { font-size: 12px; font-weight: 700; color: var(--brand); }
+  .step-row > div { height: 5px; flex: 1; background: var(--skeleton); border-radius: 5px; overflow: hidden; }
+  .step-row i { display: block; height: 100%; background: var(--accent-rose); border-radius: 5px; }
+
+  /* ---------- 선택 카드 (전달본 .choice) ---------- */
+  .choice-list { display: grid; gap: var(--sp-3); }
+
+  .choice, .sagu-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 44px 1fr 24px;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: 15px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: var(--surface);
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .choice:hover, .sagu-card:hover { border-color: var(--border-strong); background: var(--surface-2); }
+  .choice.is-selected, .sagu-card.is-selected { border: 2px solid var(--brand); background: #FFF9FB; padding: 14px; }
+
+  .choice-icon, .sagu-card-badge {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: var(--r-sm);
+    border: 0;
+    background: var(--accent-rose-soft);
+    color: var(--brand);
+    font-family: var(--font-serif);
+    font-size: 18px;
+    font-weight: 700;
+    flex: none;
+  }
+
+  .choice-icon .yk-icon { width: 21px; height: 21px; }
+  .sagu-card-body, .choice-body { display: grid; gap: 5px; min-width: 0; }
+  .sagu-card-title { font-size: 15px; font-weight: 750; letter-spacing: -0.02em; color: var(--text); }
+  .sagu-card-desc, .choice small { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+
+  .sagu-card-price {
+    flex: none;
+    justify-self: end;
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--brand);
+    background: var(--accent-rose-soft);
+    border-radius: var(--r-pill);
+    padding: 6px 10px;
+  }
+
+  /* ---------- 세그먼트 / 성별 선택 (전달본 .segmented, .gender-row) ---------- */
+  .compat-stage-row, .compat-gender-row {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 0;
+    padding: 3px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: var(--surface-sunken);
+  }
+
+  .compat-stage-chip, .compat-gender-chip {
+    min-height: 40px;
+    border: 0;
+    border-radius: 11px;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .compat-stage-chip:hover, .compat-gender-chip:hover { color: var(--brand); }
+
+  .compat-stage-chip.active, .compat-gender-chip.active {
+    background: var(--surface);
+    color: var(--brand);
+    box-shadow: 0 3px 12px rgba(43, 21, 37, 0.08);
+    font-weight: 700;
+  }
+
+  /* ---------- 결과 지표 (전달본 .score-grid) ---------- */
+  .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
+  .score-grid article {
+    display: grid; gap: 4px; padding: 12px 10px;
+    border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface);
+  }
+  .score-grid small { color: var(--text-muted); font-size: 11px; }
+  .score-grid b { font-family: var(--font-serif); color: var(--brand-dark); font-size: 27px; line-height: 1.1; }
+  .score-grid i { height: 5px; background: var(--skeleton); border-radius: 5px; overflow: hidden; }
+  .score-grid em { display: block; height: 100%; background: linear-gradient(90deg, var(--brand), var(--accent-rose)); border-radius: 5px; }
+
+  /* ---------- 인사이트 카드 (전달본 .insight-card) ---------- */
+  .insight-card {
+    margin-top: var(--sp-3);
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: linear-gradient(145deg, var(--surface), #FFF5F7);
+  }
+  .insight-card > span { font-weight: 800; color: var(--brand); font-size: 13px; }
+  .insight-card p { font-size: 14px; line-height: 1.6; color: var(--text-muted); margin: 10px 0 0; }
+
+  /* ---------- 정보 행 (전달본 .info-row) ---------- */
+  .info-row {
+    width: 100%;
+    min-height: 52px;
+    margin-top: 10px;
+    padding: 0 14px;
+    display: grid;
+    grid-template-columns: 28px 1fr 22px;
+    align-items: center;
+    gap: var(--sp-2);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    background: var(--surface);
+    color: var(--text);
+    text-align: left;
+    font-size: 13px;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .info-row:hover { background: var(--surface-2); }
+  .info-row > span:first-child {
+    display: grid; place-items: center; width: 25px; height: 25px;
+    border-radius: 9px; background: var(--accent-rose-soft); color: var(--brand); font-weight: 800; font-size: 12px;
+  }
+  .info-row .yk-icon { width: 18px; height: 18px; color: var(--text-muted); }
+
+  /* ---------- 리포트 (전달본 .report-cover / .report-tabs / .report-section) ---------- */
+  .report-cover {
+    position: relative;
+    overflow: hidden;
+    min-height: 200px;
+    padding: 20px 18px 0;
+    border-radius: 22px;
+    background: linear-gradient(145deg, #FFF5F7, #F5EAF0);
+  }
+  .report-cover > span { font-size: 12px; color: var(--brand); font-weight: 700; }
+  .report-cover h1 {
+    position: relative; z-index: 2; margin: 8px 0 18px;
+    font-size: 25px; line-height: 1.35; font-weight: 750; letter-spacing: -0.035em; color: var(--brand-dark);
+  }
+  /* (2026-09-28) 장식 일러스트를 PNG로 교체. 이전 SVG와 가로세로비가 달라서
+     예전처럼 카드 밖으로 크게 빼면 구체가 반쯤 잘린 채 걸쳐 보인다 —
+     그래서 잘리지 않게 우하단 안쪽에 온전히 앉힌다. */
+  .report-cover img {
+    position: absolute;
+    width: min(168px, 44%); height: auto;
+    right: -4px; bottom: -6px;
+    opacity: 0.92;
+    pointer-events: none;
+    /* 좌우 반전해서 큰 구체를 모서리 쪽에 두고, 글자와 겹치는 왼쪽은 마스크로 지운다
+       (320px에서 결제 메타 문구가 구체 위에 올라가 안 읽히던 문제).
+       주의: mask는 transform 이전 좌표계에 적용되므로, 화면 기준 왼쪽을 지우려면
+       여기서는 to left 방향으로 써야 한다. */
+    transform: scaleX(-1);
+    -webkit-mask-image: linear-gradient(to left, transparent 0%, #000 42%);
+            mask-image: linear-gradient(to left, transparent 0%, #000 42%);
+  }
+  .report-cover-meta { position: relative; z-index: 2; padding-bottom: 18px; color: var(--text-muted); font-size: 12px; }
+
+  .chapter-tab-strip {
+    position: sticky; top: 0; z-index: 3;
+    display: flex; gap: 0;
+    margin: 14px calc(var(--app-pad) * -1) 18px;
+    padding: 0 var(--app-pad);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .chapter-tab-strip::-webkit-scrollbar { display: none; }
+
+  .chapter-tab {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .chapter-tab:hover { color: var(--brand); background: transparent; }
+  .chapter-tab.active { color: var(--brand); font-weight: 800; border-bottom-color: var(--brand); }
+
+  .rpt-section, .report-section { padding: 4px 2px 20px; }
+  .rpt-section-title, .report-section h2 {
+    font-family: var(--font-sans);
+    font-size: 21px;
+    font-weight: 750;
+    letter-spacing: -0.035em;
+    line-height: 1.4;
+    color: var(--text);
+    margin: 6px 0 10px;
+  }
+  .rpt-p, .report-section p { font-size: 14px; line-height: 1.75; color: var(--text-mid); }
+
+  /* 챕터 번호 — 전달본 .report-section .index */
+  .chapter-toc-num, .rpt-section-index { color: var(--accent-rose); font-size: 12px; font-weight: 800; font-family: var(--font-sans); }
+
+  /* 강조 문장 (전달본 .callout) */
+  .rpt-quote, .callout {
+    margin-top: 14px;
+    padding: 15px;
+    border-radius: var(--r-sm);
+    border-left: 0;
+    background: #FFF5F7;
+    color: var(--brand);
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .rpt-quote--final { background: var(--accent-rose-soft); }
+
+  /* ---------- 결제 (전달본 .benefit-list / .price-card / .safety-row) ---------- */
+  .benefit-list {
+    list-style: none; margin: 0; padding: 6px 16px;
+    border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface);
+  }
+  .benefit-list li {
+    min-height: 48px; display: flex; align-items: center; gap: 11px;
+    border-bottom: 1px solid #F0EAED; font-size: 14px;
+  }
+  .benefit-list li:last-child { border: 0; }
+  .benefit-list i {
+    display: grid; place-items: center; width: 28px; height: 28px; flex: none;
+    border-radius: 50%; background: var(--brand); color: #fff;
+  }
+  .benefit-list .yk-icon { width: 17px; height: 17px; }
+
+  .price-card {
+    margin-top: 14px; padding: 18px; border-radius: var(--r-md);
+    background: linear-gradient(135deg, #FFF1F4, #FAE4EB);
+  }
+  .price-card > span { font-size: 12px; color: var(--text-muted); }
+  .price-card strong { display: block; margin: 3px 0; font-family: var(--font-serif); color: var(--brand-dark); font-size: 38px; line-height: 1.1; }
+  .price-card strong small { font-family: var(--font-sans); font-size: 18px; font-weight: 700; }
+  .price-card p { margin: 0; color: var(--text-muted); font-size: 12px; }
+
+  .safety-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin: 14px 0; }
+  .safety-row span { display: grid; place-items: center; text-align: center; gap: 4px; font-size: 10px; color: var(--text-muted); }
+  .safety-row .yk-icon { width: 23px; height: 23px; color: var(--brand); }
+
+  /* ---------- 상태 화면 (전달본 .center-state) ---------- */
+  .center-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 28px var(--sp-6) var(--sp-8);
+  }
+  .center-state img { width: 210px; max-width: 100%; max-height: 210px; }
+  .center-state h1, .center-state .yk-state-title {
+    margin: 15px 0 10px; font-size: 24px; line-height: 1.35; font-weight: 750;
+    letter-spacing: -0.035em; color: var(--brand-dark);
+  }
+  .center-state p, .center-state .yk-state-desc { margin: 0 0 22px; color: var(--text-muted); font-size: 14px; line-height: 1.65; }
+  .center-state small { color: #9A929B; font-size: 11px; }
+  .center-state .btn { margin-top: 4px; }
+
+  .loading-bar { width: 230px; max-width: 100%; height: 7px; border-radius: 9px; background: var(--skeleton); overflow: hidden; margin: 10px 0 12px; }
+  .loading-bar i { display: block; width: 72%; height: 100%; border-radius: 9px; background: linear-gradient(90deg, var(--brand), var(--accent-rose)); animation: loadingPulse 1.4s ease-in-out infinite; }
+  @keyframes loadingPulse { 50% { width: 88%; } }
+  @media (prefers-reduced-motion: reduce) { .loading-bar i { animation: none; width: 80%; } }
+
+  .empty-state { color: var(--text-muted); font-size: 14px; line-height: 1.7; padding: var(--sp-6) var(--sp-4); text-align: center; }
+
+  /* ---------- 공유 (전달본 .share-preview / .toggle-row / .share-actions) ---------- */
+  .share-preview {
+    position: relative; overflow: hidden; border-radius: 23px;
+    box-shadow: 0 12px 35px rgba(56, 23, 46, 0.12);
+  }
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4);
+    margin-top: 14px; padding: 16px; border: 1px solid var(--border); border-radius: 17px; background: var(--surface);
+  }
+  .toggle-row > span { display: grid; gap: 4px; }
+  .toggle-row small { font-size: 11px; color: var(--text-muted); }
+  .toggle-row input[type="checkbox"] {
+    appearance: none; width: 45px; height: 26px; flex: none; padding: 0;
+    border: 0; border-radius: var(--r-pill); background: #D9D0D4; position: relative; cursor: pointer;
+  }
+  .toggle-row input[type="checkbox"]::after {
+    content: ""; position: absolute; width: 20px; height: 20px; top: 3px; left: 3px;
+    border-radius: 50%; background: #fff; transition: left 0.2s ease;
+  }
+  .toggle-row input[type="checkbox"]:checked { background: var(--brand); }
+  .toggle-row input[type="checkbox"]:checked::after { left: 22px; }
+  @media (prefers-reduced-motion: reduce) { .toggle-row input[type="checkbox"]::after { transition: none; } }
+
+  /* 공유 화면의 두 칸 버튼(전달본 .share-actions). 주의: 이 프로젝트의
+     .share-card-actions는 "결제 버튼 + 공유 버튼"이 함께 들어가는 다른 컨테이너라,
+     여기에 보조 버튼 스타일을 걸면 결제 버튼까지 흐려진다 — 분리해서 다룬다. */
+  .share-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .share-actions button {
+    min-height: 48px; border: 1px solid var(--border); background: var(--surface);
+    border-radius: 15px; color: var(--text); box-shadow: none; font-size: 14px;
+  }
+
+  .share-card-actions {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 14px;
+  }
+  .share-card-actions > .btn { flex: 1 1 100%; }
+  /* 보조(공유/저장) 버튼은 나란히 반씩 */
+  .share-card-actions > .btn.outline { flex: 1 1 calc(50% - 5px); min-height: 48px; font-size: 14px; }
+
+  /* 결제 유도 버튼 — 폭을 꽉 채우고 은은한 펄스로 강조(전달본 .button.primary 위). */
+  .btn-buy {
+    display: flex;
+    width: 100%;
+    flex: 1 1 100%;
+    min-height: var(--btn-h);
+    border-radius: var(--r-control);
+    background: var(--brand-gradient);
+    color: var(--on-brand);
+    box-shadow: 0 9px 22px rgba(116, 29, 88, 0.24);
+    animation: btnBuyPulse 2.6s ease-in-out infinite;
+  }
+  .btn-buy:hover { filter: brightness(1.08); }
+  @keyframes btnBuyPulse {
+    0%, 100% { box-shadow: 0 9px 22px rgba(116, 29, 88, 0.24); }
+    50% { box-shadow: 0 12px 30px rgba(116, 29, 88, 0.34); }
+  }
+  @media (prefers-reduced-motion: reduce) { .btn-buy { animation: none; } }
+
+  /* 결제 유도 카드 (전달본 결제 화면의 구성 결) */
+  .report-cta {
+    padding: 18px;
+    border-radius: var(--r-md);
+    background: linear-gradient(135deg, #FFF1F4, #FAE4EB);
+    border: 1px solid var(--border);
+  }
+  .report-cta-headline {
+    margin: 0 0 var(--sp-4);
+    text-align: center;
+    font-size: 17px;
+    font-weight: 750;
+    letter-spacing: -0.03em;
+    color: var(--brand-dark);
+  }
+  .report-trust-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .report-trust-item {
+    padding: 12px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface);
+  }
+  .report-trust-head { font-size: 13px; font-weight: 750; letter-spacing: -0.02em; margin: 8px 0 4px; color: var(--text); }
+  .report-trust-desc { font-size: 11px; color: var(--text-muted); line-height: 1.55; }
+
+  /* ---------- 화면 상단 보조 설명 ---------- */
+  .page-lead { margin: 0 0 var(--sp-4); color: var(--text-muted); font-size: 14px; line-height: 1.65; }
+  .page-lead strong { color: var(--brand); font-weight: 700; }
+  .page-lead--sub { font-size: 12px; margin-top: -8px; }
+  .page-lead-group { margin-bottom: var(--sp-2); }
+
+  /* ---------- 계산기 탭 스트립 ----------
+     탭이 7개(연애 4종 + 코치 + 재물운 + 커리어운)라 폰 폭에서 flex가 각 버튼을 한 글자
+     폭까지 찌그러뜨린다. 줄바꿈 대신 가로 스크롤로 모든 탭을 그대로 유지한다. */
+  .tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 2px;
+    margin: 0 calc(var(--app-pad) * -1) var(--sp-5);
+    padding: 0 var(--app-pad);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    white-space: nowrap;
+    min-height: 44px;
+    margin: 0;
+    padding: 0 12px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .tab-btn:hover { color: var(--brand); }
+  .tab-btn.active { color: var(--brand); font-weight: 800; border-bottom-color: var(--brand); }
+
+  /* ---------- 코인 충전 플랜 카드 (전달본 .price-card 결) ---------- */
+  .plan-card {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    background: linear-gradient(135deg, #FFF1F4, #FAE4EB);
+    box-shadow: none;
+  }
+
+  .plan-card.highlight { border-color: var(--brand); }
+  .plan-badge { background: var(--brand); color: var(--on-brand); border-radius: var(--r-pill); }
+  .plan-name { font-family: var(--font-sans); font-weight: 750; letter-spacing: -0.02em; color: var(--text); }
+  .plan-credits, .plan-price { font-family: var(--font-serif); color: var(--brand-dark); }
+  .plan-unit { color: var(--text-muted); font-size: 12px; }
+  .plan-card .btn, .plan-buy { width: 100%; }
+
+  /* ---------- 리포트함 카드 ---------- */
+  .report-card {
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    background: var(--surface);
+    padding: 18px;
+    box-shadow: none;
+  }
+
+  .report-card-icon {
+    display: grid; place-items: center; width: 34px; height: 34px;
+    border-radius: 11px; background: var(--accent-rose-soft); color: var(--brand);
+  }
+  .report-card-icon .yk-icon { width: 19px; height: 19px; }
+  .report-card-subject { font-family: var(--font-sans); font-weight: 750; letter-spacing: -0.025em; }
+  .report-card-heart { color: var(--accent-rose); }
+  .report-card-meta { color: var(--text-muted); font-size: 12px; }
+  .report-card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .report-card-actions .btn { min-height: 46px; font-size: 14px; padding: 0 12px; }
+
+  /* ---------- 뱃지 ---------- */
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 5px 10px; border-radius: var(--r-pill);
+    font-size: 11px; font-weight: 700;
+    background: var(--accent-rose-soft); color: var(--brand);
+  }
+  .badge.indigo { background: rgba(79, 21, 63, 0.08); color: var(--brand-dark); }
+  .badge.gold { background: rgba(216, 88, 120, 0.12); color: var(--rose-text); }
+  .badge.water { background: #E8EAF4; color: #45538A; }
+
+  /* 리포트 본문 껍데기 — 커버가 카드 가장자리까지 붙도록 패딩을 없앤다. */
+  .report-shell { padding: 0; border: 0; background: transparent; margin-bottom: var(--sp-4); }
+  .report-shell > .report-cover { margin-bottom: 0; }
+  .report-meta { display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--text-muted); font-size: 12px; }
+
+  /* 껍데기 없는 카드 — 빈 상태/오류 상태처럼 일러스트가 주인공인 화면에서 쓴다. */
+  .card--bare { background: transparent; border: 0; padding: 0; box-shadow: none; }
+
+  /* ---------- 진행 게이지 / 단계 체크리스트 (챕터형 리포트: 실제 완료율 기반) ---------- */
+  .rpt-gauge-track { stroke: var(--skeleton); }
+  .rpt-gauge-fill { stroke: var(--brand); }
+  .rpt-gauge-percent { font-family: var(--font-serif); color: var(--brand-dark); }
+  .chapter-progress-count { color: var(--text-muted); font-size: 13px; }
+
+  .progress-steps { display: grid; gap: var(--sp-3); margin-top: var(--sp-5); }
+  .progress-step { display: grid; grid-template-columns: 22px 1fr; gap: var(--sp-3); align-items: start; }
+  .progress-step-icon {
+    display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+    border: 1px solid var(--border-strong); color: var(--text-muted); font-size: 11px; background: var(--surface);
+  }
+  .progress-step.is-active .progress-step-icon,
+  .progress-step.is-done .progress-step-icon { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .progress-step-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .progress-step-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .progress-step:not(.is-active):not(.is-done) .progress-step-title { color: var(--text-muted); font-weight: 500; }
+
+  /* ---------- 안내 박스 ---------- */
+  .placeholder-note {
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    background: var(--surface-2);
+    color: var(--text-mid);
+    padding: 14px 15px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  /* ---------- 더 보기 힌트 버튼 ---------- */
+  .scroll-hint {
+    background: var(--brand);
+    color: var(--on-brand);
+    box-shadow: 0 9px 22px rgba(116, 29, 88, 0.28);
+    border: 0;
+  }
+
+  /* ---------- 챕터 목차 ---------- */
+  .chapter-toc-wrap { margin-bottom: var(--sp-5); }
+  .chapter-toc-item a {
+    display: grid; grid-template-columns: 28px 1fr auto; gap: var(--sp-3); align-items: center;
+    padding: 12px 10px; border-radius: var(--r-sm); text-decoration: none; color: inherit;
+  }
+  .chapter-toc-item a:hover { background: var(--surface-2); }
+  .chapter-toc-title { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+  .chapter-toc-teaser { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+  .chapter-toc-badge { border-radius: var(--r-pill); font-size: 11px; padding: 4px 9px; }
+  .chapter-toc-badge--ready { background: var(--accent-rose-soft); color: var(--brand); }
+  .chapter-toc-badge--pending, .chapter-toc-badge--generating { background: var(--skeleton); color: var(--text-muted); }
+  .chapter-toc-badge--failed { background: var(--error-soft); color: var(--error); }
+
+  /* ---------- 리포트 본문 블록 ---------- */
+  .rpt-chip {
+    display: inline-flex; align-items: center; padding: 6px 11px; border-radius: var(--r-pill);
+    font-size: 12px; font-weight: 600; background: var(--accent-rose-soft); color: var(--brand);
+  }
+  .rpt-chip--gold { background: rgba(216, 88, 120, 0.12); color: var(--rose-text); }
+  .rpt-chip--indigo { background: rgba(79, 21, 63, 0.08); color: var(--brand-dark); }
+  .rpt-chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .rpt-score-track, .oheang-track, .lc-stat-track { background: var(--skeleton); }
+  .rpt-score-fill { background: linear-gradient(90deg, var(--brand), var(--accent-rose)); }
+  .rpt-score-fill--indigo { background: linear-gradient(90deg, var(--brand-dark), var(--brand)); }
+  .rpt-score-label { color: var(--text-mid); font-size: 13px; }
+
+  .rpt-os-line { font-size: 13px; line-height: 1.7; color: var(--text-mid); }
+  .rpt-os-line > span {
+    display: inline-block; margin-right: 6px; padding: 3px 8px; border-radius: var(--r-pill);
+    background: var(--accent-rose-soft); color: var(--brand); font-size: 11px; font-weight: 700;
+  }
+
+  .rpt-compare { border: 1px solid var(--border); border-radius: 18px; background: var(--surface); }
+  .rpt-compare-label { font-size: 12px; font-weight: 700; }
+  .rpt-compare-side--right .rpt-compare-label { color: var(--rose-text); }
+  .rpt-compare-side--left .rpt-compare-label { color: var(--brand); }
+  .rpt-compare-text { font-size: 13px; color: var(--text-mid); line-height: 1.65; }
+
+  .rpt-verdict { border-radius: var(--r-sm); }
+  .rpt-verdict-dot { width: 9px; height: 9px; border-radius: 999px; background: currentColor; flex: none; }
+  .rpt-verdict--go { color: var(--success); }
+  .rpt-verdict--slow { color: var(--warning); }
+  .rpt-verdict--stop { color: var(--error); }
+  .rpt-verdict--warm { color: var(--accent-rose); }
+  .rpt-verdict--info { color: var(--brand); }
+  .rpt-verdict--neutral { color: var(--text-muted); }
+
+  .rpt-calendar-stars { display: inline-flex; gap: 2px; color: var(--accent-rose); }
+  .rpt-star { width: 14px; height: 14px; }
+  .rpt-star:not(.is-on) { color: var(--rose-pale); }
+
+  .rpt-quote--tip, .rpt-timeline-key-point { display: flex; align-items: flex-start; gap: var(--sp-2); }
+  .rpt-quote--tip .yk-icon, .rpt-timeline-key-point .yk-icon {
+    width: 18px; height: 18px; margin-top: 3px; color: var(--accent-rose); flex: none;
+  }
+
+  /* 교체한 이모지 자리의 아이콘 크기 */
+  .report-trust-icon, .compat-concern-icon, .report-toc-lock {
+    display: inline-flex; align-items: center; justify-content: center; color: var(--brand);
+  }
+  .report-trust-icon .yk-icon { width: 22px; height: 22px; }
+  .compat-concern-icon .yk-icon { width: 24px; height: 24px; }
+  .report-toc-lock { color: var(--text-muted); }
+  .report-toc-lock .yk-icon { width: 16px; height: 16px; }
+
+  /* ---------- 소셜 로그인 (브랜드 색은 각 서비스 가이드라인이라 유지) ---------- */
+  .social-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    min-height: 50px; padding: 0 18px; border: 0; border-radius: var(--r-field);
+    font-family: var(--font-sans); font-size: 15px; font-weight: 700; text-decoration: none; cursor: pointer;
+  }
+  .social-btn.kakao { background: #FEE500; color: #191600; }
+  .social-btn.naver { background: #03C75A; color: #FFFFFF; }
+  .social-btn:hover { filter: brightness(0.96); }
+
+  /* ---------- 사전 / 정책 ---------- */
+  .dict-term-name { font-family: var(--font-sans); font-weight: 750; letter-spacing: -0.02em; color: var(--text); }
+  .dict-term-desc { color: var(--text-mid); font-size: 14px; line-height: 1.7; }
+  .policy-section h3 { font-family: var(--font-sans); font-weight: 750; letter-spacing: -0.02em; }
+  .policy-table-wrap, .admin-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 0 var(--sp-4); }
+  .policy-table { border-radius: var(--r-field); overflow: hidden; font-size: 13px; }
+  .policy-table th, .policy-table td { border-color: var(--border); padding: 10px 12px; line-height: 1.7; }
+  .policy-table th { background: var(--accent-rose-soft); color: var(--brand); font-weight: 700; white-space: nowrap; }
+
+  /* ---------- 푸터 ---------- */
+  .business-footer { color: var(--text-muted); font-size: 12px; line-height: 1.8; border-top: 1px solid var(--border); }
+  .business-footer a { color: var(--text-muted); }
+
+  /* ---------- 접근성 보정 (2026-09-28 검증 결과 반영) ----------
+     실제 렌더 화면을 훑어 찾아낸 항목들: 터치 영역 44px 미만, 명암비 미달. */
+
+  /* 헤더의 로고/코인 칩이 44px보다 작아 터치하기 어려웠다. */
+  .site-header-logo { min-height: 44px; padding: 4px 2px; }
+  .site-header-coin, .site-header-login { min-height: 44px; }
+
+  /* 체크박스: 기본 13px은 너무 작다. 입력 요소 자체를 44x44로 만들어 터치 영역을
+     확보하고(pseudo-element로는 히트 테스트가 안 넓어진다 — 실제로 클릭 테스트해서 확인),
+     눈에 보이는 상자는 가운데 22px로 그린다. */
+  .check-row { display: flex; align-items: center; gap: 6px; min-height: 44px; margin: var(--sp-2) 0 var(--sp-4); }
+  .check-row input[type="checkbox"], .privacy-check input[type="checkbox"] {
+    appearance: none;
+    position: relative;
+    width: 44px; height: 44px; min-height: 44px; flex: none; margin: 0 -11px; padding: 0;
+    border: 0; background: transparent; cursor: pointer;
+  }
+  .check-row input[type="checkbox"]::after, .privacy-check input[type="checkbox"]::after {
+    content: "";
+    position: absolute; left: 50%; top: 50%;
+    width: 22px; height: 22px; transform: translate(-50%, -50%);
+    border: 1.5px solid var(--border-strong); border-radius: 7px; background: var(--surface);
+  }
+  .check-row input[type="checkbox"]:checked::after, .privacy-check input[type="checkbox"]:checked::after {
+    background: var(--brand); border-color: var(--brand);
+  }
+  .check-row input[type="checkbox"]:checked::before, .privacy-check input[type="checkbox"]:checked::before {
+    content: ""; position: absolute; z-index: 1;
+    left: 50%; top: 50%; width: 6px; height: 11px; margin: -7px 0 0 -3px;
+    border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
+  }
+  .check-row input[type="checkbox"]:focus-visible::after,
+  .privacy-check input[type="checkbox"]:focus-visible::after { box-shadow: 0 0 0 3px var(--focus-ring); }
+  .check-row label { margin: 0; display: flex; align-items: center; min-height: 44px; cursor: pointer; font-weight: 500; font-size: 14px; }
+
+  /* 세그먼트/성별 칩도 44px 확보 */
+  .compat-stage-chip, .compat-gender-chip { min-height: 44px; }
+
+  /* 명암비: 로즈를 작은 글자색으로 쓰던 자리를 한 단계 진한 파생색으로 */
+  .chapter-toc-num, .rpt-section-index, .report-card-heart { color: var(--rose-text); }
+  .center-state small { color: var(--text-muted); }
+
+  /* 체크박스 자체의 터치 영역을 44px로 넓힌다(시각 크기는 22px 유지). */
+  .check-row input[type="checkbox"], .privacy-check input[type="checkbox"] { position: relative; }
+  .check-row input[type="checkbox"]::before, .privacy-check input[type="checkbox"]::before {
+    content: "";
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 44px; height: 44px;
+    transform: translate(-50%, -50%);
+  }
+
+  .complete-badge .yk-icon { width: 26px; height: 26px; }
+  .complete-title { font-family: var(--font-sans); font-weight: 750; letter-spacing: -0.03em; }
+
+  /* ---------- 오늘의 운세 지표 3칸 ---------- */
+  .fortune-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); margin-top: var(--sp-5); }
+  .fortune-fact {
+    padding: 14px 10px; text-align: center;
+    border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2);
+  }
+  .fortune-fact-label { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+  .fortune-fact-value { font-family: var(--font-sans); font-size: 14px; font-weight: 750; letter-spacing: -0.02em; color: var(--text); line-height: 1.5; }
+
+  /* ---------- 인라인 피드백 (성공 / 오류) ----------
+     결제 실패·취소, 구독 처리 결과, 폼 검증 오류를 같은 규격으로 보여준다.
+     (이 서비스는 결제 실패 전용 페이지 없이 플래시 메시지로 안내하는 구조라,
+      그 메시지가 눈에 잘 들어오게 컴포넌트로 통일했다.) */
+  .feedback {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: var(--sp-4);
+    padding: 14px 15px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .feedback .yk-icon { width: 18px; height: 18px; margin-top: 2px; flex: none; }
+  .feedback-body { min-width: 0; }
+  .feedback ul { margin: 6px 0 0; padding-left: 18px; }
+
+  .feedback--success { background: var(--success-soft); border-color: rgba(31, 122, 90, 0.28); color: var(--success); }
+  .feedback--error { background: var(--error-soft); border-color: rgba(179, 36, 63, 0.26); color: var(--error); }
+  .feedback--info { background: var(--accent-rose-soft); border-color: var(--border); color: var(--brand); }

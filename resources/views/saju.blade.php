@@ -52,22 +52,24 @@
   @include('partials.site-header')
 
   @if (session('billing_success'))
-    <div class="placeholder-note" style="margin-top:14px;">{{ session('billing_success') }}</div>
+    <div class="feedback feedback--success" role="status">
+      @include('partials.icon', ['name' => 'check'])
+      <div class="feedback-body">{{ session('billing_success') }}</div>
+    </div>
   @endif
   @if (session('billing_error'))
-    <div class="card" style="border-color: var(--seal); color: var(--seal-deep); margin-top:14px;">{{ session('billing_error') }}</div>
+    <div class="feedback feedback--error" role="alert">
+      @include('partials.icon', ['name' => 'alert'])
+      <div class="feedback-body">{{ session('billing_error') }}</div>
+    </div>
   @endif
 
-  <div class="hero @if ($hideCalcChrome) is-hidden @endif">
-    <svg class="seal-mark" viewBox="0 0 64 64" aria-hidden="true">
-      <rect x="4" y="4" width="56" height="56" rx="8" fill="none" stroke="var(--seal)" stroke-width="3"></rect>
-      <text x="32" y="39" text-anchor="middle" font-family="Song Myung, serif" font-size="19" letter-spacing="-0.5" fill="var(--seal)">연록</text>
-    </svg>
-    <div class="hero-text">
-      <h1>연록</h1>
-      <p>사주팔자로 읽는 나의 연애 기질과 궁합, 그리고 사주 맥락을 아는 연애 코치</p>
-      <p class="sub">천을귀인처럼 좋은 인연이 닿기를. 생년월일시를 입력해 시작하세요.</p>
-    </div>
+  {{-- (2026-09-28 개편) UI 전달본의 화면 상단 구성 — 상단바(제목/뒤로) + 보조 설명.
+       기존 인장 SVG 히어로를 대체했다. 문구는 그대로다. --}}
+  @include('partials.app-topbar', ['title' => '사주 풀이', 'back' => route('sagu.index')])
+  <div class="page-lead-group @if ($hideCalcChrome) is-hidden @endif">
+    <p class="page-lead">사주팔자로 읽는 나의 연애 기질과 궁합, 그리고 사주 맥락을 아는 연애 코치</p>
+    <p class="page-lead page-lead--sub">천을귀인처럼 좋은 인연이 닿기를. 생년월일시를 입력해 시작하세요.</p>
   </div>
 
   {{-- (2026-09-13 수정) 이름/순서 2차 개편 — 01.나의 연애 나침반/02.우리의 연애온도/
@@ -269,22 +271,22 @@
         <div class="compat-context-hint">선택하신 내용에 맞춰 프리미엄 리포트의 분석 방향이 달라져요.</div>
         <div class="compat-concern-grid" id="c-concern-grid">
           <button type="button" class="compat-concern-card" data-concern="continuity">
-            <span class="compat-concern-icon">♾️</span>
+            <span class="compat-concern-icon">@include('partials.icon', ['name' => 'infinity'])</span>
             <span class="compat-concern-title">지속 가능성</span>
             <span class="compat-concern-desc">잘 맞는지, 이대로 이어질 수 있는지</span>
           </button>
           <button type="button" class="compat-concern-card" data-concern="growth">
-            <span class="compat-concern-icon">📈</span>
+            <span class="compat-concern-icon">@include('partials.icon', ['name' => 'chart'])</span>
             <span class="compat-concern-title">관계 발전</span>
             <span class="compat-concern-desc">연애·결혼 등 다음 단계로 갈 수 있을지</span>
           </button>
           <button type="button" class="compat-concern-card" data-concern="flow">
-            <span class="compat-concern-icon">📅</span>
+            <span class="compat-concern-icon">@include('partials.icon', ['name' => 'calendar'])</span>
             <span class="compat-concern-title">앞으로의 흐름</span>
             <span class="compat-concern-desc">가까워질 시기·멀어질 시기가 궁금할 때</span>
           </button>
           <button type="button" class="compat-concern-card" data-concern="friction">
-            <span class="compat-concern-icon">🛡️</span>
+            <span class="compat-concern-icon">@include('partials.icon', ['name' => 'shield'])</span>
             <span class="compat-concern-title">충돌 완화</span>
             <span class="compat-concern-desc">싸움·오해·마찰이 반복되는 이유</span>
           </button>
@@ -484,7 +486,7 @@
           <div id="chat-log"></div>
           <div id="chat-typing">코치가 답변을 쓰고 있어요…</div>
           <div class="chat-input-row">
-            <input type="text" id="chat-input" placeholder="편하게 이야기해 주세요…" autocomplete="off">
+            <input type="text" id="chat-input" placeholder="편하게 이야기해 주세요…" autocomplete="off" aria-label="코치에게 보낼 메시지">
             <button class="btn" id="chat-send">보내기</button>
           </div>
           <div class="hint" id="chat-credits" style="margin-top:8px; margin-bottom:0;"></div>

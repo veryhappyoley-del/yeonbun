@@ -14,11 +14,11 @@
   @include('partials.site-header')
 
   @if ($fortune)
-    <div class="hero">
-      <div class="hero-text">
-        <p class="sub">{{ $fortune->fortune_date->format('Y년 n월 j일') }}</p>
-        <h1>{{ $fortune->content['headline'] ?? '오늘의 운세' }}</h1>
-      </div>
+    {{-- (2026-09-28 개편) 전달본 상단바 + 날짜 아이브로. 내용은 그대로다. --}}
+    @include('partials.app-topbar', ['title' => '오늘의 운세', 'back' => route('fortune.index')])
+    <div class="section-copy compact">
+      <span class="eyebrow">{{ $fortune->fortune_date->format('Y.m.d') }}</span>
+      <h1>{{ $fortune->content['headline'] ?? '오늘의 운세' }}</h1>
     </div>
 
     <div class="card">
@@ -26,18 +26,20 @@
         <p class="rpt-p">{{ $paragraph }}</p>
       @endforeach
 
-      <div class="field-row" style="margin-top:16px; text-align:center;">
-        <div>
-          <div class="hint">오늘의 색</div>
-          <strong>{{ $fortune->content['lucky_color'] ?? '-' }}</strong>
+      {{-- (2026-09-19 개편) 폼용 .field-row를 빌려 쓰던 걸 지표 전용 카드 3칸으로 바꿨다.
+           값과 표시 항목은 그대로다. --}}
+      <div class="fortune-facts">
+        <div class="fortune-fact">
+          <div class="fortune-fact-label">오늘의 색</div>
+          <div class="fortune-fact-value">{{ $fortune->content['lucky_color'] ?? '-' }}</div>
         </div>
-        <div>
-          <div class="hint">오늘의 시간</div>
-          <strong>{{ $fortune->content['lucky_time'] ?? '-' }}</strong>
+        <div class="fortune-fact">
+          <div class="fortune-fact-label">오늘의 시간</div>
+          <div class="fortune-fact-value">{{ $fortune->content['lucky_time'] ?? '-' }}</div>
         </div>
-        <div>
-          <div class="hint">오늘의 키워드</div>
-          <strong>{{ $fortune->content['keyword'] ?? '-' }}</strong>
+        <div class="fortune-fact">
+          <div class="fortune-fact-label">오늘의 키워드</div>
+          <div class="fortune-fact-value">{{ $fortune->content['keyword'] ?? '-' }}</div>
         </div>
       </div>
     </div>

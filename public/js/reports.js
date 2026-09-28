@@ -101,8 +101,10 @@
       if (ch.teaser) body.appendChild(txt('div', 'report-toc-teaser', ch.teaser));
       item.appendChild(body);
 
-      var lock = txt('span', 'report-toc-lock', '🔒');
+      // (2026-09-19 개편) 자물쇠 이모지 → 얇은 선 아이콘.
+      var lock = el('span', { class: 'report-toc-lock' });
       lock.setAttribute('aria-hidden', 'true');
+      lock.appendChild(iconEl('lock'));
       item.appendChild(lock);
 
       list.appendChild(item);
@@ -115,18 +117,47 @@
   // 교차판독/6중 멀티 엔진 검증" 같은 과장된 방법론 문구 대신, 우리가 실제로 만들어서 검증한
   // 기능만 정직하게 나열한다(20단계: Tool Use 전환+적응형 재시도로 챕터 생성 신뢰성을 실제로
   // 개선했고, 21단계: 실패 챕터는 항상 재시도 가능, 리포트함에 영구 저장됨 — 전부 사실).
+  // (2026-09-19 개편) 아이콘을 이모지에서 얇은 선 SVG로 교체했다 — 개편 시안의 규칙
+  // (아이콘은 얇은 선과 일정한 크기로 통일, 장식용 이모지로 대체하지 않는다).
+  // resources/views/partials/icon.blade.php와 같은 모양을 쓴다.
+  var ICON_PATHS = {
+    book: '<path d="M12 7.2c-1.3-1-3.1-1.5-4.9-1.5-1 0-1.4.15-1.4.5v11.3c0 .3.4.5 1 .5 1.7 0 3.5.5 5.3 1.5"/><path d="M12 7.2c1.3-1 3.1-1.5 4.9-1.5 1 0 1.4.15 1.4.5v11.3c0 .3-.4.5-1 .5-1.7 0-3.5.5-5.3 1.5V7.2Z"/>',
+    clock: '<circle cx="12" cy="12" r="8"/><path d="M12 7.6V12l3 1.8"/>',
+    refresh: '<path d="M19 12a7 7 0 1 1-2.1-5"/><path d="M19.2 5v4.3h-4.3"/>',
+    infinity: '<path d="M9.4 12c0 1.9-1.4 3.3-3.1 3.3S3.2 13.9 3.2 12s1.4-3.3 3.1-3.3c2.9 0 4.3 6.6 7.2 6.6 1.7 0 3.1-1.4 3.1-3.3s-1.4-3.3-3.1-3.3c-2.9 0-4.3 6.6-7.2 6.6"/>',
+    search: '<circle cx="11" cy="11" r="6"/><path d="m15.5 15.5 3.5 3.5"/>',
+    lock: '<rect x="5" y="10.5" width="14" height="9" rx="2.2"/><path d="M8.4 10.5V8.2a3.6 3.6 0 0 1 7.2 0v2.3"/>'
+  };
+
+  // 아이콘 SVG 요소를 만든다. 장식이므로 aria-hidden.
+  function iconEl(name, cls) {
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'yk-icon ' + (cls || ''));
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '1.6');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.innerHTML = ICON_PATHS[name] || ICON_PATHS.search;
+    return svg;
+  }
+
   var TRUST_BADGES = [
-    { icon: '📖', head: '20개 챕터', desc: '주제별로 나눠 깊이 있게 분석해요' },
-    { icon: '⏱️', head: '1~2분 완성', desc: '결제 즉시 여러 챕터가 동시에 생성돼요' },
-    { icon: '🔄', head: '실패해도 안심', desc: '일부만 실패해도 그 챕터만 다시 생성돼요' },
-    { icon: '♾️', head: '평생 소장', desc: '리포트함에 저장돼 언제든 다시 볼 수 있어요' }
+    { icon: 'book', head: '20개 챕터', desc: '주제별로 나눠 깊이 있게 분석해요' },
+    { icon: 'clock', head: '1~2분 완성', desc: '결제 즉시 여러 챕터가 동시에 생성돼요' },
+    { icon: 'refresh', head: '실패해도 안심', desc: '일부만 실패해도 그 챕터만 다시 생성돼요' },
+    { icon: 'infinity', head: '평생 소장', desc: '리포트함에 저장돼 언제든 다시 볼 수 있어요' }
   ];
 
   function buildTrustBadges() {
     var grid = el('div', { class: 'report-trust-grid' });
     TRUST_BADGES.forEach(function (b) {
       var item = el('div', { class: 'report-trust-item' });
-      item.appendChild(txt('div', 'report-trust-icon', b.icon));
+      var ic = el('div', { class: 'report-trust-icon' });
+      ic.appendChild(iconEl(b.icon));
+      item.appendChild(ic);
       item.appendChild(txt('div', 'report-trust-head', b.head));
       item.appendChild(txt('div', 'report-trust-desc', b.desc));
       grid.appendChild(item);
@@ -734,6 +765,7 @@
   }
 
   window.YeonbunReports = {
+    iconEl: iconEl,
     attachSingleCTA: attachSingleCTA,
     attachCompatCTA: attachCompatCTA,
     attachUnrequitedCTA: attachUnrequitedCTA,

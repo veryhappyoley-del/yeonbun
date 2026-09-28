@@ -18,6 +18,6 @@
     @endforeach
   </div>
   @if (!empty($content['key_point']) && is_scalar($content['key_point']))
-    <div class="rpt-quote">💡 {{ $content['key_point'] }}</div>
+    <div class="rpt-quote rpt-quote--tip">@include('partials.icon', ['name' => 'bulb']) <span>{{ $content['key_point'] }}</span></div>
   @endif
 @endif

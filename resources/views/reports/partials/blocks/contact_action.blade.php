@@ -16,21 +16,23 @@
 --}}
 @php
   $action = is_string($content['action'] ?? null) ? $content['action'] : null;
+  // (2026-09-19 개편) 이모지(❌⏳💬❤️🚫) → 얇은 선 아이콘(partials/icon.blade.php).
+  // 의미(권장 행동)는 그대로이고 표현만 시안 규격으로 통일했다.
   $variants = [
-    'no_contact_now' => ['emoji' => '❌', 'class' => 'stop'],
-    'wait' => ['emoji' => '⏳', 'class' => 'slow'],
-    'light_contact' => ['emoji' => '💬', 'class' => 'info'],
-    'heartfelt_moment' => ['emoji' => '❤️', 'class' => 'warm'],
-    'no_contact_period' => ['emoji' => '🚫', 'class' => 'stop'],
+    'no_contact_now' => ['icon' => 'close', 'class' => 'stop'],
+    'wait' => ['icon' => 'calendar', 'class' => 'slow'],
+    'light_contact' => ['icon' => 'chat', 'class' => 'info'],
+    'heartfelt_moment' => ['icon' => 'heart', 'class' => 'warm'],
+    'no_contact_period' => ['icon' => 'lock', 'class' => 'stop'],
   ];
-  $variant = $variants[$action] ?? ['emoji' => '⚪', 'class' => 'neutral'];
+  $variant = $variants[$action] ?? ['icon' => 'sparkle', 'class' => 'neutral'];
   $label = is_string($content['action_label'] ?? null) ? trim($content['action_label']) : '';
   $reason = is_string($content['reason'] ?? null) ? trim($content['reason']) : '';
 @endphp
 @if ($label !== '' || $reason !== '')
   <div class="rpt-verdict rpt-verdict--{{ $variant['class'] }}">
     <div class="rpt-verdict-badge">
-      <span aria-hidden="true">{{ $variant['emoji'] }}</span>
+      @include('partials.icon', ['name' => $variant['icon']])
       @if ($label !== ''){{ $label }}@endif
     </div>
     @if ($reason !== '')<p class="rpt-p" style="margin-top:8px;">{{ $reason }}</p>@endif

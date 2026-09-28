@@ -24,35 +24,38 @@
 
   @include('partials.site-header')
 
-  <div class="hero">
-    <svg class="seal-mark" viewBox="0 0 64 64" aria-hidden="true">
-      <rect x="4" y="4" width="56" height="56" rx="8" fill="none" stroke="var(--seal)" stroke-width="3"></rect>
-      <text x="32" y="39" text-anchor="middle" font-family="Song Myung, serif" font-size="19" letter-spacing="-0.5" fill="var(--seal)">연록</text>
-    </svg>
-    <div class="hero-text">
-      <h1>오늘의 운세</h1>
-      <p>매일 새벽, 그날의 사주 흐름을 이메일로 보내드려요.</p>
-    </div>
-  </div>
+  {{-- (2026-09-28 개편) UI 전달본의 화면 상단 구성 — 상단바(제목/뒤로) + 보조 설명.
+       기존 인장 SVG 히어로를 대체했다. 문구는 그대로다. --}}
+  @include('partials.app-topbar', ['title' => '오늘의 운세', 'back' => route('my.index')])
+  <p class="page-lead">매일 새벽, 그날의 사주 흐름을 이메일로 보내드려요.</p>
 
   @if (session('fortune_success'))
-    <div class="card" style="border-color: var(--seal);">{{ session('fortune_success') }}</div>
+    <div class="feedback feedback--success" role="status">
+      @include('partials.icon', ['name' => 'check'])
+      <div class="feedback-body">{{ session('fortune_success') }}</div>
+    </div>
   @endif
   @if (session('fortune_error'))
-    <div class="card" style="border-color: var(--seal); color: var(--seal-deep);">{{ session('fortune_error') }}</div>
+    <div class="feedback feedback--error" role="alert">
+      @include('partials.icon', ['name' => 'alert'])
+      <div class="feedback-body">{{ session('fortune_error') }}</div>
+    </div>
   @endif
   {{-- (2026-09-08 추가) "저장하기 눌러도 아무 반응이 없다"는 피드백의 실제 원인 —
        성별 칩(hidden input)처럼 브라우저가 자체적으로 검증해주지 않는 필수값을
        빼먹으면 서버 검증에서 막히는데, 이 화면 어디에도 그 실패 사유를 보여주는
        곳이 없어서 사용자 입장에선 버튼이 그냥 안 눌리는 것처럼 보였다. --}}
   @if ($errors->any())
-    <div class="card" style="border-color: var(--seal); color: var(--seal-deep);">
-      입력을 다시 확인해 주세요.
-      <ul style="margin:6px 0 0; padding-left:18px;">
-        @foreach ($errors->all() as $message)
-          <li>{{ $message }}</li>
-        @endforeach
-      </ul>
+    <div class="feedback feedback--error" role="alert">
+      @include('partials.icon', ['name' => 'alert'])
+      <div class="feedback-body">
+        입력을 다시 확인해 주세요.
+        <ul>
+          @foreach ($errors->all() as $message)
+            <li>{{ $message }}</li>
+          @endforeach
+        </ul>
+      </div>
     </div>
   @endif
 

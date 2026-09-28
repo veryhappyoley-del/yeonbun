@@ -62,16 +62,10 @@
 
   @include('partials.site-header')
 
-  <div class="hero">
-    <svg class="seal-mark" viewBox="0 0 64 64" aria-hidden="true">
-      <rect x="4" y="4" width="56" height="56" rx="8" fill="none" stroke="var(--seal)" stroke-width="3"></rect>
-      <text x="32" y="39" text-anchor="middle" font-family="Song Myung, serif" font-size="19" letter-spacing="-0.5" fill="var(--seal)">연록</text>
-    </svg>
-    <div class="hero-text">
-      <h1>사전</h1>
-      <p>리포트에 나오는 명리학 용어, 여기서 쉽게 찾아보세요.</p>
-    </div>
-  </div>
+  {{-- (2026-09-28 개편) UI 전달본의 화면 상단 구성 — 상단바(제목/뒤로) + 보조 설명.
+       기존 인장 SVG 히어로를 대체했다. 문구는 그대로다. --}}
+  @include('partials.app-topbar', ['title' => '사전'])
+  <p class="page-lead">리포트에 나오는 명리학 용어, 여기서 쉽게 찾아보세요.</p>
 
   @foreach ($dictSections as $section)
     <div class="card">

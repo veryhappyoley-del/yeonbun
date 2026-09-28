@@ -17,5 +17,5 @@
 <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
 <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
 <link rel="manifest" href="{{ asset('site.webmanifest') }}">
-<meta name="theme-color" content="#ede6d6" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1b1712" media="(prefers-color-scheme: dark)">
+{{-- (2026-09-28) UI 전달본 기준 라이트 단일 테마. 주소창 색도 하나로 고정한다. --}}
+<meta name="theme-color" content="#FFFAF8">

@@ -922,7 +922,7 @@
     out.appendChild(teaserHost);
     if (window.YeonbunReports) {
       startChapterPreview(teaserHost, 'love_fortune', 'origin_profile', window.YeonbunReports.buildSingleInput(currentSajuA), {
-        label: '🔍 내 연애, 더 깊이 보면',
+        label: '내 연애, 더 깊이 보면',
         ctaMessage: '전체 내용은 나의 연애 나침반 리포트에서 이어져요 — 아래 20개 챕터도 함께 준비돼 있어요.'
       });
     }
@@ -1133,7 +1133,7 @@
       primaryConcern: primaryConcern || null,
       concernDetail: concernDetail || null
     }, {
-      label: '🔍 이 궁합, 더 자세히 보면',
+      label: '이 궁합, 더 자세히 보면',
       primaryConcern: primaryConcern,
       concernDetail: concernDetail,
       ctaMessage: '전체 내용은 우리의 연애온도 리포트에서 이어져요 — 아래 12개 챕터도 함께 준비돼 있어요.'
@@ -1208,7 +1208,7 @@
       notes: compat.notes,
       relation: compat.rel
     }, {
-      label: '🔍 이 짝사랑, 더 자세히 보면',
+      label: '이 짝사랑, 더 자세히 보면',
       ctaMessage: '전체 내용은 나를 좋아할까.? 리포트에서 이어져요 — 언제·어떻게 다가가야 할지까지 담겨 있어요.'
     });
 
@@ -1291,7 +1291,7 @@
       breakupReason: history.breakupReason,
       breakupReasonDetail: history.breakupReasonDetail
     }, {
-      label: '🔍 우리 관계, 더 자세히 보면',
+      label: '우리 관계, 더 자세히 보면',
       ctaMessage: '전체 내용은 다시 만날 수 있을까? 리포트에서 이어져요 — 타이밍 캘린더부터 30일 행동 계획까지 담겨 있어요.'
     });
 
@@ -1391,7 +1391,7 @@
 
     if (question && answer !== '') {
       var answerCard = el('div', { class: 'rpt-concern-answer' });
-      answerCard.appendChild(txt('div', 'rpt-concern-answer-label', '🔍 회원님이 가장 궁금해하신 것'));
+      answerCard.appendChild(txt('div', 'rpt-concern-answer-label', '회원님이 가장 궁금해하신 것'));
       answerCard.appendChild(txt('div', 'rpt-concern-answer-question', question));
       answerCard.appendChild(txt('div', 'rpt-concern-answer-body', answer));
       host.appendChild(answerCard);
@@ -1438,7 +1438,7 @@
   //     궁금한 것" 값(연애운분석은 안 넘기면 됨).
   function startChapterPreview(host, reportType, chapterKey, input, opts) {
     opts = opts || {};
-    var label = opts.label || '🔍 더 자세히 보면';
+    var label = opts.label || '더 자세히 보면';
     var ctaMessage = opts.ctaMessage || '';
     var primaryConcern = opts.primaryConcern || null;
     var concernDetail = opts.concernDetail || null;

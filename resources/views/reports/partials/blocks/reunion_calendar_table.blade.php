@@ -27,7 +27,14 @@
       @php $stars = max(1, min(5, (int) ($row['stars'] ?? 0))); @endphp
       <div class="rpt-calendar-row">
         <span class="rpt-calendar-period">{{ $row['periodLabel'] }}</span>
-        <span class="rpt-calendar-stars" aria-hidden="true">{{ str_repeat('⭐', $stars).str_repeat('☆', 5 - $stars) }}</span>
+        {{-- (2026-09-19 개편) 이모지 별(⭐/☆) → 같은 의미의 SVG 별. 점수 자체는 그대로다. --}}
+        <span class="rpt-calendar-stars" aria-label="{{ $stars }}점 / 5점">
+          @for ($i = 1; $i <= 5; $i++)
+            <svg class="rpt-star @if ($i <= $stars) is-on @endif" viewBox="0 0 24 24" aria-hidden="true"
+                 fill="{{ $i <= $stars ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="1.4"
+                 stroke-linejoin="round"><path d="m12 5 2.1 4.6 5 .6-3.7 3.4 1 4.9L12 16.1 7.6 18.5l1-4.9L4.9 10.2l5-.6L12 5Z"/></svg>
+          @endfor
+        </span>
         @if (!empty($row['action']))<span class="rpt-calendar-action">{{ $row['action'] }}</span>@endif
       </div>
     @endforeach

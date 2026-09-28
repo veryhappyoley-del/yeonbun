@@ -22,20 +22,14 @@
 
   @include('partials.site-header')
 
-  <div class="hero">
-    <svg class="seal-mark" viewBox="0 0 64 64" aria-hidden="true">
-      <rect x="4" y="4" width="56" height="56" rx="8" fill="none" stroke="var(--seal)" stroke-width="3"></rect>
-      <text x="32" y="39" text-anchor="middle" font-family="Song Myung, serif" font-size="19" letter-spacing="-0.5" fill="var(--seal)">연록</text>
-    </svg>
-    <div class="hero-text">
-      <h1>마이페이지</h1>
-      @auth
-        <p>{{ auth()->user()->name }}님, 오늘도 좋은 인연 되세요.</p>
-      @else
-        <p>로그인하면 코인 충전, 프리미엄 리포트 구매, 연애 코치 상담을 이용할 수 있어요.</p>
-      @endauth
-    </div>
-  </div>
+  {{-- (2026-09-28 개편) UI 전달본의 화면 상단 구성 — 상단바(제목/뒤로) + 보조 설명.
+       기존 인장 SVG 히어로를 대체했다. 문구는 그대로다. --}}
+  @include('partials.app-topbar', ['title' => '마이페이지'])
+  @auth
+    <p class="page-lead">{{ auth()->user()->name }}님, 오늘도 좋은 인연 되세요.</p>
+  @else
+    <p class="page-lead">로그인하면 코인 충전, 프리미엄 리포트 구매, 연애 코치 상담을 이용할 수 있어요.</p>
+  @endauth
 
   @auth
     <div class="card">
@@ -62,6 +56,14 @@
         @endif
       </div>
       <a class="chip-link" href="{{ route('fortune.index') }}">구독 관리 바로가기 &rarr;</a>
+    </div>
+
+    {{-- (2026-09-28) 하단 탭바를 전달본의 4칸 구성(홈/사주/기록/마이)으로 바꾸면서
+         "사전" 탭이 빠졌다. 경로가 사라지지 않도록 마이페이지에 진입점을 남긴다. --}}
+    <div class="card">
+      <h2>명리학 사전</h2>
+      <p class="hint">리포트에 나오는 용어를 쉬운 말로 풀어뒀어요.</p>
+      <a class="chip-link" href="{{ route('dictionary.index') }}">사전 보러가기 &rarr;</a>
     </div>
 
     <div class="card">

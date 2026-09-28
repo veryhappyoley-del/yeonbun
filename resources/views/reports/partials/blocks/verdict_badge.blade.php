@@ -4,7 +4,7 @@
 
     { "verdict": "continue|slow|reconsider", "verdict_label": "", "reason": "" }
 
-  verdict는 continue(🟢 계속 도전)/slow(🟡 천천히 접근)/reconsider(🔴 정리 고려) 중
+  verdict는 continue(계속 도전)/slow(천천히 접근)/reconsider(정리 고려) 중
   정확히 하나의 문자열이어야 합니다(ChapterGenerator는 이 필드를 자유 문자열로 강제할
   뿐 enum까지는 강제하지 않으므로, App\ReportTypes\Definitions\UnrequitedLoveReportType
   의 should_continue 챕터 promptGuidance가 이 세 값 중 하나만 쓰라고 텍스트로 지침을
@@ -14,19 +14,21 @@
 --}}
 @php
   $verdict = is_string($content['verdict'] ?? null) ? $content['verdict'] : null;
+  // (2026-09-19 개편) 신호등 이모지(🟢🟡🔴) 대신 같은 의미를 색점(.rpt-verdict-dot)으로
+  // 표현한다 — 개편 시안의 "아이콘은 얇은 선/일정한 크기, 장식용 이모지 금지" 규칙.
   $variants = [
-    'continue' => ['emoji' => '🟢', 'class' => 'go'],
-    'slow' => ['emoji' => '🟡', 'class' => 'slow'],
-    'reconsider' => ['emoji' => '🔴', 'class' => 'stop'],
+    'continue' => ['class' => 'go'],
+    'slow' => ['class' => 'slow'],
+    'reconsider' => ['class' => 'stop'],
   ];
-  $variant = $variants[$verdict] ?? ['emoji' => '⚪', 'class' => 'neutral'];
+  $variant = $variants[$verdict] ?? ['class' => 'neutral'];
   $label = is_string($content['verdict_label'] ?? null) ? trim($content['verdict_label']) : '';
   $reason = is_string($content['reason'] ?? null) ? trim($content['reason']) : '';
 @endphp
 @if ($label !== '' || $reason !== '')
   <div class="rpt-verdict rpt-verdict--{{ $variant['class'] }}">
     <div class="rpt-verdict-badge">
-      <span aria-hidden="true">{{ $variant['emoji'] }}</span>
+      <span class="rpt-verdict-dot" aria-hidden="true"></span>
       @if ($label !== ''){{ $label }}@endif
     </div>
     @if ($reason !== '')<p class="rpt-p" style="margin-top:8px;">{{ $reason }}</p>@endif
