@@ -91,7 +91,7 @@ class GenerateReportJob implements ShouldQueue
             $type = ReportTypeRegistry::get($report->type);
 
             if (! $type) {
-                Log::warning('결 챕터 리포트: 등록되지 않은 타입', ['report_id' => $report->id, 'type' => $report->type]);
+                Log::warning('연록 챕터 리포트: 등록되지 않은 타입', ['report_id' => $report->id, 'type' => $report->type]);
 
                 return;
             }
@@ -234,7 +234,7 @@ class GenerateReportJob implements ShouldQueue
             'last_error' => null,
         ]);
 
-        Log::info('결 챕터 리포트: 무료 미리보기 캐시를 재사용해 API 호출을 건너뜀', [
+        Log::info('연록 챕터 리포트: 무료 미리보기 캐시를 재사용해 API 호출을 건너뜀', [
             'report_id' => $report->id,
             'chapter_key' => $chapterSpec->key,
             'chapter_preview_id' => $cached->id,

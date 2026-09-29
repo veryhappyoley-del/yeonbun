@@ -10,7 +10,7 @@
 </head>
 <body class="phone-app has-bottom-nav">
 
-<div class="wrap wrap-narrow">
+<div class="wrap">
 
   @include('partials.site-header')
 
@@ -33,11 +33,13 @@
   {{-- (2026-09-28 개편) UI 전달본의 상단바 — 뒤로(리포트함) + 화면 제목 + 오른쪽 액션.
        PDF 저장 버튼의 id(report-pdf-btn)는 public/js/report-pdf.js가 쓰므로 그대로 둔다. --}}
   <div class="no-print">
+    {{-- (2026-09-28) 리포트 표지의 제목이 이 화면의 h1이라, 상단바는 heading으로 올리지 않는다. --}}
     @include('partials.app-topbar', [
+      'titleTag' => 'p',
       'title' => '상세 리포트',
       'back' => route('reports.index'),
       'backLabel' => '내 리포트함으로',
-      'actionIcon' => 'share',
+      'actionIcon' => 'download',
       'actionId' => 'report-pdf-btn',
       'actionLabel' => 'PDF로 저장',
     ])
@@ -53,7 +55,13 @@
         <span>{{ number_format($report->amount) }}원 결제완료</span>
         <span>{{ $report->updated_at->format('Y.m.d H:i') }}</span>
       </div>
-      <img src="{{ asset('img/handoff/orbit-hero.png') }}" alt="" aria-hidden="true" loading="lazy" decoding="async">
+      {{-- (2026-09-28) 표지 전용 자산. 예전에는 공용 orbit-hero.png에 CSS로
+           transform: scaleX(-1) + mask-image를 걸어 왼쪽을 흐리게 했는데, PDF 저장에 쓰는
+           html2canvas가 CSS 마스크를 지원하지 않아 PDF에서는 마스크 없이 찍혔고 320px에서
+           결제일자와 겹쳤다. 반전·페이드를 이미지에 미리 구워서 CSS 효과 의존을 없앤다.
+           표지는 화면 최상단이자 캡처 첫 섹션이라 lazy가 아니라 eager로 받는다. --}}
+      <img src="{{ asset('img/handoff/orbit-hero-cover.png') }}" width="440" height="231"
+           alt="" aria-hidden="true" loading="eager" decoding="async">
     </div>
 
     @if ($report->isChaptered())
@@ -64,6 +72,18 @@
           리포트 정보를 불러오는 중 문제가 있었어요. 잠시 후 다시 시도해 주세요.
         </div>
       @elseif ($chaptersReady)
+        {{-- (2026-09-28) 생성이 끝났지만 일부 챕터가 끝내 실패한 경우. 챕터별 "다시 생성"
+             버튼은 챕터 리더 안에 이미 있고, 여기서는 그래도 안 될 때의 경로를 알려준다. --}}
+        @if ($failedChapters > 0)
+          <div class="feedback feedback--error" role="alert">
+            @include('partials.icon', ['name' => 'alert'])
+            <div class="feedback-body">
+              <strong>{{ $failedChapters }}개 챕터를 만들지 못했어요.</strong>
+              각 챕터의 "다시 생성" 버튼으로 재시도할 수 있고, 나머지 챕터는 지금 그대로 보실 수 있어요.
+            </div>
+          </div>
+          @include('reports.partials.support-notice', ['report' => $report])
+        @endif
         @include('reports.partials.chapter-toc', ['report' => $report, 'type' => $reportType])
         @include('reports.partials.chapter-reader', ['report' => $report, 'type' => $reportType])
       @else

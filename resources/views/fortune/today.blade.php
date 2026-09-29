@@ -9,13 +9,14 @@
 </head>
 <body class="phone-app has-bottom-nav">
 
-<div class="wrap wrap-narrow">
+<div class="wrap">
 
   @include('partials.site-header')
 
   @if ($fortune)
     {{-- (2026-09-28 개편) 전달본 상단바 + 날짜 아이브로. 내용은 그대로다. --}}
-    @include('partials.app-topbar', ['title' => '오늘의 운세', 'back' => route('fortune.index')])
+    {{-- (2026-09-28) 본문에 이미 화면 주제목 h1이 있어서, 상단바 제목은 heading으로 올리지 않는다. --}}
+    @include('partials.app-topbar', ['titleTag' => 'p', 'title' => '오늘의 운세', 'back' => route('fortune.index')])
     <div class="section-copy compact">
       <span class="eyebrow">{{ $fortune->fortune_date->format('Y.m.d') }}</span>
       <h1>{{ $fortune->content['headline'] ?? '오늘의 운세' }}</h1>

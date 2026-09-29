@@ -92,21 +92,42 @@ class ReportController extends Controller
 
         $type = ReportTypeRegistry::get($data['type']);
 
-        $report = Report::create([
-            'user_id' => $request->user()->id,
-            'type' => $data['type'],
-            'schema_version' => $type->schemaVersion,
-            'order_id' => 'gyeol_report_'.Str::uuid()->toString(),
-            'amount' => $type->price,
-            'status' => 'pending',
-            'title' => $data['title'] ?? null,
-            'input' => $data['input'],
-        ]);
+        // (2026-09-28 추가) 중복 결제 방지 — 프런트에서도 버튼을 잠그지만(public/js/reports.js
+        // 의 lockButton), 연타·새로고침·뒤로가기 후 재시도처럼 프런트 잠금이 무력화되는 경로가
+        // 있어서 서버에서도 한 번 더 막는다. 같은 사용자가 같은 타입·같은 입력·같은 금액으로
+        // 아직 결제를 끝내지 않은(pending) 건이 최근에 있으면 새 주문을 만들지 않고 그 건을
+        // 그대로 재사용한다 — 그러면 결제창이 두 번 떠도 주문번호가 하나라 청구도 한 번이다.
+        // 오래된 pending은 입력을 바꿔 다시 시도한 흔적일 수 있어 재사용하지 않는다.
+        $report = Report::where('user_id', $request->user()->id)
+            ->where('type', $data['type'])
+            ->where('status', 'pending')
+            ->where('amount', $type->price)
+            ->where('created_at', '>=', now()->subMinutes(30))
+            ->latest('id')
+            ->get()
+            ->first(fn (Report $candidate) => $candidate->input == $data['input']);
+
+        if ($report) {
+            // 제목만 달라졌을 수 있으니(이름 입력을 고친 경우) 최신 값으로 맞춰 둔다.
+            $report->forceFill(['title' => $data['title'] ?? $report->title])->save();
+        } else {
+            $report = Report::create([
+                'user_id' => $request->user()->id,
+                'type' => $data['type'],
+                'schema_version' => $type->schemaVersion,
+                'order_id' => 'gyeol_report_'.Str::uuid()->toString(),
+                'amount' => $type->price,
+                'status' => 'pending',
+                'title' => $data['title'] ?? null,
+                'input' => $data['input'],
+            ]);
+        }
 
         return response()->json([
             'order_id' => $report->order_id,
             'amount' => $report->amount,
-            'order_name' => "결 {$type->label}",
+            // (2026-09-28) 위 BillingController와 같은 이유 — 결제창에 보이는 주문명의 구 브랜드명 교체.
+            'order_name' => "연록 {$type->label}",
             'customer_name' => $request->user()->name,
         ]);
     }
@@ -209,6 +230,10 @@ class ReportController extends Controller
                 && $report->chapters->whereIn('status', ['pending', 'generating'])->isEmpty();
 
             return view('reports.show', [
+                // (2026-09-28 추가) 끝내 만들어지지 않은 챕터 수. 0보다 크면 화면이
+                // 재시도 안내와 함께 문의·환불 경로를 보여준다(결제는 됐는데 콘텐츠를
+                // 못 받은 사용자가 막다른 길에 갇히지 않도록).
+                'failedChapters' => $report->chapters->where('status', 'failed')->count(),
                 'report' => $report,
                 'type' => $reportType ? ['label' => $reportType->label, 'price' => $reportType->price] : null,
                 'reportType' => $reportType,
@@ -232,6 +257,8 @@ class ReportController extends Controller
             'type' => self::LEGACY_TYPES[$report->type] ?? null,
             'reportType' => null,
             'chaptersReady' => false,
+            // 레거시 리포트에는 챕터 개념이 없다. 뷰가 두 경로를 같이 쓰므로 0으로 넘긴다.
+            'failedChapters' => 0,
             'data' => $data,
             'printReady' => $this->hasUsableContent($report),
         ]);

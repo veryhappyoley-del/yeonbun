@@ -9,7 +9,7 @@
 </head>
 <body class="phone-app has-bottom-nav">
 
-<div class="wrap wrap-narrow">
+<div class="wrap">
 
   @include('partials.site-header')
 
@@ -17,7 +17,8 @@
     {{-- (2026-09-19 개편) 텍스트 ✓ + 초록 원 → 팔레트에 맞춘 플럼 링 + 얇은 선 체크. --}}
   <div class="complete-badge" aria-hidden="true">@include('partials.icon', ['name' => 'check'])</div>
     <div class="complete-title">
-      <h2>결제가 완료됐어요</h2>
+      {{-- (2026-09-28) 이 화면에는 상단바가 없어 h1이 아예 없었다. 주제목을 h1로 올린다. --}}
+      <h1>결제가 완료됐어요</h1>
       <p>코인 {{ $payment->credits }}개가 충전됐어요. 이제 연애 코치와 이야기할 수 있어요.</p>
     </div>
 

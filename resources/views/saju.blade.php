@@ -20,6 +20,11 @@
       return [
           'key' => $type->key,
           'label' => $type->label,
+          // (2026-09-28 추가) 가격은 서버(ReportType::$price)가 유일한 출처다. 예전에는
+          // public/js/reports.js의 TYPE_INFO에 '9,900원' 같은 문자열을 따로 적어두고
+          // 두 곳을 수동으로 맞춰야 했는데, 한쪽만 바꾸면 화면 금액과 실제 청구액이
+          // 조용히 어긋난다. 결제 검증에 쓰는 값을 그대로 내려서 표기를 파생시킨다.
+          'price' => $type->price,
           'totalChapters' => $type->chapterCount(),
           'chapters' => collect($type->previewChapters())->map(function ($chapter) {
               return ['title' => $chapter->title, 'teaser' => $chapter->teaser];
@@ -76,17 +81,20 @@
        03.나를 좋아할까.?/04.다시 만날 수 있을까?/05.연애 코치 순서로 재배치하고(연애 코치를
        재회 다음, 재물운/커리어운보다 앞으로 옮김), 3번·4번 이름을 바꿨다. data-tab 값(내부
        키)은 그대로라 결제·리포트 조회 로직은 전혀 영향받지 않는다. --}}
-  <div class="tabs @if ($hideCalcChrome) is-hidden @endif" role="tablist">
-    <button class="tab-btn active" data-tab="single" role="tab">나의 연애 나침반</button>
-    <button class="tab-btn" data-tab="compat" role="tab">우리의 연애온도</button>
+  {{-- (2026-09-28) role="tab"만 있고 aria-selected/aria-controls가 없어서, 스크린리더가
+       "탭"이라고 읽으면서 어느 탭이 선택됐는지는 알려주지 못했다. 선택 상태·연결 패널·
+       roving tabindex(화살표 키 이동)를 전부 붙였다 — 갱신은 public/js/app.js가 한다. --}}
+  <div class="tabs @if ($hideCalcChrome) is-hidden @endif" role="tablist" aria-label="사주 종목 선택">
+    <button class="tab-btn active" data-tab="single" role="tab" id="tab-single" aria-controls="panel-single" aria-selected="true" tabindex="0">나의 연애 나침반</button>
+    <button class="tab-btn" data-tab="compat" role="tab" id="tab-compat" aria-controls="panel-compat" aria-selected="false" tabindex="-1">우리의 연애온도</button>
     {{-- (2026-08-31 추가) "나를 좋아할까.?" — #panel-compat을 그대로 재사용하는 탭이라
          data-tab 값은 unrequited지만 실제로 보여줄 패널은 app.js의 탭 클릭 핸들러가
          panel-compat으로 매핑한다. --}}
-    <button class="tab-btn" data-tab="unrequited" role="tab">나를 좋아할까.?</button>
+    <button class="tab-btn" data-tab="unrequited" role="tab" id="tab-unrequited" aria-controls="panel-compat" aria-selected="false" tabindex="-1">나를 좋아할까.?</button>
     {{-- (2026-08-31 추가) "다시 만날 수 있을까?" — 이별 히스토리 필드가 필요해서 궁합 폼을
          재사용하지 않고 별도 패널(#panel-reunion)로 뒀다. --}}
-    <button class="tab-btn" data-tab="reunion" role="tab">다시 만날 수 있을까?</button>
-    <button class="tab-btn" data-tab="chat" role="tab">연애 코치</button>
+    <button class="tab-btn" data-tab="reunion" role="tab" id="tab-reunion" aria-controls="panel-reunion" aria-selected="false" tabindex="-1">다시 만날 수 있을까?</button>
+    <button class="tab-btn" data-tab="chat" role="tab" id="tab-chat" aria-controls="panel-chat" aria-selected="false" tabindex="-1">연애 코치</button>
     {{-- (2026-09-08 추가) "재물운"/"커리어운" — #panel-single을 그대로 재사용하는 탭이다
          ("나를 좋아할까.?"가 #panel-compat을 재사용하는 것과 같은 방식). 생년월일시만
          있으면 되는 InputShape::Self 리포트라 새 패널이 필요 없고, app.js의 탭 클릭
@@ -94,8 +102,8 @@
          성별이 필요해서(App\ReportTypes\Definitions\WealthFortuneReportType 등 참고)
          #panel-single 안에 성별 칩(#s-gender-section, 기본 숨김)을 추가하고 이 두 탭에서만
          보여준다. --}}
-    <button class="tab-btn" data-tab="wealth" role="tab">재물운</button>
-    <button class="tab-btn" data-tab="career" role="tab">커리어운</button>
+    <button class="tab-btn" data-tab="wealth" role="tab" id="tab-wealth" aria-controls="panel-single" aria-selected="false" tabindex="-1">재물운</button>
+    <button class="tab-btn" data-tab="career" role="tab" id="tab-career" aria-controls="panel-single" aria-selected="false" tabindex="-1">커리어운</button>
   </div>
   <!-- "고민 상담 가이드" 탭은 상단 메뉴에서 뺐습니다(완성도가 낮다는 판단, 2026-08-24).
        #panel-guide 섹션 자체는 아래에 그대로 남아있어요 — public/js/app.js의 bindEvents()가
@@ -106,13 +114,13 @@
 
 
   <!-- ===================== 1. 나의 연애 나침반 ===================== -->
-  <section class="panel active" id="panel-single">
+  <section class="panel active" id="panel-single" role="tabpanel" aria-labelledby="tab-single" tabindex="0">
     <div class="card">
       <h2>생년월일시 입력</h2>
       <div class="field-row">
         <div>
           <label for="s-name">이름 (선택)</label>
-          <input type="text" id="s-name" placeholder="예: 올리">
+          <input type="text" id="s-name" placeholder="예: 올리" autocomplete="name">
         </div>
       </div>
       {{-- (생년월일 입력 레이아웃 통일) "태어난 해"는 항상 단독 한 줄, "월/일"은 항상
@@ -122,27 +130,27 @@
       <div class="field-row">
         <div>
           <label for="s-year">태어난 해</label>
-          <input type="number" id="s-year" placeholder="1995" min="1900" max="2100">
+          <input type="number" inputmode="numeric" id="s-year" placeholder="1995" min="1900" max="2100">
         </div>
       </div>
       <div class="field-row">
         <div>
           <label for="s-month">월</label>
-          <input type="number" id="s-month" placeholder="5" min="1" max="12">
+          <input type="number" inputmode="numeric" id="s-month" placeholder="5" min="1" max="12">
         </div>
         <div>
           <label for="s-day">일</label>
-          <input type="number" id="s-day" placeholder="15" min="1" max="31">
+          <input type="number" inputmode="numeric" id="s-day" placeholder="15" min="1" max="31">
         </div>
       </div>
       <div class="field-row">
         <div>
           <label for="s-hour">시</label>
-          <input type="number" id="s-hour" placeholder="14" min="0" max="23">
+          <input type="number" inputmode="numeric" id="s-hour" placeholder="14" min="0" max="23">
         </div>
         <div>
           <label for="s-minute">분</label>
-          <input type="number" id="s-minute" placeholder="30" min="0" max="59">
+          <input type="number" inputmode="numeric" id="s-minute" placeholder="30" min="0" max="59">
         </div>
         <div>
           <label for="s-sido">출생 지역 — 시/도</label>
@@ -155,15 +163,18 @@
       </div>
       <div class="check-row">
         <input type="checkbox" id="s-unknown">
-        <label for="s-unknown" style="margin:0;">태어난 시간을 몰라요 (시주 제외하고 계산)</label>
+        <label for="s-unknown" class="u-m-0">태어난 시간을 몰라요 (시주 제외하고 계산)</label>
       </div>
       {{-- (2026-09-08 추가) "재물운"/"커리어운" 탭 전용 — 대운 순행/역행(성별에 따라
            방향이 달라짐)을 정확히 계산하려면 성별이 필요하다. "나의 연애 나침반" 탭에서는
            안 쓰는 값이라 기본 숨김이고, public/js/app.js의 applySingleModeUI()가 탭에
            따라 보이거나 숨긴다(#c-gender-section-a와 같은 패턴). --}}
+      {{-- (2026-09-28) 예전에는 <label>성별</label>이 어떤 컨트롤과도 연결돼 있지 않아
+           스크린리더가 그룹 이름을 읽지 못했다(칩은 label이 감쌀 수 있는 폼 컨트롤이 아님).
+           라벨 모양만 하는 span + role="group" aria-labelledby로 그룹 이름을 연결한다. --}}
       <div class="single-gender-only is-hidden" id="s-gender-section">
-        <label style="margin-top:8px; display:block;">성별</label>
-        <div class="compat-gender-row" id="s-gender-row">
+        <span class="form-label" id="s-gender-row-label">성별</span>
+        <div class="compat-gender-row" id="s-gender-row" role="group" aria-labelledby="s-gender-row-label">
           <button type="button" class="compat-gender-chip" data-gender="male">남자</button>
           <button type="button" class="compat-gender-chip" data-gender="female">여자</button>
         </div>
@@ -176,7 +187,7 @@
   </section>
 
   <!-- ===================== 2. 우리의 연애온도 ===================== -->
-  <section class="panel" id="panel-compat">
+  <section class="panel" id="panel-compat" role="tabpanel" aria-labelledby="tab-compat" tabindex="0">
     <div class="card">
       <h2>두 사람의 생년월일시</h2>
       <div class="hint" style="margin-bottom:14px;">궁합은 일간(태어난 날의 천간)과 일지를 중심으로 보기 때문에 태어난 시간이 없어도 계산돼요. 시간을 알면 더 정확해요.</div>
@@ -184,23 +195,23 @@
         <div class="compat-person compat-person-a">
           <div class="compat-person-label">A</div>
           <label for="c-name-a">이름</label>
-          <input type="text" id="c-name-a" placeholder="나">
-          <div class="field-row" style="margin-top:8px;">
-            <div><label for="c-year-a">태어난 해</label><input type="number" id="c-year-a" placeholder="1995"></div>
+          <input type="text" id="c-name-a" placeholder="나" autocomplete="name">
+          <div class="field-row u-mt-2">
+            <div><label for="c-year-a">태어난 해</label><input type="number" inputmode="numeric" id="c-year-a" placeholder="1995"></div>
           </div>
-          <div class="field-row" style="margin-top:8px;">
-            <div><label for="c-month-a">월</label><input type="number" id="c-month-a" placeholder="5"></div>
-            <div><label for="c-day-a">일</label><input type="number" id="c-day-a" placeholder="15"></div>
+          <div class="field-row u-mt-2">
+            <div><label for="c-month-a">월</label><input type="number" inputmode="numeric" id="c-month-a" placeholder="5"></div>
+            <div><label for="c-day-a">일</label><input type="number" inputmode="numeric" id="c-day-a" placeholder="15"></div>
           </div>
-          <div class="field-row" style="margin-top:8px;">
-            <div><label for="c-hour-a">시</label><input type="number" id="c-hour-a" placeholder="14" min="0" max="23"></div>
-            <div><label for="c-minute-a">분</label><input type="number" id="c-minute-a" placeholder="30" min="0" max="59"></div>
+          <div class="field-row u-mt-2">
+            <div><label for="c-hour-a">시</label><input type="number" inputmode="numeric" id="c-hour-a" placeholder="14" min="0" max="23"></div>
+            <div><label for="c-minute-a">분</label><input type="number" inputmode="numeric" id="c-minute-a" placeholder="30" min="0" max="59"></div>
           </div>
           <div class="check-row">
             <input type="checkbox" id="c-unknown-a">
-            <label for="c-unknown-a" style="margin:0;">태어난 시간을 몰라요</label>
+            <label for="c-unknown-a" class="u-m-0">태어난 시간을 몰라요</label>
           </div>
-          <div class="field-row" style="margin-top:8px;">
+          <div class="field-row u-mt-2">
             <div><label for="c-sido-a">출생 지역 — 시/도</label><select id="c-sido-a"></select></div>
             <div><label for="c-sigungu-a">시/군/구</label><select id="c-sigungu-a"></select></div>
           </div>
@@ -208,8 +219,8 @@
                성별이 필요해서 추가(public/js/luck-cycle.js 참고). 궁합 보기 탭에서는
                쓰지 않는 값이라 그 탭에선 app.js가 이 줄을 숨긴다(is-hidden). --}}
           <div class="compat-gender-only-unrequited is-hidden" id="c-gender-section-a">
-            <label style="margin-top:8px; display:block;">성별</label>
-            <div class="compat-gender-row" id="c-gender-row-a">
+            <span class="form-label" id="c-gender-row-a-label">성별</span>
+            <div class="compat-gender-row" id="c-gender-row-a" role="group" aria-labelledby="c-gender-row-a-label">
               <button type="button" class="compat-gender-chip" data-gender="male">남자</button>
               <button type="button" class="compat-gender-chip" data-gender="female">여자</button>
             </div>
@@ -218,29 +229,29 @@
         <div class="compat-person compat-person-b">
           <div class="compat-person-label">B</div>
           <label for="c-name-b">이름</label>
-          <input type="text" id="c-name-b" placeholder="상대">
-          <div class="field-row" style="margin-top:8px;">
-            <div><label for="c-year-b">태어난 해</label><input type="number" id="c-year-b" placeholder="1996"></div>
+          <input type="text" id="c-name-b" placeholder="상대" autocomplete="off">
+          <div class="field-row u-mt-2">
+            <div><label for="c-year-b">태어난 해</label><input type="number" inputmode="numeric" id="c-year-b" placeholder="1996"></div>
           </div>
-          <div class="field-row" style="margin-top:8px;">
-            <div><label for="c-month-b">월</label><input type="number" id="c-month-b" placeholder="9"></div>
-            <div><label for="c-day-b">일</label><input type="number" id="c-day-b" placeholder="2"></div>
+          <div class="field-row u-mt-2">
+            <div><label for="c-month-b">월</label><input type="number" inputmode="numeric" id="c-month-b" placeholder="9"></div>
+            <div><label for="c-day-b">일</label><input type="number" inputmode="numeric" id="c-day-b" placeholder="2"></div>
           </div>
-          <div class="field-row" style="margin-top:8px;">
-            <div><label for="c-hour-b">시</label><input type="number" id="c-hour-b" placeholder="9" min="0" max="23"></div>
-            <div><label for="c-minute-b">분</label><input type="number" id="c-minute-b" placeholder="0" min="0" max="59"></div>
+          <div class="field-row u-mt-2">
+            <div><label for="c-hour-b">시</label><input type="number" inputmode="numeric" id="c-hour-b" placeholder="9" min="0" max="23"></div>
+            <div><label for="c-minute-b">분</label><input type="number" inputmode="numeric" id="c-minute-b" placeholder="0" min="0" max="59"></div>
           </div>
           <div class="check-row">
             <input type="checkbox" id="c-unknown-b">
-            <label for="c-unknown-b" style="margin:0;">태어난 시간을 몰라요</label>
+            <label for="c-unknown-b" class="u-m-0">태어난 시간을 몰라요</label>
           </div>
-          <div class="field-row" style="margin-top:8px;">
+          <div class="field-row u-mt-2">
             <div><label for="c-sido-b">출생 지역 — 시/도</label><select id="c-sido-b"></select></div>
             <div><label for="c-sigungu-b">시/군/구</label><select id="c-sigungu-b"></select></div>
           </div>
           <div class="compat-gender-only-unrequited is-hidden" id="c-gender-section-b">
-            <label style="margin-top:8px; display:block;">성별</label>
-            <div class="compat-gender-row" id="c-gender-row-b">
+            <span class="form-label" id="c-gender-row-b-label">성별</span>
+            <div class="compat-gender-row" id="c-gender-row-b" role="group" aria-labelledby="c-gender-row-b-label">
               <button type="button" class="compat-gender-chip" data-gender="male">남자</button>
               <button type="button" class="compat-gender-chip" data-gender="female">여자</button>
             </div>
@@ -318,7 +329,7 @@
        마크업 구조(compat-people/compat-person 등)는 #panel-compat과 최대한 동일하게
        맞춰서, public/js/app.js의 계산 로직(calcSaju 호출부)만 새로 짧게 추가하면 되게
        했다. --}}
-  <section class="panel" id="panel-reunion">
+  <section class="panel" id="panel-reunion" role="tabpanel" aria-labelledby="tab-reunion" tabindex="0">
     <div class="card">
       <h2>두 사람의 생년월일시</h2>
       <div class="hint" style="margin-bottom:14px;">재회 전략은 두 사람의 궁합과 이별 히스토리를 함께 봐야 정확해져요. 시간을 몰라도 계산은 되지만, 알면 더 정확해요.</div>
@@ -326,30 +337,30 @@
         <div class="compat-person compat-person-a">
           <div class="compat-person-label">A</div>
           <label for="r-name-a">이름</label>
-          <input type="text" id="r-name-a" placeholder="나">
-          <div class="field-row" style="margin-top:8px;">
-            <div><label for="r-year-a">태어난 해</label><input type="number" id="r-year-a" placeholder="1995"></div>
+          <input type="text" id="r-name-a" placeholder="나" autocomplete="name">
+          <div class="field-row u-mt-2">
+            <div><label for="r-year-a">태어난 해</label><input type="number" inputmode="numeric" id="r-year-a" placeholder="1995"></div>
           </div>
-          <div class="field-row" style="margin-top:8px;">
-            <div><label for="r-month-a">월</label><input type="number" id="r-month-a" placeholder="5"></div>
-            <div><label for="r-day-a">일</label><input type="number" id="r-day-a" placeholder="15"></div>
+          <div class="field-row u-mt-2">
+            <div><label for="r-month-a">월</label><input type="number" inputmode="numeric" id="r-month-a" placeholder="5"></div>
+            <div><label for="r-day-a">일</label><input type="number" inputmode="numeric" id="r-day-a" placeholder="15"></div>
           </div>
-          <div class="field-row" style="margin-top:8px;">
-            <div><label for="r-hour-a">시</label><input type="number" id="r-hour-a" placeholder="14" min="0" max="23"></div>
-            <div><label for="r-minute-a">분</label><input type="number" id="r-minute-a" placeholder="30" min="0" max="59"></div>
+          <div class="field-row u-mt-2">
+            <div><label for="r-hour-a">시</label><input type="number" inputmode="numeric" id="r-hour-a" placeholder="14" min="0" max="23"></div>
+            <div><label for="r-minute-a">분</label><input type="number" inputmode="numeric" id="r-minute-a" placeholder="30" min="0" max="59"></div>
           </div>
           <div class="check-row">
             <input type="checkbox" id="r-unknown-a">
-            <label for="r-unknown-a" style="margin:0;">태어난 시간을 몰라요</label>
+            <label for="r-unknown-a" class="u-m-0">태어난 시간을 몰라요</label>
           </div>
-          <div class="field-row" style="margin-top:8px;">
+          <div class="field-row u-mt-2">
             <div><label for="r-sido-a">출생 지역 — 시/도</label><select id="r-sido-a"></select></div>
             <div><label for="r-sigungu-a">시/군/구</label><select id="r-sigungu-a"></select></div>
           </div>
           {{-- 대운/세운 방향(순행/역행) 계산에 성별이 필요하다(public/js/luck-cycle.js 참고).
                이 패널은 짝사랑 탈출과 달리 항상 성별을 받는 전용 패널이라 숨김 토글이 없다. --}}
-          <label style="margin-top:8px; display:block;">성별</label>
-          <div class="compat-gender-row" id="r-gender-row-a">
+          <span class="form-label" id="r-gender-row-a-label">성별</span>
+          <div class="compat-gender-row" id="r-gender-row-a" role="group" aria-labelledby="r-gender-row-a-label">
             <button type="button" class="compat-gender-chip" data-gender="male">남자</button>
             <button type="button" class="compat-gender-chip" data-gender="female">여자</button>
           </div>
@@ -357,28 +368,28 @@
         <div class="compat-person compat-person-b">
           <div class="compat-person-label">B</div>
           <label for="r-name-b">이름</label>
-          <input type="text" id="r-name-b" placeholder="전 연인">
-          <div class="field-row" style="margin-top:8px;">
-            <div><label for="r-year-b">태어난 해</label><input type="number" id="r-year-b" placeholder="1996"></div>
+          <input type="text" id="r-name-b" placeholder="전 연인" autocomplete="off">
+          <div class="field-row u-mt-2">
+            <div><label for="r-year-b">태어난 해</label><input type="number" inputmode="numeric" id="r-year-b" placeholder="1996"></div>
           </div>
-          <div class="field-row" style="margin-top:8px;">
-            <div><label for="r-month-b">월</label><input type="number" id="r-month-b" placeholder="9"></div>
-            <div><label for="r-day-b">일</label><input type="number" id="r-day-b" placeholder="2"></div>
+          <div class="field-row u-mt-2">
+            <div><label for="r-month-b">월</label><input type="number" inputmode="numeric" id="r-month-b" placeholder="9"></div>
+            <div><label for="r-day-b">일</label><input type="number" inputmode="numeric" id="r-day-b" placeholder="2"></div>
           </div>
-          <div class="field-row" style="margin-top:8px;">
-            <div><label for="r-hour-b">시</label><input type="number" id="r-hour-b" placeholder="9" min="0" max="23"></div>
-            <div><label for="r-minute-b">분</label><input type="number" id="r-minute-b" placeholder="0" min="0" max="59"></div>
+          <div class="field-row u-mt-2">
+            <div><label for="r-hour-b">시</label><input type="number" inputmode="numeric" id="r-hour-b" placeholder="9" min="0" max="23"></div>
+            <div><label for="r-minute-b">분</label><input type="number" inputmode="numeric" id="r-minute-b" placeholder="0" min="0" max="59"></div>
           </div>
           <div class="check-row">
             <input type="checkbox" id="r-unknown-b">
-            <label for="r-unknown-b" style="margin:0;">태어난 시간을 몰라요</label>
+            <label for="r-unknown-b" class="u-m-0">태어난 시간을 몰라요</label>
           </div>
-          <div class="field-row" style="margin-top:8px;">
+          <div class="field-row u-mt-2">
             <div><label for="r-sido-b">출생 지역 — 시/도</label><select id="r-sido-b"></select></div>
             <div><label for="r-sigungu-b">시/군/구</label><select id="r-sigungu-b"></select></div>
           </div>
-          <label style="margin-top:8px; display:block;">성별</label>
-          <div class="compat-gender-row" id="r-gender-row-b">
+          <span class="form-label" id="r-gender-row-b-label">성별</span>
+          <div class="compat-gender-row" id="r-gender-row-b" role="group" aria-labelledby="r-gender-row-b-label">
             <button type="button" class="compat-gender-chip" data-gender="male">남자</button>
             <button type="button" class="compat-gender-chip" data-gender="female">여자</button>
           </div>
@@ -449,7 +460,7 @@
   </section>
 
   <!-- ===================== 5. 연애 코치 (실시간 AI 호출, 로그인 필요) ===================== -->
-  <section class="panel" id="panel-chat">
+  <section class="panel" id="panel-chat" role="tabpanel" aria-labelledby="tab-chat" tabindex="0">
     <div class="card">
       <h2>연애 코치와 이야기하기</h2>
 
@@ -519,7 +530,9 @@
     // (2026-08-24 추가) 결제 전 "무료 미리보기" 챕터 생성/폴링 엔드포인트. 로그인 없이도
     // 쓸 수 있음(routes/web.php에서 auth 미들웨어 밖에 등록) — app.js의 궁합 결과 화면이
     // 씀. 자세한 설계는 App\Http\Controllers\ChapterPreviewController 주석 참고.
-    chapterPreviewsUrl: @json(route('chapter-previews.store'))
+    chapterPreviewsUrl: @json(route('chapter-previews.store')),
+    // (2026-09-28 추가) 결제 전 필수 동의 문구의 약관 링크 — 정적 JS는 route()를 못 쓴다.
+    termsUrl: @json(route('terms.index'))
   };
   // 공유 카드(연애 캐릭터 카드 등)에 사이트 유입 유도 문구/링크를 넣을 때 씀 — 정적 JS 파일은
   // Blade의 route()/url() 헬퍼를 직접 못 쓰기 때문에 여기서 서버가 렌더링해서 넘겨줌.
@@ -532,6 +545,7 @@
   // 콘텐츠(본문)는 절대 여기 포함되지 않는다 — 결제 전 사용자는 "무엇을 받는지"만 알 수 있다.
   window.YeonbunReportPreview = @json($reportTypePreviews);
 </script>
+<script src="{{ asset('js/consent.js') }}"></script>
 <script src="{{ asset('js/reveal.js') }}"></script>
 <script src="{{ asset('js/love-character.js') }}"></script>
 <script src="{{ asset('js/compat-character.js') }}"></script>

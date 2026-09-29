@@ -30,6 +30,27 @@
 --}}
 <div class="progress-steps" id="chapter-progress-steps"></div>
 
+{{-- (2026-09-28 추가) 막다른 길 방지.
+     지금까지 이 화면은 폴링이 끝까지(약 7.5분) 실패하면 "잠시 후 새로고침해 주세요"라는
+     문구만 바꾸고 끝이었다. 재시도 버튼도, 문의 경로도 없어서 결제한 사용자가 갈 곳이
+     없었다(출시전 점검리스트 3항). 아래 블록을 그때 보여준다. --}}
+<div id="chapter-progress-stuck" style="display:none;">
+  <form method="POST" action="{{ route('reports.regenerate', $report) }}" class="regenerate-form" id="chapter-regenerate-form" style="display:block;">
+    @csrf
+    <button type="submit" class="btn btn-center" id="chapter-regenerate-btn">리포트 다시 생성하기</button>
+  </form>
+  @include('reports.partials.support-notice', ['report' => $report])
+</div>
+
+{{-- 세션이 끊겨 상태를 확인할 수 없을 때. --}}
+<div class="feedback feedback--error report-pending-alert" id="chapter-session-expired" role="alert" style="display:none;">
+  @include('partials.icon', ['name' => 'alert'])
+  <div class="feedback-body">
+    로그인이 풀려서 상태를 확인할 수 없어요. 결제는 정상적으로 완료됐으니 다시 로그인하면 이어서 보실 수 있어요.
+    <a class="chip-link" href="{{ route('my.index') }}">다시 로그인하기</a>
+  </div>
+</div>
+
 <script>
   (function () {
     var statusUrl = @json(route('reports.status', $report));
@@ -38,6 +59,22 @@
     var countEl = document.getElementById('chapter-progress-count');
     var noteEl = document.getElementById('chapter-progress-note');
     var stepsEl = document.getElementById('chapter-progress-steps');
+    var stuckEl = document.getElementById('chapter-progress-stuck');
+    var expiredEl = document.getElementById('chapter-session-expired');
+    var gaugeEl = document.getElementById('chapter-progress-gauge');
+
+    function showStuck(message) {
+      noteEl.textContent = message;
+      stuckEl.style.display = 'block';
+    }
+
+    function showSessionExpired() {
+      gaugeEl.style.display = 'none';
+      stepsEl.style.display = 'none';
+      noteEl.style.display = 'none';
+      countEl.style.display = 'none';
+      expiredEl.style.display = 'block';
+    }
 
     // 원형 게이지의 둘레(SVG circle r=52 기준, 2πr). 이 화면은 레거시 pending.blade.php와
     // 달리 시간 기반 타이머 없이, 매 폴링 응답이 곧 실제 진행률이라 stroke-dashoffset을
@@ -100,6 +137,15 @@
 
     render(0, false);
 
+    // 재시도 버튼도 연타로 같은 작업이 두 번 큐에 올라가지 않게 잠근다(pending.blade.php와 동일).
+    document.getElementById('chapter-regenerate-form').addEventListener('submit', function () {
+      var btn = document.getElementById('chapter-regenerate-btn');
+      if (!btn) return;
+      btn.disabled = true;
+      btn.classList.add('is-loading');
+      btn.setAttribute('aria-busy', 'true');
+    });
+
     var pollAttempts = 0;
     // 챕터 20개 × 동시성 4 기준으로 배치 5번, 배치당 최대 90초라 최대 ~7.5분 정도
     // 걸릴 수 있음을 여유 있게 잡음(3초 간격 폴링 × 150회 ≈ 7.5분).
@@ -110,10 +156,14 @@
 
       fetch(statusUrl, { headers: { 'Accept': 'application/json' } })
         .then(function (res) {
+          // (2026-09-28) 세션이 끊기면 로그인 화면으로 리다이렉트되거나 401/419가 온다.
+          // 예전에는 둘 다 catch가 조용히 삼켜서 7.5분 동안 빈 진행률만 돌았다.
+          if (res.status === 401 || res.status === 419 || res.redirected) { showSessionExpired(); return null; }
           if (!res.ok) throw new Error('status check failed');
           return res.json();
         })
         .then(function (data) {
+          if (data === null) return;
           var total = data.total || 0;
           var completed = data.completed || 0;
           var failed = data.failed || 0;
@@ -130,12 +180,14 @@
           if (pollAttempts < maxPollAttempts) {
             setTimeout(poll, 3000);
           } else {
-            noteEl.textContent = '생성이 예상보다 오래 걸리고 있어요. 결제는 정상적으로 완료됐으니 안심하시고, 잠시 후 페이지를 새로고침해 주세요.';
+            showStuck('생성이 예상보다 오래 걸리고 있어요. 아래 버튼으로 다시 시도해 보시고, 그래도 안 되면 문의해 주세요.');
           }
         })
         .catch(function () {
           if (pollAttempts < maxPollAttempts) {
             setTimeout(poll, 3000);
+          } else {
+            showStuck('상태를 확인하는 중 문제가 있었어요. 결제는 정상적으로 완료됐으니 아래 버튼으로 다시 시도해 주세요.');
           }
         });
     }

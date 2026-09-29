@@ -31,6 +31,6 @@
       <span class="rpt-verdict-dot" aria-hidden="true"></span>
       @if ($label !== ''){{ $label }}@endif
     </div>
-    @if ($reason !== '')<p class="rpt-p" style="margin-top:8px;">{{ $reason }}</p>@endif
+    @if ($reason !== '')<p class="rpt-p u-mt-2">{{ $reason }}</p>@endif
   </div>
 @endif

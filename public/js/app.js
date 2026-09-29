@@ -773,17 +773,177 @@
   }
   function txt(tag, cls, text) { return el(tag, { class: cls }, [document.createTextNode(text)]); }
 
+  /* ============================================================
+   * 생년월일시 검증 + 인라인 오류 표시 (2026-09-28 신설)
+   *
+   * 이전에는 `if (!year || !month || !day)` 정도만 보고 alert()로 알렸다. 그래서
+   * "2999년 13월 45일" 같은 존재하지 않는 날짜가 그대로 통과해 사주 명식이 멀쩡하게
+   * 그려지고, 그 가짜 결과에 결제 버튼까지 붙었다. 또 alert()는 어느 칸이 잘못됐는지
+   * 알려주지 못하고 화면을 막는다.
+   *
+   * 여기서는 (1) 값 범위와 실재하는 날짜인지(윤년 포함), 미래 날짜인지까지 검사하고
+   * (2) 문제가 있는 칸 바로 아래에 .form-error를 붙이고 aria-invalid/aria-describedby로
+   * 연결한 뒤 그 칸으로 포커스를 옮긴다. 세 개의 제출 경로(단일/궁합·짝사랑/재회)가
+   * 모두 이 함수들을 공유한다.
+   * ============================================================ */
+
+  function daysInMonth(year, month) {
+    return new Date(year, month, 0).getDate();   // month는 1-based, day=0 → 이전 달의 말일
+  }
+
+  function clearFormErrors(root) {
+    var scope = root || document;
+    scope.querySelectorAll('.form-error[data-auto="1"]').forEach(function (n) { n.remove(); });
+    scope.querySelectorAll('[aria-invalid="true"]').forEach(function (n) {
+      n.removeAttribute('aria-invalid');
+      n.removeAttribute('aria-describedby');
+    });
+    scope.querySelectorAll('.field-invalid').forEach(function (n) { n.classList.remove('field-invalid'); });
+  }
+
+  // target이 입력이면 그 아래에, 칩 그룹 컨테이너면 그룹 아래에 오류를 붙인다.
+  function setFieldError(targetId, message) {
+    var target = document.getElementById(targetId);
+    if (!target) return null;
+
+    var errId = targetId + '-error';
+    var err = document.getElementById(errId);
+    if (!err) {
+      err = el('p', { class: 'form-error', id: errId, 'data-auto': '1', role: 'alert' }, [document.createTextNode(message)]);
+      if (target.parentNode) target.parentNode.insertBefore(err, target.nextSibling);
+    } else {
+      err.textContent = message;
+    }
+
+    var isControl = /^(INPUT|SELECT|TEXTAREA)$/.test(target.tagName);
+    if (isControl) {
+      target.setAttribute('aria-invalid', 'true');
+      target.setAttribute('aria-describedby', errId);
+    } else {
+      target.classList.add('field-invalid');
+    }
+    return target;
+  }
+
+  function focusInvalid(target) {
+    if (!target) return;
+    var focusable = /^(INPUT|SELECT|TEXTAREA)$/.test(target.tagName)
+      ? target
+      : target.querySelector('button, input, select, textarea');
+    if (!focusable) return;
+    try { focusable.focus({ preventScroll: true }); } catch (e) { focusable.focus(); }
+    focusable.scrollIntoView({ block: 'center', behavior: 'auto' });
+  }
+
+  // ids: { year, month, day, hour, minute, unknown } — 접두사가 폼마다 달라서 그대로 받는다.
+  // 반환: { ok: true, value: {...} } 또는 { ok: false, id: '문제 칸 id', message: '...' }
+  function validateBirthFields(ids, opts) {
+    opts = opts || {};
+    var label = opts.label ? opts.label + ' ' : '';
+    var get = function (id) {
+      var node = document.getElementById(id);
+      return node ? node.value : '';
+    };
+    var num = function (id) {
+      var raw = String(get(id)).trim();
+      if (raw === '') return null;
+      var n = Number(raw);
+      return isFinite(n) && String(Math.trunc(n)) === String(n) ? Math.trunc(n) : NaN;
+    };
+
+    var now = new Date();
+    var year = num(ids.year);
+    var month = num(ids.month);
+    var day = num(ids.day);
+
+    if (year === null) return { ok: false, id: ids.year, message: label + '태어난 해를 입력해 주세요.' };
+    if (isNaN(year)) return { ok: false, id: ids.year, message: '태어난 해는 숫자로 입력해 주세요.' };
+    if (year < 1900 || year > now.getFullYear()) {
+      return { ok: false, id: ids.year, message: '태어난 해는 1900년부터 ' + now.getFullYear() + '년 사이로 입력해 주세요.' };
+    }
+
+    if (month === null) return { ok: false, id: ids.month, message: label + '태어난 달을 입력해 주세요.' };
+    if (isNaN(month)) return { ok: false, id: ids.month, message: '월은 숫자로 입력해 주세요.' };
+    if (month < 1 || month > 12) return { ok: false, id: ids.month, message: '월은 1에서 12 사이로 입력해 주세요.' };
+
+    if (day === null) return { ok: false, id: ids.day, message: label + '태어난 날을 입력해 주세요.' };
+    if (isNaN(day)) return { ok: false, id: ids.day, message: '일은 숫자로 입력해 주세요.' };
+    var maxDay = daysInMonth(year, month);
+    if (day < 1 || day > maxDay) {
+      // 윤년이 아닌 해의 2월 29일처럼 "있을 법한데 없는 날짜"도 여기서 걸린다.
+      return { ok: false, id: ids.day, message: year + '년 ' + month + '월은 ' + maxDay + '일까지 있어요.' };
+    }
+
+    var unknownEl = ids.unknown ? document.getElementById(ids.unknown) : null;
+    var unknownTime = !!(unknownEl && unknownEl.checked);
+    var hour = null, minute = null;
+
+    if (!unknownTime) {
+      hour = num(ids.hour);
+      minute = num(ids.minute);
+      // 시/분을 아예 비워둔 건 "시간을 모른다"는 뜻으로 받아들이지 않는다 —
+      // 체크박스를 안 누른 채 비워두면 시주가 조용히 빠져버리기 때문.
+      if (hour === null || minute === null) {
+        return {
+          ok: false,
+          id: hour === null ? ids.hour : ids.minute,
+          message: '태어난 시각을 입력하거나 "태어난 시간을 몰라요"에 체크해 주세요.'
+        };
+      }
+      if (isNaN(hour) || hour < 0 || hour > 23) return { ok: false, id: ids.hour, message: '시는 0에서 23 사이 숫자로 입력해 주세요.' };
+      if (isNaN(minute) || minute < 0 || minute > 59) return { ok: false, id: ids.minute, message: '분은 0에서 59 사이 숫자로 입력해 주세요.' };
+    }
+
+    // 미래 날짜 차단 — 시간을 모르면 그날 23:59로 보고 판단한다.
+    var birth = new Date(year, month - 1, day, unknownTime ? 23 : hour, unknownTime ? 59 : minute, 0, 0);
+    if (birth.getTime() > now.getTime()) {
+      return { ok: false, id: ids.day, message: '아직 오지 않은 날짜예요. 생년월일을 다시 확인해 주세요.' };
+    }
+
+    return {
+      ok: true,
+      value: { year: year, month: month, day: day, hour: unknownTime ? null : hour, minute: unknownTime ? null : minute, unknownTime: unknownTime }
+    };
+  }
+
+  // 검증 실패를 화면에 반영하고 false를 돌려준다(성공이면 true).
+  // resultHostId를 주면 실패 시 이전 결과를 지운다 — 날짜를 잘못 고친 뒤에도 예전 입력으로
+  // 만들어진 결과와 결제 버튼이 그대로 남아 있으면 "이 결과가 방금 그 날짜의 결과"라고
+  // 오해하게 된다.
+  function applyBirthValidation(result, resultHostId) {
+    if (result.ok) return true;
+    if (resultHostId) {
+      var host = document.getElementById(resultHostId);
+      if (host) host.innerHTML = '';
+    }
+    focusInvalid(setFieldError(result.id, result.message));
+    return false;
+  }
+
   // (2026-08-24 추가) 궁합 폼의 "현재 관계"/"지금 가장 궁금한 것" 칩·카드는 컨테이너 안에서
   // 최대 1개만 선택되는 단일 선택 토글이다(라디오 버튼과 같은 동작이지만 버튼 UI로).
   // 같은 걸 다시 누르면 선택 해제(선택 사항이라 "고르지 않음"도 유효한 상태).
   function wireSingleSelect(containerId, itemClass) {
     var container = document.getElementById(containerId);
     if (!container) return;
-    container.querySelectorAll('.' + itemClass).forEach(function (item) {
+    var items = container.querySelectorAll('.' + itemClass);
+
+    // (2026-09-28 추가) 선택 상태를 .active(색)로만 표현하면 스크린리더와 색각 이상
+    // 사용자가 무엇이 선택됐는지 알 수 없다. 같은 걸 다시 눌러 해제할 수 있는 토글이라
+    // 라디오(aria-checked)가 아니라 aria-pressed가 맞는 매핑이다.
+    var syncPressed = function () {
+      items.forEach(function (el2) {
+        el2.setAttribute('aria-pressed', el2.classList.contains('active') ? 'true' : 'false');
+      });
+    };
+    syncPressed();
+
+    items.forEach(function (item) {
       item.addEventListener('click', function () {
         var wasActive = item.classList.contains('active');
-        container.querySelectorAll('.' + itemClass).forEach(function (el2) { el2.classList.remove('active'); });
+        items.forEach(function (el2) { el2.classList.remove('active'); });
         if (!wasActive) item.classList.add('active');
+        syncPressed();
       });
     });
   }
@@ -1108,8 +1268,8 @@
       card.appendChild(typeCard);
       window.YeonbunReports.attachCardShare(typeCard, card, {
         footerCta: '나도 우리 궁합 유형 확인하기 👉',
-        filename: 'gyeol-compat-type-card.png',
-        title: '결 — 궁합 유형 카드',
+        filename: 'yeonrok-compat-type-card.png',
+        title: '연록 — 궁합 유형 카드',
         text: '우리 궁합 유형 나왔어! 너도 확인해볼래?'
       });
     }
@@ -1581,23 +1741,24 @@
   }
 
   function readSingleForm() {
-    var year = parseInt(document.getElementById('s-year').value, 10);
-    var month = parseInt(document.getElementById('s-month').value, 10);
-    var day = parseInt(document.getElementById('s-day').value, 10);
-    var hour = parseInt(document.getElementById('s-hour').value, 10);
-    var minute = parseInt(document.getElementById('s-minute').value, 10);
-    var unknown = document.getElementById('s-unknown').checked;
+    // (2026-09-28 수정) alert() 한 줄 검사 → validateBirthFields()로 교체.
+    // 예전 검사는 `!year || !month || !day`뿐이라 13월 45일, 2999년 같은 값이 그대로
+    // 통과해서 존재하지 않는 날짜로 사주가 계산됐다.
+    clearFormErrors(document.getElementById('panel-single'));
+    var check = validateBirthFields({
+      year: 's-year', month: 's-month', day: 's-day',
+      hour: 's-hour', minute: 's-minute', unknown: 's-unknown'
+    });
+    if (!applyBirthValidation(check, 's-result')) return null;
+
     var lon = parseFloat(document.getElementById('s-sigungu').value);
     var name = document.getElementById('s-name').value.trim();
 
-    if (!year || !month || !day || (!unknown && (isNaN(hour) || isNaN(minute)))) {
-      alert('생년월일을 정확히 입력해 주세요. 시간을 모르면 "시간을 몰라요"에 체크해 주세요.');
-      return null;
-    }
     return {
-      year: year, month: month, day: day,
-      hour: unknown ? null : hour, minute: unknown ? null : minute,
-      unknownTime: unknown, longitude: isNaN(lon) ? 126.978 : lon, name: name
+      year: check.value.year, month: check.value.month, day: check.value.day,
+      hour: check.value.hour, minute: check.value.minute,
+      unknownTime: check.value.unknownTime,
+      longitude: isNaN(lon) ? 126.978 : lon, name: name
     };
   }
 
@@ -1628,7 +1789,32 @@
     if (submitBtn) submitBtn.textContent = SINGLE_SUBMIT_LABEL[mode] || SINGLE_SUBMIT_LABEL.single;
   }
 
+  // (2026-09-28 추가) 사용자가 문제가 된 칸을 고치기 시작하면 그 칸의 오류 표시만 지운다.
+  // 폼이 여러 개(단일/궁합/재회)라 각각에 리스너를 다는 대신 document에 위임한다.
+  function wireErrorSelfClear() {
+    var clearFor = function (node) {
+      if (!node) return;
+      if (node.getAttribute && node.getAttribute('aria-invalid') === 'true') {
+        var errId = node.getAttribute('aria-describedby');
+        node.removeAttribute('aria-invalid');
+        node.removeAttribute('aria-describedby');
+        var err = errId && document.getElementById(errId);
+        if (err && err.getAttribute('data-auto') === '1') err.remove();
+      }
+      var group = node.closest && node.closest('.field-invalid');
+      if (group) {
+        group.classList.remove('field-invalid');
+        var gErr = document.getElementById(group.id + '-error');
+        if (gErr && gErr.getAttribute('data-auto') === '1') gErr.remove();
+      }
+    };
+    ['input', 'change', 'click'].forEach(function (type) {
+      document.addEventListener(type, function (e) { clearFor(e.target); }, true);
+    });
+  }
+
   function bindEvents() {
+    wireErrorSelfClear();
     wireSingleSelect('s-gender-row', 'compat-gender-chip');
     wireSingleSelect('c-stage-row', 'compat-stage-chip');
     wireSingleSelect('c-concern-grid', 'compat-concern-card');
@@ -1651,21 +1837,51 @@
     // (2026-09-08 수정) "재물운"/"커리어운"도 짝사랑 탈출과 같은 방식으로 #panel-single을
     // 재사용한다.
     var PANEL_OVERRIDE = { unrequited: 'compat', wealth: 'single', career: 'single' };
-    document.querySelectorAll('.tab-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
-        document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('active'); });
-        btn.classList.add('active');
-        var tab = btn.getAttribute('data-tab');
-        document.getElementById('panel-' + (PANEL_OVERRIDE[tab] || tab)).classList.add('active');
+    var tabButtons = Array.prototype.slice.call(document.querySelectorAll('.tab-btn'));
 
-        if (tab === 'compat' || tab === 'unrequited') {
-          currentCompatMode = tab;
-          applyCompatModeUI(tab);
-        } else if (tab === 'single' || tab === 'wealth' || tab === 'career') {
-          currentSingleMode = tab;
-          applySingleModeUI(tab);
+    // (2026-09-28 추가) role="tab"을 선언해 둔 만큼 ARIA 탭 패턴을 제대로 맞춘다.
+    // 선택 상태(aria-selected)를 알려주고, 탭 하나만 Tab 키 순서에 남기고(roving tabindex)
+    // 나머지는 좌우 화살표로 이동하게 한다. 패널 하나를 여러 탭이 공유하는 경우
+    // (짝사랑→compat, 재물운/커리어운→single)에는 aria-labelledby도 현재 탭으로 바꿔준다.
+    function activateTab(btn) {
+      var tab = btn.getAttribute('data-tab');
+      tabButtons.forEach(function (b) {
+        var on = b === btn;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+        b.setAttribute('tabindex', on ? '0' : '-1');
+      });
+      document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('active'); });
+
+      var panel = document.getElementById('panel-' + (PANEL_OVERRIDE[tab] || tab));
+      if (panel) {
+        panel.classList.add('active');
+        if (panel.getAttribute('role') === 'tabpanel' && btn.id) {
+          panel.setAttribute('aria-labelledby', btn.id);
         }
+      }
+
+      if (tab === 'compat' || tab === 'unrequited') {
+        currentCompatMode = tab;
+        applyCompatModeUI(tab);
+      } else if (tab === 'single' || tab === 'wealth' || tab === 'career') {
+        currentSingleMode = tab;
+        applySingleModeUI(tab);
+      }
+    }
+
+    tabButtons.forEach(function (btn, i) {
+      btn.addEventListener('click', function () { activateTab(btn); });
+      btn.addEventListener('keydown', function (e) {
+        var delta = e.key === 'ArrowRight' ? 1 : (e.key === 'ArrowLeft' ? -1 : 0);
+        var target = null;
+        if (delta) target = tabButtons[(i + delta + tabButtons.length) % tabButtons.length];
+        else if (e.key === 'Home') target = tabButtons[0];
+        else if (e.key === 'End') target = tabButtons[tabButtons.length - 1];
+        if (!target) return;
+        e.preventDefault();
+        activateTab(target);
+        target.focus();
       });
     });
 
@@ -1680,7 +1896,7 @@
       if (currentSingleMode === 'wealth' || currentSingleMode === 'career') {
         var singleGender = getSingleSelectValue('s-gender-row', 'gender');
         if (!singleGender) {
-          alert('대운 계산에 필요해서, 성별을 먼저 선택해 주세요.');
+          focusInvalid(setFieldError('s-gender-row', '대운 계산에 필요해서, 성별을 먼저 선택해 주세요.'));
           return;
         }
         if (currentSingleMode === 'wealth') {
@@ -1695,45 +1911,44 @@
     });
 
     document.getElementById('c-submit').addEventListener('click', function () {
-      var ya = parseInt(document.getElementById('c-year-a').value, 10);
-      var ma = parseInt(document.getElementById('c-month-a').value, 10);
-      var da = parseInt(document.getElementById('c-day-a').value, 10);
-      var ha = parseInt(document.getElementById('c-hour-a').value, 10);
-      var na = parseInt(document.getElementById('c-minute-a').value, 10);
-      var unknownA = document.getElementById('c-unknown-a').checked || isNaN(ha) || isNaN(na);
+      // (2026-09-28 수정) 두 사람 모두 validateBirthFields()로 검사한다. 예전에는
+      // `!ya || !ma || !da` 수준이라 존재하지 않는 날짜가 그대로 통과했고, 시/분을
+      // 비워두면 조용히 "시간 모름"으로 처리돼 시주가 빠진 채 계산됐다.
+      clearFormErrors(document.getElementById('panel-compat'));
+
+      var checkA = validateBirthFields({
+        year: 'c-year-a', month: 'c-month-a', day: 'c-day-a',
+        hour: 'c-hour-a', minute: 'c-minute-a', unknown: 'c-unknown-a'
+      }, { label: '나(A)의' });
+      if (!applyBirthValidation(checkA, 'c-result')) return;
+
+      var checkB = validateBirthFields({
+        year: 'c-year-b', month: 'c-month-b', day: 'c-day-b',
+        hour: 'c-hour-b', minute: 'c-minute-b', unknown: 'c-unknown-b'
+      }, { label: '상대방(B)의' });
+      if (!applyBirthValidation(checkB, 'c-result')) return;
+
       var lonA = parseFloat(document.getElementById('c-sigungu-a').value);
-
-      var yb = parseInt(document.getElementById('c-year-b').value, 10);
-      var mb = parseInt(document.getElementById('c-month-b').value, 10);
-      var db = parseInt(document.getElementById('c-day-b').value, 10);
-      var hb = parseInt(document.getElementById('c-hour-b').value, 10);
-      var nb = parseInt(document.getElementById('c-minute-b').value, 10);
-      var unknownB = document.getElementById('c-unknown-b').checked || isNaN(hb) || isNaN(nb);
       var lonB = parseFloat(document.getElementById('c-sigungu-b').value);
-
       var nameA = document.getElementById('c-name-a').value.trim();
       var nameB = document.getElementById('c-name-b').value.trim();
 
-      if (!ya || !ma || !da || !yb || !mb || !db) {
-        alert('두 사람의 생년월일을 모두 입력해 주세요.');
-        return;
-      }
       var sajuA = calcSaju({
-        year: ya, month: ma, day: da,
-        hour: unknownA ? null : ha, minute: unknownA ? null : na,
-        unknownTime: unknownA, longitude: isNaN(lonA) ? 126.978 : lonA
+        year: checkA.value.year, month: checkA.value.month, day: checkA.value.day,
+        hour: checkA.value.hour, minute: checkA.value.minute,
+        unknownTime: checkA.value.unknownTime, longitude: isNaN(lonA) ? 126.978 : lonA
       });
       var sajuB = calcSaju({
-        year: yb, month: mb, day: db,
-        hour: unknownB ? null : hb, minute: unknownB ? null : nb,
-        unknownTime: unknownB, longitude: isNaN(lonB) ? 126.978 : lonB
+        year: checkB.value.year, month: checkB.value.month, day: checkB.value.day,
+        hour: checkB.value.hour, minute: checkB.value.minute,
+        unknownTime: checkB.value.unknownTime, longitude: isNaN(lonB) ? 126.978 : lonB
       });
 
       if (currentCompatMode === 'unrequited') {
         var genderA = getSingleSelectValue('c-gender-row-a', 'gender');
         var genderB = getSingleSelectValue('c-gender-row-b', 'gender');
         if (!genderA) {
-          alert('대운/세운 계산에 필요해서, 나(A)의 성별을 먼저 선택해 주세요.');
+          focusInvalid(setFieldError('c-gender-row-a', '대운/세운 계산에 필요해서, 나(A)의 성별을 먼저 선택해 주세요.'));
           return;
         }
         renderUnrequitedResult(sajuA, sajuB, nameA, nameB, genderA, genderB);
@@ -1753,46 +1968,42 @@
     var reunionSubmit = document.getElementById('r-submit');
     if (reunionSubmit) {
       reunionSubmit.addEventListener('click', function () {
-        var ya = parseInt(document.getElementById('r-year-a').value, 10);
-        var ma = parseInt(document.getElementById('r-month-a').value, 10);
-        var da = parseInt(document.getElementById('r-day-a').value, 10);
-        var ha = parseInt(document.getElementById('r-hour-a').value, 10);
-        var na = parseInt(document.getElementById('r-minute-a').value, 10);
-        var unknownA = document.getElementById('r-unknown-a').checked || isNaN(ha) || isNaN(na);
+        // (2026-09-28 수정) 궁합 폼과 동일하게 validateBirthFields()로 검사한다.
+        clearFormErrors(document.getElementById('panel-reunion'));
+
+        var checkA = validateBirthFields({
+          year: 'r-year-a', month: 'r-month-a', day: 'r-day-a',
+          hour: 'r-hour-a', minute: 'r-minute-a', unknown: 'r-unknown-a'
+        }, { label: '나(A)의' });
+        if (!applyBirthValidation(checkA, 'r-result')) return;
+
+        var checkB = validateBirthFields({
+          year: 'r-year-b', month: 'r-month-b', day: 'r-day-b',
+          hour: 'r-hour-b', minute: 'r-minute-b', unknown: 'r-unknown-b'
+        }, { label: '상대방(B)의' });
+        if (!applyBirthValidation(checkB, 'r-result')) return;
+
         var lonA = parseFloat(document.getElementById('r-sigungu-a').value);
-
-        var yb = parseInt(document.getElementById('r-year-b').value, 10);
-        var mb = parseInt(document.getElementById('r-month-b').value, 10);
-        var db = parseInt(document.getElementById('r-day-b').value, 10);
-        var hb = parseInt(document.getElementById('r-hour-b').value, 10);
-        var nb = parseInt(document.getElementById('r-minute-b').value, 10);
-        var unknownB = document.getElementById('r-unknown-b').checked || isNaN(hb) || isNaN(nb);
         var lonB = parseFloat(document.getElementById('r-sigungu-b').value);
-
         var nameA = document.getElementById('r-name-a').value.trim();
         var nameB = document.getElementById('r-name-b').value.trim();
-
-        if (!ya || !ma || !da || !yb || !mb || !db) {
-          alert('두 사람의 생년월일을 모두 입력해 주세요.');
-          return;
-        }
 
         var genderA = getSingleSelectValue('r-gender-row-a', 'gender');
         var genderB = getSingleSelectValue('r-gender-row-b', 'gender');
         if (!genderA) {
-          alert('대운/세운 계산에 필요해서, 나(A)의 성별을 먼저 선택해 주세요.');
+          focusInvalid(setFieldError('r-gender-row-a', '대운/세운 계산에 필요해서, 나(A)의 성별을 먼저 선택해 주세요.'));
           return;
         }
 
         var sajuA = calcSaju({
-          year: ya, month: ma, day: da,
-          hour: unknownA ? null : ha, minute: unknownA ? null : na,
-          unknownTime: unknownA, longitude: isNaN(lonA) ? 126.978 : lonA
+          year: checkA.value.year, month: checkA.value.month, day: checkA.value.day,
+          hour: checkA.value.hour, minute: checkA.value.minute,
+          unknownTime: checkA.value.unknownTime, longitude: isNaN(lonA) ? 126.978 : lonA
         });
         var sajuB = calcSaju({
-          year: yb, month: mb, day: db,
-          hour: unknownB ? null : hb, minute: unknownB ? null : nb,
-          unknownTime: unknownB, longitude: isNaN(lonB) ? 126.978 : lonB
+          year: checkB.value.year, month: checkB.value.month, day: checkB.value.day,
+          hour: checkB.value.hour, minute: checkB.value.minute,
+          unknownTime: checkB.value.unknownTime, longitude: isNaN(lonB) ? 126.978 : lonB
         });
 
         var history = {
@@ -1809,10 +2020,14 @@
 
     var grid = document.getElementById('concern-grid');
     CONCERNS.forEach(function (c) {
-      var chip = el('button', { class: 'concern-chip', 'data-key': c.key }, [document.createTextNode(c.icon + ' ' + c.label)]);
+      var chip = el('button', { type: 'button', class: 'concern-chip', 'data-key': c.key, 'aria-pressed': 'false' }, [document.createTextNode(c.icon + ' ' + c.label)]);
       chip.addEventListener('click', function () {
-        document.querySelectorAll('.concern-chip').forEach(function (x) { x.classList.remove('active'); });
+        document.querySelectorAll('.concern-chip').forEach(function (x) {
+          x.classList.remove('active');
+          x.setAttribute('aria-pressed', 'false');
+        });
         chip.classList.add('active');
+        chip.setAttribute('aria-pressed', 'true');
         renderGuideResult(c.key);
       });
       grid.appendChild(chip);

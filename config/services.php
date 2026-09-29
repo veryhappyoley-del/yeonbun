@@ -70,4 +70,12 @@ return [
         'secret_key' => env('TOSS_SECRET_KEY'),
     ],
 
+    // (2026-09-28 추가) 에러 알림용 웹훅. 슬랙/디스코드 Incoming Webhook 주소를 넣으면
+    // 운영 중 발생한 예외가 그 채널로 바로 전달된다(App\Support\ErrorNotifier).
+    // 비워두면 아무 일도 하지 않고 기존처럼 로그 파일에만 남는다.
+    // 디스코드 웹훅은 주소 끝에 /slack 을 붙이면 같은 {"text": ...} 형식을 그대로 받는다.
+    'error_webhook' => [
+        'url' => env('ERROR_WEBHOOK_URL'),
+    ],
+
 ];

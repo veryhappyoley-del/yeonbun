@@ -16,6 +16,16 @@
   컨트롤러+데이터 클래스로 옮기면 된다.
 --}}
 @php
+  // (2026-09-28 추가) 가격 문자열을 이 파일에 직접 적지 않는다. 리포트 가격은
+  // App\ReportTypes\ReportTypeRegistry(= 결제 시 서버가 금액을 검증할 때 쓰는
+  // ReportType::$price)에서, 구독 가격은 SubscriptionController::PRICE에서 가져온다.
+  // 예전에는 '12,900원' 같은 문자열을 여기에 적어두고 서버 값과 손으로 맞춰야 했다.
+  $reportPrice = function (string $key): string {
+      $type = \App\ReportTypes\ReportTypeRegistry::all()[$key] ?? null;
+      return $type ? number_format($type->price).'원' : '가격 확인 중';
+  };
+  $fortunePrice = '월 '.number_format(\App\Http\Controllers\SubscriptionController::PRICE).'원';
+
   $saguCategories = [
       [
           'key' => 'love',
@@ -25,9 +35,8 @@
           // 02.우리의 연애온도(10,900원)/03.나를 좋아할까.?(12,900원)/04.다시 만날 수
           // 있을까?(14,900원)/05.연애 코치 순서로 재배치하고(연애 코치를 3번째에서
           // 재회 다음으로 옮김), 01·03·04번 이름을 바꿨다. 가격 표시는
-          // App\ReportTypes\Definitions\*ReportType::$price가 실제 결제 시 서버에서
-          // 다시 확인하는 값이라 여기 문자열이 그 값과 어긋나지 않도록 항상 같이 바꿔야
-          // 한다(무료 미리보기가 있는 01·02번은 실제 가격 대신 계속 "무료로 시작"으로 둠).
+          // (2026-09-28) 가격 표기는 위 $reportPrice/$fortunePrice로 서버 값에서 파생한다
+          // (무료 미리보기가 있는 01·02번은 가격 대신 계속 "무료로 시작"으로 둔다).
           'items' => [
               [
                   'badge' => '나', 'title' => '나의 연애 나침반',
@@ -45,7 +54,7 @@
                   // ?tab=unrequited로 들어간다(public/js/app.js 참고).
                   'badge' => '짝', 'title' => '나를 좋아할까.?',
                   'desc' => '짝사랑을 연애로 바꾸는 인연의 흐름.',
-                  'href' => route('calculator.index', ['tab' => 'unrequited']), 'price' => '12,900원',
+                  'href' => route('calculator.index', ['tab' => 'unrequited']), 'price' => $reportPrice('unrequited_love'),
               ],
               [
                   // (2026-08-31 추가) App\ReportTypes\Definitions\ReunionStrategyReportType.
@@ -53,7 +62,7 @@
                   // 궁합 폼을 재사용하지 않고 별도 패널(#panel-reunion)을 새로 만들었다.
                   'badge' => '재', 'title' => '다시 만날 수 있을까?',
                   'desc' => '재회 가능성과 다시 만나는 전략.',
-                  'href' => route('calculator.index', ['tab' => 'reunion']), 'price' => '14,900원',
+                  'href' => route('calculator.index', ['tab' => 'reunion']), 'price' => $reportPrice('reunion_strategy'),
               ],
               [
                   'badge' => '코', 'title' => '연애 코치',
@@ -65,7 +74,7 @@
                   // 흐름(saju.blade.php)이 아니라 별도 SubscriptionController(/fortune)로 간다.
                   'badge' => '운', 'title' => '오늘의 운세',
                   'desc' => '매일 새벽, 그날의 사주 흐름을 이메일로.',
-                  'href' => route('fortune.index'), 'price' => '월 3,900원',
+                  'href' => route('fortune.index'), 'price' => $fortunePrice,
               ],
           ],
       ],
@@ -113,7 +122,7 @@
 </head>
 <body class="phone-app has-bottom-nav">
 
-<div class="wrap wrap-narrow">
+<div class="wrap">
 
   {{-- (2026-08-24 수정) 하단 탭바가 생겨서 "결로 돌아가기" 링크는 더 이상 필요 없음(하단
        "홈" 탭이 그 역할을 대신함) — 전역 헤더로 교체. --}}

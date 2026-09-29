@@ -28,20 +28,23 @@
   // (2026-09-13 수정) 이름/가격 2차 개편 — 01.나의 연애 나침반(9,900원)/02.우리의 연애온도
   // (10,900원)/03.나를 좋아할까.?(12,900원)/04.다시 만날 수 있을까?(14,900원). 실제 결제
   // 금액은 항상 서버(App\ReportTypes\Definitions\*ReportType::$price)가 최종 확인하므로,
-  // 여기 priceLabel이 그 값과 어긋나지 않도록 항상 두 곳을 같이 바꿔야 한다.
-  var TYPE_INFO = {
-    love_fortune: { label: '나의 연애 나침반', priceLabel: '9,900원' },
-    compatibility: { label: '우리의 연애온도', priceLabel: '10,900원' },
-    unrequited_love: { label: '나를 좋아할까.?', priceLabel: '12,900원' },
-    // (2026-08-31 추가) "다시 만날 수 있을까?" — App\ReportTypes\Definitions\ReunionStrategyReportType.
-    reunion_strategy: { label: '다시 만날 수 있을까?', priceLabel: '14,900원' },
-    // (2026-09-08 추가) "재물운"/"커리어운" — 처음으로 연애 카테고리를 벗어난 리포트.
-    // 가격은 App\ReportTypes\Definitions\{Wealth,Career}FortuneReportType::$price가
-    // 실제 결제 시 서버에서 다시 확인하는 값이라 여기 priceLabel은 버튼 문구 표시용일
-    // 뿐이고, 두 값이 어긋나지 않도록 항상 그 두 파일과 같이 바꿔야 한다.
-    wealth_fortune: { label: '재물운', priceLabel: '21,900원' },
-    career_fortune: { label: '커리어운', priceLabel: '19,900원' }
-  };
+  // (2026-09-28 수정) 라벨·가격을 여기 하드코딩하지 않는다. 둘 다
+  // window.YeonbunReportPreview(= App\ReportTypes\ReportTypeRegistry)에서 내려오고,
+  // 가격은 결제 검증에 쓰이는 ReportType::$price 그대로다. 예전에는 TYPE_INFO에
+  // priceLabel: '9,900원' 식으로 따로 적어둬서, 서버 가격만 바꾸면 버튼 문구와 실제
+  // 청구 금액이 조용히 어긋날 수 있었다.
+  function typeMeta(typeKey) {
+    var previews = window.YeonbunReportPreview || [];
+    for (var i = 0; i < previews.length; i++) {
+      if (previews[i].key === typeKey) return previews[i];
+    }
+    return null;
+  }
+
+  function formatWon(value) {
+    if (typeof value !== 'number' || !isFinite(value)) return null;
+    return String(Math.round(value)).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '원';
+  }
 
   // 결제 전 "이걸 사면 뭘 받는지" 안내용 — 목차 미리보기(제목+티저, 잠금 아이콘)와 FAQ.
   // 목차 데이터는 saju.blade.php가 App\ReportTypes\ReportTypeRegistry에서 그대로 뽑아
@@ -201,7 +204,28 @@
    * 결제 흐름 (프리미엄 리포트)
    * ============================================================ */
 
-  function startCheckout(type, input, title, statusBox) {
+  // (2026-09-28 추가) 결제 버튼 잠금/해제. 코인 충전(billing.blade.php)과 구독 결제
+  // (fortune/index.blade.php)는 원래 button.disabled로 중복 클릭을 막고 있었는데
+  // 리포트 결제만 빠져 있어서, 빠르게 두 번 누르면 /reports/checkout이 두 번 나가고
+  // 주문이 두 건 생길 수 있었다. 같은 방식으로 맞춘다.
+  function lockButton(btn) {
+    if (!btn) return;
+    btn.disabled = true;
+    btn.classList.add('is-loading');
+    btn.setAttribute('aria-busy', 'true');
+  }
+
+  function unlockButton(btn) {
+    if (!btn) return;
+    btn.disabled = false;
+    btn.classList.remove('is-loading');
+    btn.removeAttribute('aria-busy');
+  }
+
+  function startCheckout(type, input, title, statusBox, buyBtn) {
+    // 이미 진행 중이면(연타·엔터 중복) 두 번째 호출은 그냥 버린다.
+    if (buyBtn && buyBtn.disabled) return;
+    lockButton(buyBtn);
     if (!window.YeonbunAuth || !window.YeonbunAuth.loggedIn) {
       // (2026-09-08 추가) 로그인 안 된 걸 감지한 바로 이 순간이 "구매하려던 참이었다"는
       // 신호라, public/js/app.js에 지금 탭 상태를 저장하고 "로그인 후 돌아오면 이 탭을
@@ -211,11 +235,13 @@
         window.YeonbunDraft.markPendingCheckoutResume();
       }
       showLoginGate(statusBox);
+      unlockButton(buyBtn);
       return;
     }
 
     if (!window.YeonbunBilling || !window.YeonbunBilling.tossConfigured) {
       statusBox.textContent = '결제 기능이 아직 설정되지 않았어요.';
+      unlockButton(buyBtn);
       return;
     }
 
@@ -230,8 +256,10 @@
       },
       body: JSON.stringify({ type: type, input: input, title: title })
     })
-      .then(function (res) { return res.json().then(function (body) { return { ok: res.ok, body: body }; }); })
+      .then(function (res) { return res.json().then(function (body) { return { ok: res.ok, status: res.status, body: body }; }); })
       .then(function (r) {
+        // (2026-09-28) throttle 도입으로 429가 올 수 있다. 기본 429 본문에는 error가 없다.
+        if (r.status === 429) throw new Error('요청이 너무 잦아요. 잠시 후 다시 시도해 주세요.');
         if (!r.ok) throw new Error(r.body.error || '리포트 결제를 시작하지 못했어요.');
 
         statusBox.textContent = '';
@@ -249,7 +277,10 @@
       .catch(function (error) {
         if (error && error.code === 'USER_CANCEL') { statusBox.textContent = ''; return; }
         statusBox.textContent = (error && error.message) || '리포트 결제 중 문제가 발생했어요.';
-      });
+      })
+      // 토스 결제창이 정상적으로 열리면 이 페이지를 떠나므로 해제될 일이 없고,
+      // 취소/실패로 이 화면에 남는 경우에만 다시 누를 수 있게 풀어준다.
+      .finally(function () { unlockButton(buyBtn); });
   }
 
   // (2026-08-25 추가, 로드맵 1·2번) 결제 버튼을 눌렀는데 로그인이 안 돼 있으면 이 게이트가
@@ -473,11 +504,42 @@
   // 여기선 구매 버튼만 둠. includeToc: false면 이 함수 안에서 목차 미리보기를 렌더링하지
   // 않음 — 궁합분석은 24단계부터 목차 미리보기를 CTA 카드 안이 아니라 무료 티저 바로
   // 아래(더 이탈 지점에 가깝게)로 옮겨서 별도로 렌더링하므로, 여기서 중복으로 그리지 않게.
+  // buildCTA()는 레지스트리에 없는 타입이면 null을 돌려준다(가격을 모르는 채로 결제
+  // 버튼을 그리지 않기 위해서). 호출부가 6곳이라 null 처리를 여기 한 곳에 모아 둔다.
+  function appendCTA(card, node) {
+    if (node) card.appendChild(node);
+  }
+
+  // 결제 버튼 바로 위에 붙는 필수 동의 줄. resources/views/partials/payment-consent.blade.php와
+  // 같은 문구·구조를 쓴다(한쪽만 바뀌면 화면마다 동의 문구가 달라지므로 같이 고쳐야 한다).
+  function buildConsentRow(typeKey) {
+    var id = 'report-consent-' + typeKey;
+    var box = el('input', { type: 'checkbox', id: id, 'data-consent-targets': '.btn-buy' });
+
+    var termsUrl = (window.YeonbunBilling && window.YeonbunBilling.termsUrl) || '/terms';
+    var link = el('a', { href: termsUrl + '#refund', target: '_blank', rel: 'noopener noreferrer' },
+      [document.createTextNode('이용약관·환불정책')]);
+
+    var label = el('label', { for: id }, [
+      el('strong', null, [document.createTextNode('[필수] ')]),
+      link,
+      document.createTextNode('을 확인했으며, 디지털 콘텐츠는 제공이 시작되면 청약철회가 제한된다는 점에 동의합니다.')
+    ]);
+
+    var rowEl = el('div', { class: 'check-row consent-row' }, [box, label]);
+    // consent.js가 이미 로드돼 있으면 이 노드만 다시 스캔시킨다.
+    setTimeout(function () {
+      if (window.YeonbunConsent) window.YeonbunConsent.init(rowEl.parentNode || rowEl);
+    }, 0);
+    return rowEl;
+  }
+
   function buildCTA(typeKey, buildTitle, onShare, opts) {
     opts = opts || {};
     var showShare = opts.showShare !== false;
     var includeToc = opts.includeToc !== false;
-    var info = TYPE_INFO[typeKey];
+    var info = typeMeta(typeKey);
+    if (!info) return null;   // 레지스트리에 없는 타입이면 결제 CTA 자체를 만들지 않는다
     var wrap = el('div', { class: 'report-cta' });
     wrap.appendChild(txt('p', 'report-cta-headline', '더 깊은 해석이 궁금하다면?'));
 
@@ -489,11 +551,19 @@
 
     // (2026-08-24 추가) 결제 버튼이 다른 버튼들과 똑같이 생겨서 눈에 잘 안 띈다는 피드백에
     // 대응해 btn-buy로 크기/그라데이션/은은한 펄스를 준 전용 스타일을 얹었다(app.css 참고).
-    var buyBtn = el('button', { type: 'button', class: 'btn btn-buy' }, [document.createTextNode(info.label + ' 전체 보기 · ' + info.priceLabel)]);
+    var priceLabel = formatWon(info.price);
+    var buyLabel = info.label + ' 전체 보기' + (priceLabel ? ' · ' + priceLabel : '');
+    var buyBtn = el('button', { type: 'button', class: 'btn btn-buy', disabled: 'disabled', 'aria-disabled': 'true' }, [document.createTextNode(buyLabel)]);
     buyBtn.addEventListener('click', function () {
-      startCheckout(typeKey, buildTitle.input, buildTitle.title, statusBox);
+      startCheckout(typeKey, buildTitle.input, buildTitle.title, statusBox, buyBtn);
     });
     row.appendChild(buyBtn);
+
+    // (2026-09-28 추가) 결제 전 필수 동의. 디지털 콘텐츠는 제공이 시작되면 청약철회가
+    // 제한되는데, 그 제한을 주장하려면 결제 전에 고지하고 동의를 받아야 한다.
+    // 잠금 동작은 public/js/consent.js가 담당한다(코인 충전·구독 화면과 같은 규칙).
+    wrap.setAttribute('data-consent-scope', '');
+    wrap.appendChild(buildConsentRow(typeKey));
     wrap.appendChild(row);
 
     // 결제 버튼 바로 아래 신뢰 배지 4칸(실제로 만든 기능만 정직하게 나열).
@@ -530,7 +600,7 @@
   function attachSingleCTA(card, state) {
     var input = buildSingleInput(state);
     var title = (state.name ? state.name + '님의 ' : '') + '나의 연애 나침반';
-    card.appendChild(buildCTA('love_fortune', { input: input, title: title }, null, { showShare: false, includeToc: false }));
+    appendCTA(card, buildCTA('love_fortune', { input: input, title: title }, null, { showShare: false, includeToc: false }));
   }
 
   // (2026-08-24 수정) 궁합분석의 공유는 이제 별도 HTML 템플릿(buildCompatCardHTML,
@@ -543,7 +613,7 @@
   function attachCompatCTA(card, state) {
     var input = buildTwoPersonInput(state);
     var title = (state.nameA || 'A') + ' × ' + (state.nameB || 'B') + ' 연애온도';
-    card.appendChild(buildCTA('compatibility', { input: input, title: title }, null, { showShare: false, includeToc: false }));
+    appendCTA(card, buildCTA('compatibility', { input: input, title: title }, null, { showShare: false, includeToc: false }));
   }
 
   // (2026-08-31 추가) "짝사랑 탈출" — attachCompatCTA와 같은 틀(무료 티저 → 목차 미리보기
@@ -551,14 +621,14 @@
   function attachUnrequitedCTA(card, state) {
     var input = buildUnrequitedInput(state);
     var title = (state.nameA || '나') + '님의 ' + (state.nameB || '그 사람') + ' 나를 좋아할까.?';
-    card.appendChild(buildCTA('unrequited_love', { input: input, title: title }, null, { showShare: false, includeToc: false }));
+    appendCTA(card, buildCTA('unrequited_love', { input: input, title: title }, null, { showShare: false, includeToc: false }));
   }
 
   // (2026-08-31 추가) "다시, 우리" — attachUnrequitedCTA와 같은 틀, typeKey/제목/input만 다르다.
   function attachReunionCTA(card, state) {
     var input = buildReunionInput(state);
     var title = (state.nameA || '나') + ' × ' + (state.nameB || '그 사람') + ' 다시 만날 수 있을까?';
-    card.appendChild(buildCTA('reunion_strategy', { input: input, title: title }, null, { showShare: false, includeToc: false }));
+    appendCTA(card, buildCTA('reunion_strategy', { input: input, title: title }, null, { showShare: false, includeToc: false }));
   }
 
   // (2026-09-08 추가) "재물운"/"커리어운" — attachSingleCTA와 같은 틀(무료 티저 → 목차
@@ -566,13 +636,13 @@
   function attachWealthCTA(card, state) {
     var input = buildProfessionalInput(state);
     var title = (state.name ? state.name + '님의 ' : '') + '재물운 심층 리포트';
-    card.appendChild(buildCTA('wealth_fortune', { input: input, title: title }, null, { showShare: false, includeToc: false }));
+    appendCTA(card, buildCTA('wealth_fortune', { input: input, title: title }, null, { showShare: false, includeToc: false }));
   }
 
   function attachCareerCTA(card, state) {
     var input = buildProfessionalInput(state);
     var title = (state.name ? state.name + '님의 ' : '') + '커리어운 심층 리포트';
-    card.appendChild(buildCTA('career_fortune', { input: input, title: title }, null, { showShare: false, includeToc: false }));
+    appendCTA(card, buildCTA('career_fortune', { input: input, title: title }, null, { showShare: false, includeToc: false }));
   }
 
   function truncate(str, n) {
@@ -598,10 +668,20 @@
   // 결에 맞춘 디자인 개정) 캡처 전에 미리 로드해둘 폰트 목록에서도 뺐다.
   function fontsReady() {
     if (!document.fonts || !document.fonts.ready) return Promise.resolve();
-    return Promise.all([
-      document.fonts.load('400 40px "Song Myung"'),
-      document.fonts.load('700 40px "Gowun Dodum"')
-    ]).catch(function () {}).then(function () { return document.fonts.ready; });
+    // (2026-09-28 수정) 아래 주석의 Song Myung/Gowun Dodum은 2026-09-28 UI 개편에서
+    // Pretendard(+Noto Sans/Serif KR)로 교체돼 더 이상 로드되지 않는다. 없는 패밀리는
+    // document.fonts.load()가 조용히 성공해서, 실제로는 아무 폰트도 기다리지 않는
+    // 상태였다 — 공유 카드가 대체 폰트로 찍힐 수 있었다.
+    var families = [
+      '400 16px "Pretendard Variable"',
+      '750 24px "Pretendard Variable"',
+      '400 16px "Noto Sans KR"',
+      '700 16px "Noto Sans KR"',
+      '700 24px "Noto Serif KR"'
+    ];
+    return Promise.all(families.map(function (f) {
+      return document.fonts.load(f).catch(function () {});
+    })).then(function () { return document.fonts.ready; }).catch(function () {});
   }
 
   function siteShareUrl() {
@@ -611,7 +691,8 @@
 
   function siteShareHost() {
     if (window.YeonbunSite && window.YeonbunSite.host) return window.YeonbunSite.host;
-    try { return new URL(siteShareUrl()).host; } catch (e) { return '결'; }
+    // (2026-09-28) 브랜드명이 '결' → '연록'으로 바뀐 뒤에도 폴백 문자열이 남아 있었다.
+    try { return new URL(siteShareUrl()).host; } catch (e) { return '연록'; }
   }
 
   // 캡처된 canvas를 미리보기 + "이미지 저장"/"공유하기" 버튼으로 보여주는 공통 로직.
@@ -689,8 +770,8 @@
 
   var DEFAULT_SHARE_META = {
     footerCta: '나도 내 연애 캐릭터 뽑아보기 👉',
-    filename: 'gyeol-love-character-card.png',
-    title: '결 — 나의 연애 캐릭터 카드',
+    filename: 'yeonrok-love-character-card.png',
+    title: '연록 — 나의 연애 캐릭터 카드',
     text: '내 사주로 나온 연애 캐릭터 카드! 너도 확인해볼래?'
   };
 
@@ -736,7 +817,7 @@
           if (!target) return;
           target.style.animation = 'none'; // 리빌 애니메이션은 캡처 순간과 안 맞을 수 있어서 끔
 
-          // 캡처본 전용 — "결" 유입을 유도하는 문구를 카드 하단에 덧붙임(실제 온페이지 카드는 안 건드림).
+          // 캡처본 전용 — "연록" 유입을 유도하는 문구를 카드 하단에 덧붙임(실제 온페이지 카드는 안 건드림).
           var shareFooter = clonedDoc.createElement('div');
           shareFooter.className = 'lc-share-footer';
           var cta = clonedDoc.createElement('div');

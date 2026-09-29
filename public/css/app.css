@@ -44,7 +44,6 @@
     --disabled-bg: #EFE9EC;
     --disabled-fg: #A79EA6;
     --focus-ring: rgba(116, 29, 88, 0.28);
-    --overlay: rgba(35, 28, 40, 0.48);
     --skeleton: #F0E8EB;
 
     /* --- 모서리 --- */
@@ -67,6 +66,7 @@
 
     /* --- 치수 --- */
     --btn-h: 54px;
+    --btn-h-compact: 46px;   /* (2026-09-28) 리포트 카드 안 보조 버튼처럼 한 칸에 둘씩 들어가는 축소형 */
     --field-h: 46px;
     --nav-h: 76px;
     --app-pad: 22px;
@@ -79,7 +79,6 @@
 
     /* --- 그림자 --- */
     --shadow: 0 10px 30px -18px rgba(44, 20, 37, 0.28);
-    --shadow-soft: 0 6px 20px -16px rgba(44, 20, 37, 0.22);
     --shadow-lift: 0 18px 60px rgba(44, 20, 37, 0.12);
 
     /* --- 예전 이름 별칭 (값은 위 의미 토큰이 원본) --- */
@@ -99,10 +98,8 @@
     --indigo-tint: rgba(79, 21, 63, 0.08);
     --gold: var(--accent-rose);
     --gold-tint: rgba(216, 88, 120, 0.12);
-    --rose: var(--accent-rose);
     --rose-text: #B23A5C;         /* 로즈를 작은 글자색으로 쓸 때(명암비 확보) */
     --rose-pale: #F1C7D2;
-    --rose-tint: var(--accent-rose-soft);
     --danger: var(--error);
     --danger-tint: var(--error-soft);
     --radius: var(--r-md);
@@ -141,7 +138,7 @@
   /* (2026-09-19 개편) 예전의 회색 radial 그림자 대신, 크림 바탕 위에 아주 옅은
      로즈/퍼플 기운만 얹어 종이 질감을 낸다. 텍스트 가독성을 해치지 않도록 최대
      불투명도를 0.05 이하로 유지한다. */
-  /* 전달본은 배경 그라데이션 장식 없이 단색 #F5F2F3 위에 카드가 얹히는 구조다. */
+  /* 전달본은 배경 그라데이션 장식 없이 단색 var(--bg) 위에 카드가 얹히는 구조다. */
   body {
     background: var(--bg);
     color: var(--text);
@@ -217,7 +214,7 @@
     display: flex;
     align-items: center;
     gap: 22px;
-    padding: 6px 4px 30px;
+    padding: 6px var(--sp-1) 30px;
     border-bottom: 1px solid var(--line);
     margin-bottom: 28px;
   }
@@ -233,7 +230,7 @@
     font-weight: 750;
     font-size: 2.6rem;
     letter-spacing: 0.04em;
-    margin: 0 0 4px;
+    margin: 0 0 var(--sp-1);
     color: var(--ink);
     text-wrap: balance;
   }
@@ -261,7 +258,7 @@
     align-items: baseline;
     justify-content: space-between;
     gap: var(--sp-2);
-    padding: 2px 2px 20px;
+    padding: 2px 2px var(--sp-5);
   }
 
   .home-brandbar-logo {
@@ -277,35 +274,9 @@
     text-align: right;
   }
 
-  .home-hero {
-    padding: 0 2px 26px;
-    margin-bottom: var(--sp-3);
-  }
 
-  .home-hero h1 {
-    font-family: var(--font-sans);
-    font-weight: 750;
-    font-size: clamp(1.72rem, 7.4vw, 2.1rem);
-    line-height: 1.5;
-    letter-spacing: -0.01em;
-    margin: 0 0 var(--sp-2);
-    color: var(--ink);
-    text-align: left;
-  }
 
-  .home-hero p {
-    margin: 0 0 var(--sp-3);
-    max-width: 330px;
-    color: var(--ink-soft);
-    font-size: 0.92rem;
-    line-height: 1.75;
-    text-align: left;
-  }
 
-  .home-hero-art {
-    margin: 0 0 var(--sp-3);
-    padding: 0 var(--sp-1);
-  }
 
   .home-hero-art .orbit-art { max-width: 300px; margin: 0 auto; }
 
@@ -334,9 +305,31 @@
     animation: homeTextUp 0.5s ease-out forwards;
   }
 
-  .home-hero h1          { animation-delay: 0.05s; }
-  .home-hero p           { animation-delay: 0.13s; }
-  .home-hero-art         { animation-delay: 0.21s; }
+  .home-hero h1          {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    font-family: var(--font-sans);
+    font-weight: 750;
+    font-size: clamp(1.72rem, 7.4vw, 2.1rem);
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+    margin: 0 0 var(--sp-2);
+    color: var(--ink);
+    text-align: left;
+ animation-delay: 0.05s; }
+  .home-hero p           {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    margin: 0 0 var(--sp-3);
+    max-width: 330px;
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    line-height: 1.75;
+    text-align: left;
+ animation-delay: 0.13s; }
+  .home-hero-art         {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    margin: 0 0 var(--sp-3);
+    padding: 0 var(--sp-1);
+ animation-delay: 0.21s; }
   .home-hero-cta-wrap    { animation-delay: 0.29s; }
   .home-hero-hint        { animation-delay: 0.37s; }
 
@@ -390,20 +383,20 @@
   .home-feature-item {
     background: var(--paper);
     border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 18px 16px;
+    border-radius: var(--r-sm);
+    padding: 18px var(--sp-4);
   }
 
   .home-feature-icon {
     width: 42px;
     height: 42px;
-    border-radius: 12px;
+    border-radius: var(--r-field);
     background: var(--seal-tint);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.2rem;
-    margin-bottom: 12px;
+    margin-bottom: var(--sp-3);
   }
 
   .home-feature-head {
@@ -424,34 +417,9 @@
   }
 
   /* ---------- Tabs ---------- */
-  .tabs {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 26px;
-    border-bottom: 1px solid var(--line);
-  }
 
-  .tab-btn {
-    appearance: none;
-    background: none;
-    border: none;
-    font-family: var(--font-sans);
-    font-size: 0.95rem;
-    color: var(--ink-faint);
-    padding: 10px 4px 12px;
-    margin-right: 22px;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: color 0.15s ease, border-color 0.15s ease;
-  }
 
-  .tab-btn:hover { color: var(--ink); }
 
-  .tab-btn.active {
-    color: var(--seal);
-    border-bottom-color: var(--seal);
-    font-weight: 700;
-  }
 
   .panel { display: none; }
   .panel.active { display: block; animation: fadeIn 0.25s ease; }
@@ -467,14 +435,6 @@
   }
 
   /* ---------- Cards / form ---------- */
-  .card {
-    background: var(--paper-2);
-    border: 1px solid var(--line);
-    border-radius: var(--r-lg);
-    padding: var(--sp-3);
-    box-shadow: var(--shadow-soft);
-    margin-bottom: var(--sp-3);
-  }
 
   .card h2 {
     font-family: var(--font-sans);
@@ -489,36 +449,14 @@
   .field-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 12px;
-    margin-bottom: 12px;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-3);
   }
 
-  label {
-    display: block;
-    font-size: 0.82rem;
-    color: var(--ink-soft);
-    margin-bottom: var(--sp-1);
-    letter-spacing: 0;
-  }
 
   /* (2026-09-19 개편) 시안의 입력창: 밝은 표면 + 얇은 테두리 + 넉넉한 내부 여백.
      터치 영역을 위해 최소 높이를 48px 이상으로 잡는다. */
-  input[type="number"], input[type="text"], input[type="email"], input[type="tel"],
-  input[type="date"], input[type="password"], select, textarea {
-    width: 100%;
-    font-family: var(--font-sans);
-    font-size: 0.95rem;
-    min-height: 50px;
-    padding: 13px 14px;
-    border-radius: var(--r-md);
-    border: 1px solid var(--line);
-    background: var(--paper-2);
-    color: var(--ink);
-    font-variant-numeric: tabular-nums;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  }
 
-  input::placeholder, textarea::placeholder { color: var(--ink-faint); }
 
   input[type="number"]:hover, input[type="text"]:hover, select:hover, textarea:hover {
     border-color: var(--line-strong);
@@ -537,11 +475,6 @@
     box-shadow: 0 0 0 3px var(--danger-tint);
   }
 
-  input:disabled, select:disabled, textarea:disabled {
-    background: var(--paper-3);
-    color: var(--ink-faint);
-    cursor: not-allowed;
-  }
 
   /* 키보드 포커스 표시는 팔레트에 맞춘 플럼 링으로 통일. */
   a:focus-visible, button:focus-visible, [tabindex]:focus-visible,
@@ -551,45 +484,14 @@
     border-radius: var(--r-sm);
   }
 
-  .check-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 4px 0 16px;
-    font-size: 0.86rem;
-    color: var(--ink-soft);
-  }
 
   .check-row input { width: auto; }
 
   /* (2026-09-19 개편) 시안의 주요 버튼: 뮤트 퍼플 바탕 + 밝은 텍스트 + 충분한 높이
      (터치 44px 이상) + 둥근 모서리(pill이 아니라 14px). <a class="btn">도 있어서
      text-decoration/색 상속을 여기서 확실히 끊는다. */
-  .btn {
-    appearance: none;
-    border: none;
-    border-radius: 14px;
-    min-height: 54px;
-    padding: 15px 26px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--sp-1);
-    font-family: var(--font-sans);
-    font-size: 1rem;
-    font-weight: 700;
-    line-height: 1.3;
-    cursor: pointer;
-    text-decoration: none;
-    background: var(--seal);
-    color: var(--on-seal);
-    box-shadow: 0 8px 20px -12px rgba(89, 60, 88, 0.5);
-    transition: transform 0.12s ease, background 0.15s ease, box-shadow 0.15s ease;
-  }
 
-  .btn:hover { background: var(--seal-deep); box-shadow: 0 10px 24px -12px rgba(89, 60, 88, 0.55); }
-  .btn:active { transform: scale(0.98); background: var(--seal-deep); }
-  .btn[disabled], .btn:disabled, .btn.is-disabled {
+      .btn[disabled], .btn:disabled, .btn.is-disabled {
     background: var(--paper-3);
     color: var(--ink-faint);
     box-shadow: none;
@@ -598,7 +500,6 @@
   }
 
   /* 버튼 안의 화살표(시안의 "우리 관계 알아보기 →")는 장식이라 스크린리더에서 제외한다. */
-  .btn .btn-arrow { font-size: 1.05em; line-height: 1; }
 
   .btn.outline {
     background: var(--paper-2);
@@ -623,17 +524,6 @@
      같아서 화면에서 눈에 잘 안 띈다는 피드백에 대응. 가로 폭을 꽉 채우고, 글자/여백을 키우고,
      그라데이션 + 은은하게 커졌다 작아졌다 하는 그림자 펄스로 "지금 눌러야 할 버튼"이라는
      걸 시각적으로 확실히 구분해준다. */
-  .btn-buy {
-    display: block;
-    width: 100%;
-    padding: 15px 20px;
-    font-size: 1.02rem;
-    border-radius: 14px;
-    background: linear-gradient(135deg, var(--seal), var(--seal-deep));
-    box-shadow: 0 10px 24px -8px var(--seal);
-    animation: btn-buy-pulse 2.6s ease-in-out infinite;
-  }
-  .btn-buy:hover { background: linear-gradient(135deg, var(--seal), var(--seal-deep)); filter: brightness(1.05); }
 
   @keyframes btn-buy-pulse {
     0%, 100% { box-shadow: 0 10px 24px -8px var(--seal); }
@@ -644,25 +534,14 @@
     .btn-buy { animation: none; }
   }
 
-  .btn-center {
-    display: block;
-    width: fit-content;
-    margin: 18px auto 0;
-  }
 
-  .hint {
-    font-size: 0.78rem;
-    color: var(--ink-faint);
-    margin-top: -4px;
-    margin-bottom: 14px;
-  }
 
   /* ---------- 사주 명식표 ---------- */
   .myeongsik {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin: 4px 0 6px;
+    gap: var(--sp-2);
+    margin: var(--sp-1) 0 6px;
   }
 
   .pillar {
@@ -670,7 +549,7 @@
     border: 1px solid var(--line);
     border-radius: 10px;
     text-align: center;
-    padding: 10px 4px 12px;
+    padding: 10px var(--sp-1) var(--sp-3);
   }
 
   .pillar .role {
@@ -689,11 +568,15 @@
   .pillar .hangul {
     font-size: 0.8rem;
     color: var(--ink-soft);
-    margin-top: 4px;
+    margin-top: var(--sp-1);
   }
 
   .pillar .stem-el { color: var(--el-color, var(--ink)); }
-  .pillar .branch-el { color: var(--el-color2, var(--ink)); }
+  /* (2026-09-28) --el-color2는 CSS/JS 어디에서도 정의된 적이 없어, 지지(地支) 글자는
+     처음부터 늘 폴백인 --ink로 렌더됐다. 죽은 간접 참조를 걷어내고 실제 동작을 그대로 적는다.
+     천간처럼 오행 색을 입히려면 var(--el-color)로 바꾸면 된다(.branch-el에도 el-* 클래스가
+     이미 붙어 있다) — 다만 이건 눈에 보이는 디자인 변경이라 임의로 하지 않았다. */
+  .pillar .branch-el { color: var(--ink); }
 
   .el-목 { --el-color: var(--wood); }
   .el-화 { --el-color: var(--fire); }
@@ -709,11 +592,11 @@
   }
 
   /* ---------- 오행 바 ---------- */
-  .oheang-list { display: flex; flex-direction: column; gap: 8px; margin: 14px 0 4px; }
+  .oheang-list { display: flex; flex-direction: column; gap: var(--sp-2); margin: 14px 0 var(--sp-1); }
   .oheang-row { display: grid; grid-template-columns: 52px 1fr 24px; align-items: center; gap: 10px; font-size: 0.84rem; }
   .oheang-row .lab { color: var(--ink-soft); }
-  .oheang-track { height: 9px; border-radius: 999px; background: var(--paper-3); overflow: hidden; }
-  .oheang-fill { height: 100%; border-radius: 999px; }
+  .oheang-track { height: 9px; border-radius: var(--r-pill); background: var(--paper-3); overflow: hidden; }
+  .oheang-fill { height: 100%; border-radius: var(--r-pill); }
   .oheang-row .cnt { text-align: right; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
 
   /* ---------- 결과 텍스트 ---------- */
@@ -724,7 +607,7 @@
     color: var(--ink);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--sp-2);
   }
   .result-block h3::before {
     content: "";
@@ -735,23 +618,10 @@
   }
   .result-block p { margin: 0 0 10px; color: var(--ink-soft); font-size: 0.92rem; }
 
-  .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 12px; }
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.78rem;
-    padding: 5px 12px;
-    border-radius: 999px;
-    background: var(--gold-tint);
-    color: var(--rose-text);
-    border: 1px solid var(--gold-tint);
-  }
-  .badge.seal { background: var(--seal-tint); color: var(--seal); }
-  .badge.indigo { background: var(--indigo-tint); color: var(--indigo); }
-  /* (2026-08-31 추가) "다시, 우리" 리포트 카드 배지 — 기존 seal/indigo/기본(gold)과
+  .badge-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: 6px 0 var(--sp-3); }
+    .badge.seal { background: var(--seal-tint); color: var(--seal); }
+    /* (2026-08-31 추가) "다시, 우리" 리포트 카드 배지 — 기존 seal/indigo/기본(gold)과
      구별되는 4번째 색이 필요해서 --water를 새로 재활용했다. */
-  .badge.water { background: color-mix(in srgb, var(--water) 14%, transparent); color: var(--water); }
 
   /* ---------- 궁합 ---------- */
   /* (2026-08-24 수정) 예전엔 뷰포트 560px 이상에서 A/B를 좌우 2열로 배치했는데, 18단계에서
@@ -762,15 +632,15 @@
   .compat-people {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: var(--sp-5);
   }
 
   .compat-person {
     position: relative;
     border: 1px solid var(--line);
-    border-radius: 12px;
+    border-radius: var(--r-field);
     background: var(--paper);
-    padding: 20px 16px 16px;
+    padding: var(--sp-5) var(--sp-4) var(--sp-4);
   }
 
   .compat-person-label {
@@ -783,8 +653,8 @@
     font-size: 0.72rem;
     font-weight: 700;
     line-height: 1;
-    padding: 4px 11px;
-    border-radius: 999px;
+    padding: var(--sp-1) 11px;
+    border-radius: var(--r-pill);
   }
 
   .compat-person-b .compat-person-label { background: var(--seal); }
@@ -810,16 +680,16 @@
      프롬프트에 반영). 결과 자체가 아니라 입력 폼이라 나의 연애 사주 폼과 같은 --paper 카드
      톤을 그대로 씀(경쟁사처럼 어두운 별도 테마를 쓰지 않음 — 우리 브랜드 일관성 유지). */
   .compat-context { margin-top: 22px; }
-  .compat-context-label { font-weight: 700; color: var(--ink); font-size: 0.92rem; margin: 18px 0 4px; }
+  .compat-context-label { font-weight: 700; color: var(--ink); font-size: 0.92rem; margin: 18px 0 var(--sp-1); }
   .compat-context-label:first-child { margin-top: 0; }
   .compat-context-optional { font-weight: 400; color: var(--ink-faint); font-size: 0.78rem; }
   .compat-context-hint { color: var(--ink-faint); font-size: 0.8rem; margin-bottom: 10px; }
 
-  .compat-stage-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .compat-stage-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
   .compat-stage-chip {
     flex: 1 1 auto;
     min-width: 70px;
-    padding: 10px 12px;
+    padding: 10px var(--sp-3);
     border-radius: 10px;
     border: 1px solid var(--line);
     background: var(--paper);
@@ -838,9 +708,9 @@
   .compat-concern-card {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 14px 12px;
-    border-radius: 12px;
+    gap: var(--sp-1);
+    padding: 14px var(--sp-3);
+    border-radius: var(--r-field);
     border: 1px solid var(--line);
     background: var(--paper);
     text-align: left;
@@ -855,7 +725,7 @@
 
   #c-concern-detail {
     width: 100%;
-    padding: 10px 12px;
+    padding: 10px var(--sp-3);
     border-radius: 10px;
     border: 1px solid var(--line);
     background: var(--paper);
@@ -875,14 +745,14 @@
      공개, 나머지는 진짜 텍스트를 그대로 둔 채 .report-teaser-fade로 시각적으로만 블러
      처리한다(더미 텍스트 아님 — 결제 후에도 같은 내용이 그대로 이어짐). 궁합분석
      (compat_overview)과 연애운분석(origin_profile) 둘 다 이 컴포넌트를 그대로 쓴다. */
-  .report-teaser { margin-top: 20px; }
+  .report-teaser { margin-top: var(--sp-5); }
   .report-teaser-label {
     font-weight: 700;
     color: var(--ink);
     font-size: 0.92rem;
     margin-bottom: 10px;
   }
-  .report-teaser-loading { padding: 4px 0 2px; }
+  .report-teaser-loading { padding: var(--sp-1) 0 2px; }
   .report-teaser-loading-row {
     display: flex;
     align-items: center;
@@ -905,7 +775,7 @@
   /* 실제 콘텐츠가 들어올 자리 모양을 미리 잡아두는 스켈레톤 — 로딩 중에도 "지금 뭔가
      만들어지고 있다"는 실감을 주고, 콘텐츠가 도착했을 때 레이아웃이 갑자기 위아래로
      튀지 않도록(스켈레톤 높이 ≈ 실제 콘텐츠 높이) 완충 역할도 한다. */
-  .report-teaser-skeleton { display: flex; flex-direction: column; gap: 8px; }
+  .report-teaser-skeleton { display: flex; flex-direction: column; gap: var(--sp-2); }
   .report-teaser-skel-block,
   .report-teaser-skel-line {
     border-radius: 8px;
@@ -913,7 +783,7 @@
     background-size: 400% 100%;
     animation: report-teaser-shimmer 1.6s ease infinite;
   }
-  .report-teaser-skel-block { height: 64px; border-radius: 12px; margin-bottom: 2px; }
+  .report-teaser-skel-block { height: 64px; border-radius: var(--r-field); margin-bottom: 2px; }
   .report-teaser-skel-line { height: 12px; }
   @keyframes report-teaser-shimmer {
     0% { background-position: 100% 0; }
@@ -925,7 +795,7 @@
     .report-teaser-skel-block, .report-teaser-skel-line { animation: none; }
   }
   .report-teaser-cta {
-    margin-top: 12px;
+    margin-top: var(--sp-3);
     padding: 10px 14px;
     border-radius: 10px;
     background: var(--seal-tint);
@@ -978,8 +848,8 @@
      전역 규칙)까지 이중으로 막아둔다. */
   .lc-card {
     position: relative;
-    border-radius: 20px;
-    padding: 22px 20px 20px;
+    border-radius: var(--r-md);
+    padding: 22px var(--sp-5) var(--sp-5);
     overflow: hidden;
     background: var(--paper-2);
     border: 1px solid var(--line);
@@ -1010,7 +880,7 @@
   .lc-kicker {
     font-size: 0.7rem; letter-spacing: 0.06em; font-weight: 700;
     color: var(--ink-faint); background: var(--paper-3);
-    padding: 5px 12px; border-radius: 999px;
+    padding: 5px var(--sp-3); border-radius: var(--r-pill);
   }
   .lc-rarity { font-size: 0.92rem; letter-spacing: 0.04em; color: var(--rose-text); }
 
@@ -1025,74 +895,74 @@
     position: relative; z-index: 1;
   }
 
-  .lc-attr-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; position: relative; z-index: 1; }
+  .lc-attr-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-4); position: relative; z-index: 1; }
   .lc-attr-badge {
     display: inline-flex; align-items: center; gap: 6px;
     background: var(--paper); border: 1px solid var(--line); color: var(--ink-soft);
-    padding: 6px 13px; border-radius: 999px; font-size: 0.78rem; font-weight: 700;
+    padding: 6px 13px; border-radius: var(--r-pill); font-size: 0.78rem; font-weight: 700;
   }
 
   .lc-oneliner {
     background: var(--paper);
     border-left: 3px solid var(--lc-accent, var(--seal));
     border-radius: 0 12px 12px 0;
-    padding: 13px 16px;
+    padding: 13px var(--sp-4);
     font-size: 0.94rem;
     line-height: 1.65;
     color: var(--ink);
-    margin-bottom: 16px;
+    margin-bottom: var(--sp-4);
     position: relative; z-index: 1;
   }
   .lc-oneliner span { display: block; }
 
-  .lc-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; position: relative; z-index: 1; }
-  .lc-tag { font-size: 0.72rem; background: var(--paper-3); padding: 5px 10px; border-radius: 999px; color: var(--ink-soft); }
+  .lc-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--sp-5); position: relative; z-index: 1; }
+  .lc-tag { font-size: 0.72rem; background: var(--paper-3); padding: 5px 10px; border-radius: var(--r-pill); color: var(--ink-soft); }
 
   .lc-panel {
     background: var(--paper);
     border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 15px 16px;
-    margin-bottom: 12px;
+    border-radius: var(--r-sm);
+    padding: 15px var(--sp-4);
+    margin-bottom: var(--sp-3);
     position: relative; z-index: 1;
   }
   .lc-panel:last-of-type { margin-bottom: 0; }
-  .lc-panel-title { font-size: 0.72rem; letter-spacing: 0.08em; font-weight: 700; color: var(--ink-faint); margin-bottom: 12px; }
+  .lc-panel-title { font-size: 0.72rem; letter-spacing: 0.08em; font-weight: 700; color: var(--ink-faint); margin-bottom: var(--sp-3); }
 
   .lc-stat-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
   .lc-stat-row:last-child { margin-bottom: 0; }
   .lc-stat-label { width: 62px; flex: none; font-size: 0.78rem; font-weight: 700; color: var(--ink-soft); }
-  .lc-stat-track { flex: 1; height: 9px; border-radius: 999px; background: var(--paper-3); overflow: hidden; }
-  .lc-stat-fill { height: 100%; border-radius: 999px; background: var(--lc-accent, var(--seal)); }
+  .lc-stat-track { flex: 1; height: 9px; border-radius: var(--r-pill); background: var(--paper-3); overflow: hidden; }
+  .lc-stat-fill { height: 100%; border-radius: var(--r-pill); background: var(--lc-accent, var(--seal)); }
   .lc-stat-value { width: 28px; flex: none; text-align: right; font-size: 0.76rem; font-variant-numeric: tabular-nums; color: var(--ink-faint); }
   .lc-stat-row--signature .lc-stat-label { color: var(--rose-text); }
   .lc-stat-row--signature .lc-stat-fill { background: var(--gold); }
 
-  .lc-trait-title, .lc-weakness-title { font-weight: 700; font-size: 0.96rem; margin: 2px 0 4px; color: var(--ink); }
+  .lc-trait-title, .lc-weakness-title { font-weight: 700; font-size: 0.96rem; margin: 2px 0 var(--sp-1); color: var(--ink); }
   .lc-trait-desc, .lc-weakness-desc { font-size: 0.84rem; color: var(--ink-soft); line-height: 1.6; }
-  .lc-trait-label, .lc-weakness-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; color: var(--ink-faint); margin-bottom: 4px; }
+  .lc-trait-label, .lc-weakness-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; color: var(--ink-faint); margin-bottom: var(--sp-1); }
   .lc-weakness { border-left: 3px solid var(--fire); }
 
   .lc-skill-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .lc-skill { background: var(--paper-3); border-radius: 12px; padding: 12px 12px; }
-  .lc-skill-name { font-size: 0.82rem; font-weight: 700; margin-bottom: 4px; color: var(--ink); }
+  .lc-skill { background: var(--paper-3); border-radius: var(--r-field); padding: var(--sp-3) var(--sp-3); }
+  .lc-skill-name { font-size: 0.82rem; font-weight: 700; margin-bottom: var(--sp-1); color: var(--ink); }
   .lc-skill-name::before { content: '✦ '; color: var(--lc-accent, var(--seal)); }
   .lc-skill-desc { font-size: 0.74rem; color: var(--ink-soft); line-height: 1.5; }
 
   .lc-footer {
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;
-    margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--line);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--sp-1);
+    margin-top: var(--sp-4); padding-top: 14px; border-top: 1px dashed var(--line);
     font-size: 0.68rem; color: var(--ink-faint);
     position: relative; z-index: 1;
   }
 
   /* 캐릭터 카드 바로 아래 "이 카드 공유하기" 버튼 줄 */
-  .lc-share-row { margin: 6px 0 20px; text-align: center; }
+  .lc-share-row { margin: 6px 0 var(--sp-5); text-align: center; }
 
   /* 공유용 캡처(reports.js renderCharacterCardShare)에서만 카드 맨 아래에 덧붙는 유입 유도 문구.
      온페이지에 실제로 보이는 .lc-card에는 렌더링되지 않고, 캡처 직전 복제본에만 추가됨. */
   .lc-share-footer {
-    margin-top: 16px;
+    margin-top: var(--sp-4);
     padding-top: 14px;
     border-top: 1px dashed var(--line);
     text-align: center;
@@ -1103,7 +973,7 @@
     font-family: var(--font-sans);
     font-size: 1.05rem;
     color: var(--ink);
-    margin-bottom: 4px;
+    margin-bottom: var(--sp-1);
   }
   .lc-share-footer-host {
     font-size: 0.72rem;
@@ -1120,23 +990,23 @@
   }
 
   /* 캐릭터 카드 아래 "자세한 사주 풀이" 접이식 섹션 */
-  .saju-detail-toggle { margin-top: 4px; }
+  .saju-detail-toggle { margin-top: var(--sp-1); }
   .saju-detail-toggle > summary {
     cursor: pointer;
     font-weight: 700;
     font-size: 0.86rem;
     color: var(--ink-soft);
-    padding: 10px 4px;
+    padding: 10px var(--sp-1);
   }
   .saju-detail-toggle > summary:hover { color: var(--seal); }
-  .saju-detail-toggle .card { margin-top: 8px; }
+  .saju-detail-toggle .card { margin-top: var(--sp-2); }
 
   /* ---------- 상담 가이드 ---------- */
   .concern-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 8px;
-    margin: 4px 0 18px;
+    gap: var(--sp-2);
+    margin: var(--sp-1) 0 18px;
   }
   .concern-chip {
     appearance: none;
@@ -1144,7 +1014,7 @@
     background: var(--paper);
     border: 1px solid var(--line);
     border-radius: 10px;
-    padding: 12px 12px;
+    padding: var(--sp-3) var(--sp-3);
     cursor: pointer;
     font-family: var(--font-sans);
     color: var(--ink);
@@ -1161,13 +1031,13 @@
 
   .guide-card {
     border-left: 3px solid var(--seal);
-    padding: 4px 0 4px 16px;
+    padding: var(--sp-1) 0 var(--sp-1) var(--sp-4);
   }
   .guide-card .field-label {
     font-size: 0.74rem;
     letter-spacing: 0.06em;
     color: var(--ink-faint);
-    margin: 14px 0 4px;
+    margin: 14px 0 var(--sp-1);
   }
   .guide-card .field-label:first-child { margin-top: 2px; }
   .guide-card p { margin: 0; color: var(--ink-soft); font-size: 0.93rem; }
@@ -1186,15 +1056,6 @@
     flex: none;
   }
 
-  .placeholder-note {
-    background: var(--indigo-tint);
-    border: 1px dashed var(--indigo);
-    border-radius: 10px;
-    padding: 12px 14px;
-    font-size: 0.82rem;
-    color: var(--ink-soft);
-    margin-top: 18px;
-  }
 
   /* 리포트 생성 대기 화면(pending.blade.php)의 원형 게이지 — 실제 진행률이 아니라
      예상 소요 시간을 기준으로 한 시각적 진행 표시(가짜 진행률)입니다. 원 전체가 천천히
@@ -1204,26 +1065,6 @@
   .rpt-gauge-spin { width: 100%; height: 100%; animation: rpt-gauge-spin 3.2s linear infinite; }
   @keyframes rpt-gauge-spin { to { transform: rotate(360deg); } }
   .rpt-gauge-svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
-  .rpt-gauge-track { fill: none; stroke: var(--paper-3); stroke-width: 9; }
-  .rpt-gauge-fill {
-    fill: none;
-    stroke: var(--seal);
-    stroke-width: 9;
-    stroke-linecap: round;
-    stroke-dashoffset: 0;
-    transition: stroke-dashoffset 0.3s ease;
-  }
-  .rpt-gauge-percent {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--ink);
-    font-variant-numeric: tabular-nums;
-  }
 
   @media (prefers-reduced-motion: reduce) {
     .rpt-gauge-spin { animation: none; }
@@ -1234,37 +1075,11 @@
      단계별 문구를 보여주는 것을 참고했다. 다만 가짜 타이머가 아니라 실제 챕터 완료율
      (completed+failed)/total 구간에 맞춰 체크(✓)/진행중(●)/대기(○) 상태를 계산해서
      보여준다 — "전문적으로 집중 탐구하는 느낌"을 실제 진행 상황과 어긋나지 않게 준다. */
-  .progress-steps { margin-top: 18px; text-align: left; }
-  .progress-step {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 8px 2px;
-  }
-  .progress-step-icon {
-    flex: none;
-    width: 20px;
-    text-align: center;
-    font-size: 0.9rem;
-    line-height: 1.5;
-    color: var(--ink-faint);
-  }
-  .progress-step.done .progress-step-icon { color: var(--wood); }
+        .progress-step.done .progress-step-icon { color: var(--wood); }
   .progress-step.active .progress-step-icon { color: var(--seal); animation: progress-step-pulse 1.4s ease-in-out infinite; }
   .progress-step-body { flex: 1; min-width: 0; }
-  .progress-step-title {
-    font-size: 0.86rem;
-    color: var(--ink-faint);
-    line-height: 1.5;
-  }
-  .progress-step.done .progress-step-title { color: var(--ink-soft); }
+    .progress-step.done .progress-step-title { color: var(--ink-soft); }
   .progress-step.active .progress-step-title { color: var(--ink); font-weight: 700; }
-  .progress-step-desc {
-    font-size: 0.78rem;
-    color: var(--ink-faint);
-    line-height: 1.5;
-    margin-top: 3px;
-  }
 
   @keyframes progress-step-pulse {
     0%, 100% { opacity: 1; }
@@ -1275,11 +1090,6 @@
     .progress-step.active .progress-step-icon { animation: none; }
   }
 
-  .empty-state {
-    color: var(--ink-faint);
-    font-size: 0.88rem;
-    padding: 10px 2px 4px;
-  }
 
   /* ---------- 결제 완료 페이지 ---------- */
   .complete-badge {
@@ -1298,12 +1108,8 @@
     box-shadow: 0 6px 16px -6px rgba(76, 122, 82, 0.4);
   }
 
-  .complete-title {
-    text-align: center;
-    margin-bottom: 26px;
-  }
 
-  .complete-title h2 {
+  .complete-title h1, .complete-title h2 {
     margin-bottom: 6px;
   }
 
@@ -1317,15 +1123,15 @@
     background: var(--paper);
     border: 1px solid var(--line);
     border-radius: 10px;
-    padding: 4px 16px;
+    padding: var(--sp-1) var(--sp-4);
     margin-bottom: 18px;
   }
 
   .receipt-row {
     display: flex;
     justify-content: space-between;
-    gap: 12px;
-    padding: 12px 0;
+    gap: var(--sp-3);
+    padding: var(--sp-3) 0;
     font-size: 0.9rem;
   }
 
@@ -1363,43 +1169,13 @@
      피드백에 대응해, CTA 영역 전체를 점선 구분선짜리 텍스트 블록에서 은은한 카드형
      "구매존"으로 바꿨다 — 배경 틴트 + 라운드 보더 + 그림자로 화면에서 시선이 멈추는
      지점을 만든다. */
-  .report-cta {
-    margin-top: 20px;
-    padding: 22px 18px 20px;
-    border-radius: 18px;
-    background: linear-gradient(180deg, var(--seal-tint), transparent 65%);
-    border: 1px solid var(--seal-tint);
-    box-shadow: 0 12px 28px -18px var(--seal);
-    text-align: center;
-  }
 
-  .report-cta-headline {
-    margin: 0 0 14px;
-    font-size: 0.98rem;
-    font-weight: 700;
-    color: var(--ink);
-  }
 
   /* (2026-08-24 추가) 결제 버튼 바로 아래 붙는 신뢰 배지 4칸 그리드 — 경쟁사(명사도)가
      "4대 학파 교차판독 / 6중 멀티 엔진 검증" 식으로 과장된 방법론을 내세우는 것과 달리,
      우리가 실제로 만든 기능(20챕터 심층 분석/1~2분 완성/챕터별 자동 재시도/평생 소장)만
      정직하게 카드로 보여준다(reports.js buildTrustBadges). */
-  .report-trust-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 16px;
-    text-align: left;
-  }
-  .report-trust-item {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 12px 12px 13px;
-  }
-  .report-trust-icon { font-size: 1.15rem; line-height: 1; margin-bottom: 6px; }
-  .report-trust-head { font-weight: 700; color: var(--seal-deep); font-size: 0.84rem; margin-bottom: 3px; }
-  .report-trust-desc { color: var(--ink-faint); font-size: 0.74rem; line-height: 1.45; }
+      .report-trust-icon { font-size: 1.15rem; line-height: 1; margin-bottom: 6px; }
 
   @media (max-width: 380px) {
     .report-trust-grid { grid-template-columns: 1fr; }
@@ -1408,7 +1184,7 @@
   /* 결제 전 "목차 미리보기" — .chapter-toc-*(구매 후 실제 목차)와 같은 시각 언어를
      재사용하되, 링크가 아니라 잠금 아이콘이 달린 정적 목록이라 별도 클래스로 둔다. */
   .report-toc-toggle {
-    margin-top: 16px;
+    margin-top: var(--sp-4);
     padding-top: 14px;
     border-top: 1px dashed var(--line);
     text-align: left;
@@ -1419,7 +1195,7 @@
     font-weight: 700;
     font-size: 0.86rem;
     color: var(--ink-soft);
-    padding: 6px 4px;
+    padding: 6px var(--sp-1);
   }
 
   .report-toc-toggle > summary:hover { color: var(--seal); }
@@ -1436,8 +1212,8 @@
   .report-toc-item {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
-    padding: 10px 8px;
+    gap: var(--sp-3);
+    padding: 10px var(--sp-2);
     border-radius: 10px;
   }
 
@@ -1473,16 +1249,10 @@
     line-height: 1.5;
   }
 
-  .report-toc-lock {
-    flex: none;
-    align-self: center;
-    font-size: 0.8rem;
-    opacity: 0.55;
-  }
 
   /* 결제 전 FAQ — .saju-detail-toggle과 같은 접이식 시각 언어를 재사용. */
   .report-faq {
-    margin-top: 16px;
+    margin-top: var(--sp-4);
     padding-top: 14px;
     border-top: 1px dashed var(--line);
     text-align: left;
@@ -1507,34 +1277,26 @@
     font-size: 0.84rem;
     font-weight: 600;
     color: var(--ink);
-    padding: 10px 4px;
+    padding: 10px var(--sp-1);
   }
 
   .report-faq-item > summary:hover { color: var(--seal); }
 
   .report-faq-item p {
-    margin: 0 0 12px;
-    padding: 0 4px;
+    margin: 0 0 var(--sp-3);
+    padding: 0 var(--sp-1);
     font-size: 0.82rem;
     line-height: 1.6;
     color: var(--ink-faint);
   }
 
-  .report-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 16px;
-    font-size: 0.8rem;
-    color: var(--ink-faint);
-    margin-bottom: 18px;
-  }
 
   .report-body h3 {
     font-family: var(--font-sans);
     font-weight: 750;
     font-size: 1.08rem;
     color: var(--seal-deep);
-    margin: 22px 0 8px;
+    margin: 22px 0 var(--sp-2);
   }
 
   .report-body h3:first-child { margin-top: 0; }
@@ -1547,7 +1309,7 @@
 
   .report-body ul {
     margin: 0 0 10px;
-    padding-left: 20px;
+    padding-left: var(--sp-5);
     line-height: 1.75;
     font-size: 0.92rem;
   }
@@ -1555,21 +1317,10 @@
   .report-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
-  .share-card-actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 14px;
-  }
 
-  .share-preview {
-    margin-top: 16px;
-    text-align: center;
-  }
 
   .share-preview img {
     max-width: 260px;
@@ -1582,27 +1333,27 @@
   .login-gate-inline {
     margin-top: 14px;
     display: flex;
-    gap: 8px;
+    gap: var(--sp-2);
     justify-content: center;
     flex-wrap: wrap;
   }
 
   /* ---------- 심층 연애 리포트 — 구조화 JSON 렌더링(reports/partials/single-report) ---------- */
-  .rpt { margin-top: 4px; }
+  .rpt { margin-top: var(--sp-1); }
 
   .rpt-section {
     margin-top: 26px;
-    padding-top: 20px;
+    padding-top: var(--sp-5);
     border-top: 1px dashed var(--line);
   }
-  .rpt-section:first-child { margin-top: 8px; padding-top: 0; border-top: none; }
+  .rpt-section:first-child { margin-top: var(--sp-2); padding-top: 0; border-top: none; }
 
   .rpt-section-title {
     font-family: var(--font-sans);
     font-weight: 750;
     font-size: 1.05rem;
     color: var(--seal-deep);
-    margin: 0 0 12px;
+    margin: 0 0 var(--sp-3);
   }
 
   .rpt-p { margin: 0 0 10px; line-height: 1.75; font-size: 0.92rem; color: var(--ink-soft); }
@@ -1611,21 +1362,20 @@
     background: var(--paper);
     border-left: 3px solid var(--seal);
     border-radius: 0 12px 12px 0;
-    padding: 12px 16px;
+    padding: var(--sp-3) var(--sp-4);
     font-size: 0.94rem;
     line-height: 1.7;
     color: var(--ink);
     margin-top: 10px;
   }
-  .rpt-quote--final { border-left-color: var(--gold); font-weight: 600; }
 
   /* concern_answer 블록 — 궁합 폼에서 사용자가 직접 선택/입력한 "가장 궁금한 것"에
      대한 직접적인 답을 강조하는 카드. compat_overview(첫 챕터) 맨 위에서만 쓰인다. */
   .rpt-concern-answer {
     background: var(--gold-tint);
     border: 1px solid var(--gold);
-    border-radius: 14px;
-    padding: 14px 16px;
+    border-radius: var(--r-sm);
+    padding: 14px var(--sp-4);
     margin-bottom: 14px;
   }
   .rpt-concern-answer-label {
@@ -1639,7 +1389,7 @@
     font-family: var(--font-sans);
     font-size: 0.92rem;
     color: var(--ink);
-    margin-bottom: 8px;
+    margin-bottom: var(--sp-2);
     line-height: 1.5;
   }
   .rpt-concern-answer-body {
@@ -1648,17 +1398,14 @@
     color: var(--ink-soft);
   }
 
-  .rpt-character-link { background: var(--seal-tint); border-radius: 14px; padding: 16px; border-top: none; margin-top: 20px; }
+  .rpt-character-link { background: var(--seal-tint); border-radius: var(--r-sm); padding: var(--sp-4); border-top: none; margin-top: var(--sp-5); }
   .rpt-character-link .rpt-p { color: var(--ink); }
 
   /* LOVE SCORE / COMPATIBILITY 게이지 바 — 오행 바(.oheang-*)와 같은 시각 언어 재사용 */
-  .rpt-score-list { display: flex; flex-direction: column; gap: 9px; margin-top: 4px; }
+  .rpt-score-list { display: flex; flex-direction: column; gap: 9px; margin-top: var(--sp-1); }
   .rpt-score-row { display: grid; grid-template-columns: 84px 1fr 30px; align-items: center; gap: 10px; font-size: 0.82rem; }
-  .rpt-score-label { color: var(--ink-soft); }
-  .rpt-score-track { height: 9px; border-radius: 999px; background: var(--paper-3); overflow: hidden; }
-  .rpt-score-fill { height: 100%; border-radius: 999px; background: var(--gold); }
-  .rpt-score-fill--indigo { background: var(--indigo); }
-  .rpt-score-row .rpt-score-value { text-align: right; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+    .rpt-score-track { height: 9px; border-radius: var(--r-pill); background: var(--paper-3); overflow: hidden; }
+      .rpt-score-row .rpt-score-value { text-align: right; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
 
   /* LOVE OS / WHO ATTRACTS YOU / PARTNER'S VIEW 카드 그리드 */
   .rpt-os-grid, .rpt-attract-grid, .rpt-partner-grid {
@@ -1669,12 +1416,11 @@
   .rpt-os-card, .rpt-attract-card, .rpt-partner-card {
     background: var(--paper);
     border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 12px 14px;
+    border-radius: var(--r-field);
+    padding: var(--sp-3) 14px;
   }
   .rpt-os-title { font-size: 0.86rem; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
-  .rpt-os-line { font-size: 0.86rem; color: var(--ink-soft); line-height: 1.6; margin-top: 4px; }
-  .rpt-os-line span {
+    .rpt-os-line span {
     display: inline-block;
     font-size: 0.68rem;
     font-weight: 700;
@@ -1692,8 +1438,8 @@
   .rpt-sw-card {
     background: var(--paper);
     border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 14px 16px;
+    border-radius: var(--r-field);
+    padding: 14px var(--sp-4);
     margin-top: 10px;
   }
   .rpt-sw-line { font-size: 0.88rem; line-height: 1.65; color: var(--ink-soft); margin-top: 6px; }
@@ -1704,7 +1450,7 @@
   .rpt-sw-weakness span { color: var(--seal); }
 
   /* RECURRING PATTERN */
-  .rpt-pattern-flow { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .rpt-pattern-flow { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: var(--sp-1); }
   .rpt-pattern-step {
     display: flex;
     align-items: flex-start;
@@ -1730,13 +1476,13 @@
   .rpt-advice-card {
     background: var(--paper);
     border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 14px 16px;
+    border-radius: var(--r-field);
+    padding: 14px var(--sp-4);
     margin-top: 10px;
   }
   .rpt-advice-num { font-size: 0.72rem; font-weight: 700; color: var(--rose-text); letter-spacing: 0.05em; margin-bottom: 6px; }
 
-  .rpt-final { background: var(--gold-tint); border-radius: 14px; padding: 18px; border-top: none; margin-top: 26px; }
+  .rpt-final { background: var(--gold-tint); border-radius: var(--r-sm); padding: 18px; border-top: none; margin-top: 26px; }
 
   /* (2026-08-24 추가) 시각 블록 4종 — score_bars/step_flow/paragraphs 같은 기존 데이터
      모양을 그대로 쓰거나(radar_chart, timeline) 새 필드를 더한(keyword_chips,
@@ -1766,7 +1512,7 @@
   }
 
   /* TIMELINE — step_flow와 같은 steps/key_point 데이터를 연결선 + 오행 색 순환 노드로. */
-  .rpt-timeline { position: relative; margin-top: 4px; padding-left: 34px; }
+  .rpt-timeline { position: relative; margin-top: var(--sp-1); padding-left: 34px; }
   .rpt-timeline::before {
     content: '';
     position: absolute;
@@ -1776,7 +1522,7 @@
     width: 2px;
     background: var(--line);
   }
-  .rpt-timeline-step { position: relative; padding-bottom: 16px; }
+  .rpt-timeline-step { position: relative; padding-bottom: var(--sp-4); }
   .rpt-timeline-step:last-child { padding-bottom: 0; }
   .rpt-timeline-num {
     position: absolute;
@@ -1796,64 +1542,41 @@
   .rpt-timeline-key-point {
     margin-top: 14px;
     background: var(--gold-tint);
-    border-radius: 12px;
-    padding: 12px 14px;
+    border-radius: var(--r-field);
+    padding: var(--sp-3) 14px;
     font-size: 0.88rem;
     color: var(--ink);
     display: flex;
-    gap: 8px;
+    gap: var(--sp-2);
     align-items: flex-start;
   }
 
   /* KEYWORD CHIPS — love_profile/final_verdict의 keywords 배열을 태그 pill로. */
-  .rpt-chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-  .rpt-chip-row--tight { margin-top: 8px; gap: 6px; }
-  .rpt-chip {
-    display: inline-flex;
-    align-items: center;
-    padding: 6px 14px;
-    border-radius: 999px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .rpt-chip-row--tight .rpt-chip { padding: 4px 11px; font-size: 0.74rem; }
+  .rpt-chip-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: 10px; }
+  .rpt-chip-row--tight { margin-top: var(--sp-2); gap: 6px; }
+    .rpt-chip-row--tight .rpt-chip { padding: var(--sp-1) 11px; font-size: 0.74rem; }
   .rpt-chip--seal { background: var(--seal-tint); color: var(--seal); }
-  .rpt-chip--indigo { background: var(--indigo-tint); color: var(--indigo); }
-  .rpt-chip--gold { background: var(--gold-tint); color: var(--rose-text); }
 
   /* LABEL GROUPS — (2026-09-08 신설) "재물운"/"커리어운" 결론 챕터의 "핵심 강점 5가지 /
      적합한 직무 5가지" 같은 여러 그룹 리스트. rpt-chip-row를 그대로 재사용하되 그룹마다
      제목을 붙이고 카드로 묶는다(.rpt-sw-card와 같은 여백/톤). */
-  .rpt-label-groups { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+  .rpt-label-groups { display: flex; flex-direction: column; gap: var(--sp-3); margin-top: 10px; }
   .rpt-label-group {
     background: var(--paper);
     border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 14px 16px;
+    border-radius: var(--r-field);
+    padding: 14px var(--sp-4);
   }
   .rpt-label-group-title { font-size: 0.82rem; font-weight: 700; color: var(--ink-soft); }
-  .rpt-label-group .rpt-chip-row { margin-top: 8px; }
+  .rpt-label-group .rpt-chip-row { margin-top: var(--sp-2); }
 
   /* COMPARE CARDS — who_attracts_you/opposite_type/compatibility_match의 compare.left/
      right를 VS 구분선을 사이에 둔 세로 스택으로. 폰 프레임 폭(~440px)에서 좌우 2열보다
      세로 스택이 한글 문장 줄바꿈에 훨씬 안전해서 이 레이아웃을 택함. */
-  .rpt-compare {
-    display: flex;
-    flex-direction: column;
-    margin-top: 6px;
-    border-radius: 14px;
-    overflow: hidden;
-    border: 1px solid var(--line);
-  }
-  .rpt-compare-side { padding: 14px 16px; background: var(--paper); }
+    .rpt-compare-side { padding: 14px var(--sp-4); background: var(--paper); }
   .rpt-compare-side--left { border-left: 4px solid var(--indigo); }
   .rpt-compare-side--right { border-left: 4px solid var(--gold); }
-  .rpt-compare-label { font-size: 0.76rem; font-weight: 700; letter-spacing: 0.03em; margin-bottom: 6px; }
-  .rpt-compare-side--left .rpt-compare-label { color: var(--indigo); }
-  .rpt-compare-side--right .rpt-compare-label { color: var(--rose-text); }
-  .rpt-compare-text { font-size: 0.88rem; line-height: 1.65; color: var(--ink-soft); }
-  .rpt-compare-divider {
+          .rpt-compare-divider {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1879,49 +1602,13 @@
      LoveFortune/Compatibility 등 20챕터+ 리포트 타입 전용. 레거시(schema_version=1)
      single/compat 리포트에는 쓰이지 않습니다. */
 
-  .chapter-toc-wrap {
-    margin-top: 4px;
-  }
 
   /* 상단에 붙는 가로 번호 탭 스트립. report-toc.js(IntersectionObserver)가 스크롤에 따라
      .active를 토글합니다. 기존 .tabs/.tab-btn과 같은 시각 언어(밑줄 강조)를 쓰되,
      sticky로 화면 상단에 계속 붙어있는다는 점이 다릅니다. */
-  .chapter-tab-strip {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px;
-    background: var(--paper);
-    padding: 8px 0;
-    margin-bottom: 18px;
-    border-bottom: 1px solid var(--line);
-    overflow-x: auto;
-  }
 
-  .chapter-tab {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 26px;
-    border-radius: 6px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    color: var(--ink-faint);
-    text-decoration: none;
-    transition: background 0.15s ease, color 0.15s ease;
-  }
 
-  .chapter-tab:hover { color: var(--ink); background: var(--paper-2); }
 
-  .chapter-tab.active {
-    color: var(--seal);
-    background: var(--seal-tint);
-  }
 
   /* 전체 챕터를 세로로 나열하는 목차 목록. */
   .chapter-toc-list {
@@ -1933,18 +1620,7 @@
     gap: 2px;
   }
 
-  .chapter-toc-item a {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 11px 8px;
-    border-radius: 10px;
-    text-decoration: none;
-    color: inherit;
-    transition: background 0.15s ease;
-  }
 
-  .chapter-toc-item a:hover { background: var(--paper-2); }
 
   .chapter-toc-num {
     flex: none;
@@ -1964,58 +1640,33 @@
     gap: 2px;
   }
 
-  .chapter-toc-title {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--ink);
-  }
 
-  .chapter-toc-teaser {
-    font-size: 0.78rem;
-    color: var(--ink-faint);
-    line-height: 1.5;
-  }
 
-  .chapter-toc-badge {
-    flex: none;
-    align-self: center;
-    font-size: 0.68rem;
-  }
 
-  .chapter-toc-badge--ready { background: var(--seal-tint); color: var(--seal); }
-  .chapter-toc-badge--failed { background: var(--gold-tint); color: var(--rose-text); }
-  .chapter-toc-badge--pending, .chapter-toc-badge--generating { background: var(--paper-3); color: var(--ink-faint); }
 
   /* 챕터 리더(chapter-reader.blade.php)에서 아직 준비 안 됐거나 실패한 챕터의 안내. */
   .chapter-pending-note {
     background: var(--paper);
     border: 1px dashed var(--line);
     border-radius: 10px;
-    padding: 14px 16px;
+    padding: 14px var(--sp-4);
     font-size: 0.86rem;
     color: var(--ink-faint);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: var(--sp-3);
     flex-wrap: wrap;
   }
 
   .chapter-retry-btn {
     flex: none;
-    padding: 8px 14px;
+    padding: var(--sp-2) 14px;
     font-size: 0.82rem;
   }
 
   /* 챕터형 진행 화면(chapter-progress.blade.php)의 "N / 총 챕터 완료" 카운터.
      원형 게이지(.rpt-gauge)는 레거시 pending.blade.php와 동일한 컴포넌트를 재사용합니다. */
-  .chapter-progress-count {
-    text-align: center;
-    margin-top: 10px;
-    font-size: 0.82rem;
-    color: var(--ink-faint);
-    font-variant-numeric: tabular-nums;
-  }
 
   /* 12개월 흐름/대운·세운 타임라인 등은 4단계(연간전략/인생전략)에서 실제로 쓰일 때
      구현합니다(지금은 연애운분석/궁합분석만 다루므로 아직 필요 없음). */
@@ -2031,17 +1682,10 @@
 
   /* (2026-08-26 수정) 사업자 정보를 항목별 줄바꿈 목록으로 정리 + 개인정보 처리방침
      링크/인스타그램 아이콘 행 추가. */
-  .business-footer {
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px dashed var(--line);
-    font-size: 0.74rem;
-    color: var(--ink-faint);
-  }
 
   .business-footer-list {
     list-style: none;
-    margin: 0 0 4px;
+    margin: 0 0 var(--sp-1);
     padding: 0;
   }
 
@@ -2050,13 +1694,9 @@
   }
 
   .business-footer p, .business-footer-contact {
-    margin: 0 0 4px;
+    margin: 0 0 var(--sp-1);
   }
 
-  .business-footer a {
-    color: var(--ink-faint);
-    text-decoration: underline;
-  }
 
   .business-footer a:hover { color: var(--seal); }
 
@@ -2101,14 +1741,14 @@
     gap: 10px;
     max-height: 420px;
     overflow-y: auto;
-    padding: 4px 2px 12px;
-    margin-bottom: 12px;
+    padding: var(--sp-1) 2px var(--sp-3);
+    margin-bottom: var(--sp-3);
   }
 
   .chat-bubble {
     max-width: 82%;
     padding: 10px 14px;
-    border-radius: 14px;
+    border-radius: var(--r-sm);
     font-size: 0.92rem;
     line-height: 1.55;
     white-space: pre-wrap;
@@ -2144,12 +1784,12 @@
     align-self: flex-start;
     color: var(--ink-faint);
     font-size: 0.8rem;
-    padding: 0 4px 6px;
+    padding: 0 var(--sp-1) 6px;
   }
 
   .chat-input-row {
     display: flex;
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
   .chat-input-row input {
@@ -2166,24 +1806,7 @@
     font-size: 0.84rem;
   }
 
-  .social-btn {
-    appearance: none;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-family: var(--font-sans);
-    font-size: 0.84rem;
-    font-weight: 700;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
 
-  .social-btn.kakao { background: #FEE500; color: #191600; }
-  .social-btn.naver { background: #03C75A; color: #ffffff; }
-  .social-btn:hover { filter: brightness(0.96); }
 
   /* .user-chip 계열은 2026-08-24 헤더/하단탭 개편으로 saju.blade.php의 예전 .topbar가
      빠지면서 더 이상 어디서도 쓰이지 않아 제거함(계정 정보/로그아웃은 마이페이지로 이동). */
@@ -2194,8 +1817,8 @@
     font-weight: 700;
     border: 1px solid var(--gold-tint);
     background: var(--gold-tint);
-    border-radius: 999px;
-    padding: 5px 12px;
+    border-radius: var(--r-pill);
+    padding: 5px var(--sp-3);
     font-size: 0.78rem;
   }
 
@@ -2205,34 +1828,13 @@
      좌측 "결" 워드마크 + 우측 코인 칩/로그인 링크만 가볍게. 예전 .topbar(로그인 폼+코인+
      리포트함+로그아웃을 한 줄에 다 넣은 버전)를 대체한다 — 무거운 계정 관리는 전부
      마이페이지로 옮겼다. */
-  .site-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 2px 0;
-    margin-bottom: 6px;
-  }
-  .site-header-logo {
-    font-family: var(--font-serif);
-    font-weight: 400;
-    font-size: 1.4rem;
-    color: var(--ink);
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-  }
-  .site-header-logo-img {
-    height: 28px;
-    width: auto;
-    display: block;
-  }
-  .site-header-coin {
+        .site-header-coin {
     color: var(--rose-text);
     text-decoration: none;
     font-weight: 700;
     border: 1px solid var(--gold-tint);
     background: var(--gold-tint);
-    border-radius: 999px;
+    border-radius: var(--r-pill);
     padding: 6px 13px;
     font-size: 0.78rem;
   }
@@ -2251,34 +1853,8 @@
      폭과 어긋나지 않게 맞춘다. env(safe-area-inset-bottom)은 iPhone 홈 인디케이터 영역을
      피하기 위한 것으로, <meta viewport ... viewport-fit=cover">가 있어야 실제로 값이 들어간다
      (이 바를 쓰는 페이지들에 함께 추가함). */
-  .site-bottom-nav {
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    max-width: 440px;
-    margin: 0 auto;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-around;
-    background: var(--paper-2);
-    border-top: 1px solid var(--line);
-    padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
-    z-index: 40;
-  }
 
-  .site-bottom-nav-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    padding: 4px 2px;
-    text-decoration: none;
-    color: var(--ink-faint);
-    font-size: 0.68rem;
-    font-weight: 700;
-  }
-  .site-bottom-nav-item.active { color: var(--seal); }
-  .site-bottom-nav-icon { width: 22px; height: 22px; }
+      .site-bottom-nav-icon { width: 22px; height: 22px; }
 
   /* "사주"는 실제 매출 진입점이라 원형 뱃지로 살짝 튀어나오게 강조(경쟁사 화면의 "가운데
      탭 강조" 구조만 참고, 색은 사이트 결 그대로 seal 톤). 항상 이 톤을 유지하고, 선택된
@@ -2306,7 +1882,6 @@
 
   /* 하단 탭바가 고정으로 떠 있는 만큼, 이 바를 쓰는 페이지의 .wrap 맨 아래 콘텐츠가
      가려지지 않게 여백을 더 확보한다(body에 has-bottom-nav 클래스를 붙인 페이지만). */
-  body.has-bottom-nav .wrap { padding-bottom: 130px; }
 
   /* ---------- 마이페이지 (my.blade.php, 2026-08-24 신설) ---------- */
   .my-coin-row {
@@ -2326,53 +1901,18 @@
   .dict-term-list { display: flex; flex-direction: column; gap: 14px; }
   .dict-term { padding-bottom: 14px; border-bottom: 1px dashed var(--line); }
   .dict-term:last-child { border-bottom: none; padding-bottom: 0; }
-  .dict-term-name { font-family: var(--font-sans); font-size: 1rem; color: var(--seal-deep); margin-bottom: 4px; }
-  .dict-term-desc { font-size: 0.86rem; color: var(--ink-soft); line-height: 1.65; }
 
   /* ---------- 코인 충전(결제) 페이지 ---------- */
   .plan-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 14px;
-    margin: 24px 0;
+    margin: var(--sp-6) 0;
   }
 
-  .plan-card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    background: var(--paper-2);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 26px 18px 20px;
-    box-shadow: var(--shadow);
-  }
 
-  .plan-card.highlight {
-    border-color: var(--seal);
-    box-shadow: 0 6px 20px -8px var(--seal-tint);
-  }
 
-  .plan-badge {
-    position: absolute;
-    top: -11px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--seal);
-    color: var(--on-seal);
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 4px 12px;
-    border-radius: 999px;
-  }
 
-  .plan-name {
-    font-family: var(--font-sans);
-    font-size: 1.1rem;
-    margin-bottom: 8px;
-  }
 
   .plan-credits {
     font-family: var(--font-serif);
@@ -2386,7 +1926,7 @@
   .plan-desc {
     color: var(--ink-soft);
     font-size: 0.84rem;
-    margin: 8px 0 14px;
+    margin: var(--sp-2) 0 14px;
     min-height: 2.6em;
   }
 
@@ -2396,26 +1936,21 @@
     color: var(--ink);
   }
 
-  .plan-unit {
-    font-size: 0.74rem;
-    color: var(--ink-faint);
-    margin: 4px 0 16px;
-  }
 
   .plan-card .btn { width: 100%; }
 
   /* ---------- 로그인 필요 안내 (AI 상담 탭) ---------- */
   .login-gate {
     text-align: center;
-    padding: 24px 10px 8px;
+    padding: var(--sp-6) 10px var(--sp-2);
   }
 
-  .login-gate p { color: var(--ink-soft); font-size: 0.92rem; margin-bottom: 16px; }
+  .login-gate p { color: var(--ink-soft); font-size: 0.92rem; margin-bottom: var(--sp-4); }
   .login-gate .social-btn { padding: 11px 22px; font-size: 0.9rem; margin: 0 5px; }
 
   /* ---------- 이전 대화 목록 ---------- */
   #chat-history {
-    margin-bottom: 16px;
+    margin-bottom: var(--sp-4);
   }
 
   #chat-history .field-label {
@@ -2434,7 +1969,7 @@
     background: var(--paper);
     border: 1px solid var(--line);
     border-radius: 9px;
-    padding: 9px 12px;
+    padding: 9px var(--sp-3);
     margin-bottom: 6px;
     font-size: 0.84rem;
     color: var(--ink);
@@ -2449,27 +1984,27 @@
     background: none;
     border: 1px dashed var(--line);
     border-radius: 9px;
-    padding: 9px 12px;
+    padding: 9px var(--sp-3);
     width: 100%;
     text-align: center;
     color: var(--ink-faint);
     font-family: var(--font-sans);
     font-size: 0.84rem;
     cursor: pointer;
-    margin-bottom: 4px;
+    margin-bottom: var(--sp-1);
   }
 
   /* ---------- 관리자 대시보드 ---------- */
   .admin-tabs {
     display: flex;
-    gap: 8px;
+    gap: var(--sp-2);
     margin: 22px 0 18px;
     border-bottom: 1px solid var(--line);
   }
 
   .admin-tab {
     display: inline-block;
-    padding: 8px 4px;
+    padding: var(--sp-2) var(--sp-1);
     margin-bottom: -1px;
     font-size: 0.88rem;
     font-weight: 700;
@@ -2489,14 +2024,14 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 14px;
-    margin-bottom: 20px;
+    margin-bottom: var(--sp-5);
   }
 
   .stat-card {
     background: var(--paper-2);
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    padding: 18px 20px;
+    padding: 18px var(--sp-5);
     box-shadow: var(--shadow);
   }
 
@@ -2509,7 +2044,7 @@
     font-size: 0.78rem;
     color: var(--ink-faint);
     letter-spacing: 0.02em;
-    margin-bottom: 8px;
+    margin-bottom: var(--sp-2);
   }
 
   .stat-value {
@@ -2523,7 +2058,7 @@
     font-family: var(--font-sans);
     font-size: 0.9rem;
     color: var(--ink-faint);
-    margin-left: 4px;
+    margin-left: var(--sp-1);
   }
 
   .stat-sub {
@@ -2545,7 +2080,7 @@
   .bar-chart {
     display: flex;
     align-items: flex-end;
-    gap: 4px;
+    gap: var(--sp-1);
     border-bottom: 1px solid var(--line);
     padding-bottom: 2px;
   }
@@ -2612,15 +2147,21 @@
 
   .admin-table tbody tr:hover { background: var(--paper); }
 
-  .wrap-narrow { max-width: 620px; }
+  /* (2026-09-28) .wrap-narrow는 사용자 화면 10곳에도 붙어 있었는데, .wrap(430px)보다
+     뒤에 선언돼 431~639px 구간에서만 이겨서 홈·계산기는 430px, 사주·기록·마이 등은
+     500~620px로 화면마다 앱 컨테이너 폭이 달라졌다(640px 이상에서는 body.phone-app .wrap이
+     다시 430px로 되돌렸다). 전달본 기준은 430px 하나뿐이라 사용자 화면에서는 클래스를
+     걷어냈다. 규칙 자체는 admin/chats/show.blade.php가 아직 쓰고 있어 남겨두되,
+     사용자 화면(.phone-app)에는 절대 적용되지 않도록 범위를 좁힌다. */
+  body:not(.phone-app) .wrap-narrow { max-width: 620px; }
 
   .chart-note {
     font-size: 0.78rem;
     color: var(--ink-faint);
     background: var(--indigo-tint);
     border-radius: 8px;
-    padding: 8px 12px;
-    margin: -4px 0 16px;
+    padding: var(--sp-2) var(--sp-3);
+    margin: -4px 0 var(--sp-4);
   }
 
   /* ---------- 관리자 기간/사용자 검색 ---------- */
@@ -2628,18 +2169,18 @@
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
-    gap: 12px;
+    gap: var(--sp-3);
     background: var(--paper-2);
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    padding: 14px 16px;
-    margin-bottom: 20px;
+    padding: 14px var(--sp-4);
+    margin-bottom: var(--sp-5);
   }
 
   .filter-field {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: var(--sp-1);
   }
 
   .filter-field label {
@@ -2662,7 +2203,7 @@
     background: var(--seal);
     color: var(--on-seal);
     border-radius: 8px;
-    padding: 8px 16px;
+    padding: var(--sp-2) var(--sp-4);
     font-family: var(--font-sans);
     font-size: 0.84rem;
     font-weight: 700;
@@ -2675,7 +2216,7 @@
     font-size: 0.78rem;
     color: var(--ink-faint);
     text-decoration: none;
-    padding: 8px 4px;
+    padding: var(--sp-2) var(--sp-1);
   }
 
   .filter-reset:hover { color: var(--seal); }
@@ -2684,18 +2225,18 @@
   .chat-session-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
   .chat-session-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: var(--sp-3);
     background: var(--paper);
     border: 1px solid var(--line);
     border-radius: 10px;
-    padding: 12px 14px;
+    padding: var(--sp-3) 14px;
     text-decoration: none;
     color: var(--ink);
   }
@@ -2736,7 +2277,7 @@
   .chat-transcript {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: var(--sp-1);
   }
 
   .chat-date-divider {
@@ -2761,7 +2302,7 @@
   .chat-meta {
     font-size: 0.68rem;
     color: var(--ink-faint);
-    margin: 3px 4px 0;
+    margin: 3px var(--sp-1) 0;
   }
 
   .chat-new-btn:hover { border-color: var(--seal); color: var(--seal); }
@@ -2771,8 +2312,10 @@
      필터→카드 목록)만 가져오고, 색은 어두운 네온 대신 사이트 결(종이/먹색/인주색)을 그대로
      쓴다. 카드 뱃지는 사이트에 이미 있는 seal-mark(테두리 사각형 안에 세리프 글자 하나)와
      같은 문법을 재사용해서, 새 아이콘 세트를 따로 만들지 않고도 카드마다 다르게 보이게 했다. */
-  .sagu-cat-row { display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
+  .sagu-cat-row { display: flex; gap: var(--sp-2); margin-bottom: 22px; flex-wrap: wrap; }
   .sagu-cat-btn {
+    /* (2026-09-28) 40px이라 최소 터치 영역(44px)에 못 미쳤다. */
+    min-height: 44px;
     appearance: none;
     border: 1px solid var(--line);
     background: var(--paper-2);
@@ -2781,7 +2324,7 @@
     font-size: 0.86rem;
     font-weight: 700;
     padding: 9px 18px;
-    border-radius: 999px;
+    border-radius: var(--r-pill);
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   }
@@ -2791,7 +2334,7 @@
   .sagu-panel { display: none; }
   .sagu-panel.active { display: block; animation: fadeIn 0.25s ease; }
 
-  .sagu-card-list { display: flex; flex-direction: column; gap: 12px; }
+  .sagu-card-list { display: flex; flex-direction: column; gap: var(--sp-3); }
 
   .sagu-card {
     display: flex;
@@ -2800,7 +2343,7 @@
     background: var(--paper-2);
     border: 1px solid var(--line);
     border-radius: 16px;
-    padding: 16px 18px;
+    padding: var(--sp-4) 18px;
     text-decoration: none;
     color: inherit;
     transition: border-color 0.15s ease, transform 0.12s ease;
@@ -2823,19 +2366,8 @@
   }
 
   .sagu-card-body { flex: 1; min-width: 0; }
-  .sagu-card-title { font-family: var(--font-sans); font-weight: 400; font-size: 1.02rem; color: var(--ink); margin-bottom: 3px; }
-  .sagu-card-desc { font-size: 0.82rem; color: var(--ink-soft); line-height: 1.5; }
+    .sagu-card-desc { font-size: 0.82rem; color: var(--ink-soft); line-height: 1.5; }
 
-  .sagu-card-price {
-    flex: none;
-    font-size: 0.76rem;
-    font-weight: 700;
-    color: var(--seal);
-    background: var(--seal-tint);
-    padding: 6px 12px;
-    border-radius: 999px;
-    white-space: nowrap;
-  }
 
   .sagu-card--soon { opacity: 0.55; }
   .sagu-card--soon .sagu-card-badge { border-color: var(--ink-faint); color: var(--ink-faint); }
@@ -2870,14 +2402,14 @@
     text-align: center;
     color: var(--ink-faint);
     font-size: 0.88rem;
-    padding: 40px 10px;
+    padding: var(--sp-8) 10px;
     border: 1px dashed var(--line);
     border-radius: 16px;
     background: var(--paper-2);
   }
 
   @media (max-width: 420px) {
-    .sagu-card { padding: 14px; gap: 12px; }
+    .sagu-card { padding: 14px; gap: var(--sp-3); }
     .sagu-card-badge { width: 40px; height: 40px; font-size: 1.1rem; }
     .sagu-card-price { font-size: 0.7rem; padding: 5px 10px; }
   }
@@ -2901,72 +2433,21 @@
     gap: 14px;
   }
 
-  .report-card {
-    background: var(--paper-2);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 18px;
-  }
 
   .report-card-top {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 12px;
+    margin-bottom: var(--sp-3);
   }
 
-  .report-card-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 11px;
-    background: var(--seal-tint);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.05rem;
-    flex-shrink: 0;
-  }
 
-  .report-card-subject {
-    font-family: var(--font-sans);
-    font-weight: 750;
-    font-size: 1.1rem;
-    color: var(--ink);
-    margin-bottom: 6px;
-    line-height: 1.4;
-  }
 
-  .report-card-heart {
-    color: var(--seal);
-    font-size: 0.85em;
-    margin: 0 2px;
-  }
 
-  .report-card-meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.8rem;
-    color: var(--ink-faint);
-    margin-bottom: 16px;
-  }
 
   .report-card-dot { opacity: 0.6; }
 
-  .report-card-actions {
-    display: flex;
-    gap: 10px;
-  }
 
-  .report-card-actions .btn {
-    flex: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 11px 12px;
-    font-size: 0.86rem;
-  }
 
   /* ============================================================
    * 인쇄 / PDF 저장 (2026-08-25 추가, 로드맵 4번)
@@ -3028,45 +2509,28 @@
     margin-bottom: 0;
   }
 
-  .policy-section h3 {
+  .policy-section h2, .policy-section h3 {
     font-family: var(--font-sans);
     font-weight: 750;
     font-size: 1.02rem;
-    margin: 0 0 8px;
+    margin: 0 0 var(--sp-2);
   }
 
   .policy-section p {
-    margin: 0 0 8px;
+    margin: 0 0 var(--sp-2);
   }
 
   .policy-section ul, .policy-section ol {
-    margin: 0 0 8px;
+    margin: 0 0 var(--sp-2);
     padding-left: 1.3em;
   }
 
   .policy-section li {
-    margin: 0 0 4px;
+    margin: 0 0 var(--sp-1);
   }
 
-  .policy-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.86rem;
-    margin: 0 0 8px;
-  }
 
-  .policy-table th, .policy-table td {
-    border: 1px solid var(--line);
-    padding: 8px 10px;
-    text-align: left;
-    vertical-align: top;
-  }
 
-  .policy-table th {
-    background: var(--paper-3);
-    font-weight: 600;
-    white-space: nowrap;
-  }
 
   /* ---------- 짝사랑 탈출 리포트 (2026-08-31 추가) ---------- */
   /* 궁합 폼(A/B)에 새로 추가한 성별 토글 — 기존 .compat-stage-chip과 같은 문법(테두리 →
@@ -3076,10 +2540,10 @@
      반영해, 선택 시 체크마크(::before) + 굵어진 테두리 + 은은한 그림자까지 겹쳐서 표시한다
      — 배경색 대비가 약한 화면/환경에서도 "선택됐다"는 게 분명히 보이도록 이중 삼중으로
      신호를 준다. */
-  .compat-gender-row { display: flex; gap: 8px; margin-top: 8px; }
+  .compat-gender-row { display: flex; gap: var(--sp-2); margin-top: var(--sp-2); }
   .compat-gender-chip {
     flex: 1;
-    padding: 8px 0;
+    padding: var(--sp-2) 0;
     border-radius: 10px;
     border: 1.4px solid var(--line);
     background: transparent;
@@ -3104,18 +2568,18 @@
   .rpt-timing-card {
     background: var(--paper);
     border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 14px 16px;
+    border-radius: var(--r-field);
+    padding: 14px var(--sp-4);
     margin-top: 10px;
   }
-  .rpt-timing-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .rpt-timing-head { display: flex; align-items: baseline; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-1); }
   .rpt-timing-rank {
     display: inline-block;
     font-size: 0.68rem;
     font-weight: 700;
     color: var(--on-seal);
     background: var(--seal);
-    border-radius: 999px;
+    border-radius: var(--r-pill);
     padding: 2px 9px;
     letter-spacing: 0.03em;
   }
@@ -3125,48 +2589,35 @@
      신호등의 통념적 색(초록/노랑/빨강)을 그대로 쓰는 게 사용자에게 더 직관적이라
      --wood/--gold/--fire를 신호등 의미로 재활용했다(각 변수는 라이트/다크 테마 모두에서
      이미 정의돼 있어 별도 다크모드 대응이 필요 없다). */
-  .rpt-verdict {
-    border-radius: 14px;
-    padding: 14px 16px;
-    margin-top: 10px;
-    border: 1px solid var(--line);
-  }
-  .rpt-verdict--go { background: color-mix(in srgb, var(--wood) 14%, transparent); border-color: var(--wood); }
-  .rpt-verdict--slow { background: var(--gold-tint); border-color: var(--gold); }
-  .rpt-verdict--stop { background: color-mix(in srgb, var(--fire) 14%, transparent); border-color: var(--fire); }
-  .rpt-verdict--neutral { background: var(--paper); }
-  .rpt-verdict-badge { font-family: var(--font-sans); font-weight: 700; font-size: 1.02rem; color: var(--ink); }
+            .rpt-verdict-badge { font-family: var(--font-sans); font-weight: 700; font-size: 1.02rem; color: var(--ink); }
 
   /* ---------- "다시, 우리"(재회 전략) 리포트 (2026-08-31 추가) ---------- */
   /* contact_action 블록의 5번째/6번째 판정(가벼운 연락/진심을 전달할 시점)은 기존
      go/slow/stop/neutral 4색으로는 표현이 부족해서 2개만 새로 더했다(나머지 3개는
      verdict_badge와 그대로 공유). */
-  .rpt-verdict--info { background: color-mix(in srgb, var(--water) 14%, transparent); border-color: var(--water); }
-  .rpt-verdict--warm { background: var(--seal-tint); border-color: var(--seal); }
 
   /* reunion_calendar_table 블록 — 실제로 계산된 12개월 재회 타이밍을 표 형태로. 별점은
      luck-cycle.js가 이미 문자로 만들어 주므로(⭐☆) 여기선 줄바꿈 없는 한 줄 표로만
      배치한다. */
-  .rpt-calendar { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
+  .rpt-calendar { display: flex; flex-direction: column; gap: 2px; margin-top: var(--sp-2); }
   .rpt-calendar-row {
     display: grid;
     grid-template-columns: 84px 1fr auto;
     align-items: center;
     gap: 10px;
-    padding: 8px 4px;
+    padding: var(--sp-2) var(--sp-1);
     border-bottom: 1px solid var(--line);
     font-size: 0.84rem;
   }
   .rpt-calendar-row:last-child { border-bottom: none; }
   .rpt-calendar-period { font-weight: 700; color: var(--ink); }
-  .rpt-calendar-stars { letter-spacing: 1px; }
-  .rpt-calendar-action {
+    .rpt-calendar-action {
     justify-self: end;
     font-size: 0.76rem;
     font-weight: 600;
     color: var(--seal);
     background: var(--seal-tint);
-    border-radius: 999px;
+    border-radius: var(--r-pill);
     padding: 3px 10px;
     white-space: nowrap;
   }
@@ -3185,27 +2636,6 @@
   transform: translateY(0);
 }
 
-.scroll-hint {
-  position: fixed;
-  left: 50%;
-  bottom: 88px;
-  transform: translateX(-50%);
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: none;
-  background: var(--ink);
-  color: var(--paper);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
-  cursor: pointer;
-  z-index: 60;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
 .scroll-hint.is-visible {
   opacity: 1;
   pointer-events: auto;
@@ -3230,14 +2660,15 @@
   transform: translateX(-50%) translateY(12px);
   background: var(--ink);
   color: var(--paper);
-  padding: 12px 20px;
-  border-radius: 999px;
+  padding: var(--sp-3) var(--sp-5);
+  border-radius: var(--r-pill);
   font-size: 14px;
   line-height: 1.4;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
   opacity: 0;
   transition: opacity 0.3s ease, transform 0.3s ease;
-  z-index: 9999;
+  /* (2026-09-28) 9999는 다른 층(최대 60)과 단절돼 있어 스케일 안으로 들였다. */
+  z-index: 70;
   max-width: 88vw;
   text-align: center;
   pointer-events: none;
@@ -3300,7 +2731,16 @@
     text-align: center;
   }
 
-  .app-topbar > strong { font-size: 16px; font-weight: 750; letter-spacing: -0.02em; }
+  /* (2026-09-28) 제목이 <strong>에서 <h1 class="app-topbar-title">로 바뀌었다.
+     h1 기본 margin/font-size를 여기서 눌러서 예전과 똑같이 보이게 한다. */
+  .app-topbar > .app-topbar-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 750;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+    color: var(--text);
+  }
 
   .icon-button {
     display: grid;
@@ -3367,7 +2807,7 @@
     justify-content: center;
     gap: 9px;
     min-height: 38px;
-    padding: 8px 12px;
+    padding: var(--sp-2) var(--sp-3);
     font-size: 12px;
     color: var(--text-muted);
     background: #FBF7F8;
@@ -3379,31 +2819,25 @@
   /* ---------- 버튼 스택 / 고정 CTA ---------- */
   .action-stack { display: grid; gap: 10px; }
 
-  .sticky-cta {
-    position: sticky;
-    z-index: 4;
-    bottom: 0;
-    margin: var(--sp-5) calc(var(--app-pad) * -1) 0;
-    padding: var(--sp-3) var(--sp-4) max(var(--sp-4), env(safe-area-inset-bottom));
-    background: linear-gradient(180deg, rgba(255, 253, 252, 0), var(--surface) 22%);
-  }
-
-  .sticky-cta .btn { width: 100%; }
-  .sticky-cta small { display: block; text-align: center; color: var(--text-muted); font-size: 11px; margin-bottom: 7px; }
-
-  /* 하단 탭바가 있는 화면에서는 탭바 위로 올라오게 한다. */
-  body.has-bottom-nav .sticky-cta { bottom: var(--nav-h); }
+  /* (2026-09-28) .sticky-cta(화면 하단 고정 CTA) 규칙을 제거했다.
+     개편 때 전달본을 보고 만들어 뒀지만 어떤 화면에서도 쓰이지 않았다(사용처 0건).
+     지금 붙일 자리는 무료 결과 화면의 결제 버튼인데, 그 버튼은 "신뢰 배지 4칸 → 목차
+     미리보기 → FAQ"가 이어지는 카드 안에 있어서 고정으로 띄우면 그 아래 설득 콘텐츠를
+     계속 가린다. 붙일지 말지는 전환율에 직접 영향을 주는 제품 판단이라 임의로 정하지 않고,
+     쓰지 않는 CSS만 걷어냈다. 다시 필요하면 이 커밋에서 되살리면 된다. */
 
   /* ---------- 버튼 (전달본 .button) ----------
      기본 높이 54px, 모서리 17px, primary는 브랜드 그라데이션. */
   .btn {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+
     appearance: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: var(--sp-2);
     min-height: var(--btn-h);
-    padding: 0 20px;
+    padding: 0 var(--sp-5);
     border: 0;
     border-radius: var(--r-control);
     font-family: var(--font-sans);
@@ -3419,8 +2853,14 @@
     transition: filter 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
   }
 
-  .btn:hover { filter: brightness(1.08); box-shadow: 0 11px 26px rgba(116, 29, 88, 0.26); }
-  .btn:active { transform: scale(0.985); filter: brightness(0.96); }
+  .btn:hover {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    background: var(--seal-deep);
+     filter: brightness(1.08); box-shadow: 0 11px 26px rgba(116, 29, 88, 0.26); }
+  .btn:active {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+        background: var(--seal-deep);
+ transform: scale(0.985); filter: brightness(0.96); }
 
   .btn[disabled], .btn:disabled, .btn.is-disabled, .btn[aria-disabled="true"] {
     background: var(--disabled-bg);
@@ -3444,7 +2884,9 @@
   }
   @keyframes btnSpin { to { transform: rotate(360deg); } }
 
-  .btn .btn-arrow { font-size: 1.05em; line-height: 1; }
+  .btn .btn-arrow {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+         font-size: 1.05em; line-height: 1; }
 
   .btn.outline, .btn.secondary {
     color: var(--brand);
@@ -3457,7 +2899,10 @@
   .btn.outline:active, .btn.secondary:active { background: #F3DAE2; }
 
   .btn.narrow { min-width: 190px; width: auto; }
-  .btn-center { display: flex; margin: 0 auto; }
+  .btn-center {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+        width: fit-content;
+     display: flex; margin: 0 auto; }
 
   /* 텍스트 버튼 (전달본 .text-button) */
   .text-button, .chip-link {
@@ -3480,6 +2925,8 @@
 
   /* ---------- 입력 (전달본 .form-card) ---------- */
   label {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+
     display: block;
     margin-bottom: var(--sp-2);
     font-size: 13px;
@@ -3488,8 +2935,31 @@
     letter-spacing: -0.01em;
   }
 
+  /* (2026-09-28) 칩 그룹처럼 폼 컨트롤이 아니라 <label>로 감쌀 수 없는 묶음의 이름표.
+     모양은 label과 같고, 의미는 role="group" + aria-labelledby로 연결한다. */
+  .form-label {
+    display: block;
+    margin: var(--sp-2) 0 var(--sp-2);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .form-label--spaced { margin-top: var(--sp-3); }
+
+  /* (2026-09-28) Blade에서 가장 많이 반복되던 인라인 style 두 가지를 토큰 기반 유틸리티로.
+     나머지 인라인 style은 한 곳에서만 쓰이는 값이라 그대로 뒀다. */
+  .u-mt-2 { margin-top: var(--sp-2); }
+  .u-m-0 { margin: 0; }
+
+  /* (2026-09-28) 아이콘 버튼은 글자가 없어 "처리 중"을 문구로 알릴 수 없다. */
+  .icon-button[aria-busy="true"] { opacity: 0.45; pointer-events: none; }
+
   input[type="number"], input[type="text"], input[type="email"], input[type="tel"],
   input[type="date"], input[type="password"], select, textarea {
+    /* (2026-09-28) 구 선언에 남아 있던 min-height: 50px를 제거했다. 새 규칙의
+       height: var(--field-h)(46px)가 계산은 되지만 min-height가 이겨서, 토큰을 고쳐도
+       화면은 계속 50px로 나오고 있었다. 전달본 기준(component.inputHeight = 46)에 맞춘다. */
     width: 100%;
     height: var(--field-h);
     padding: 0 13px;
@@ -3504,8 +2974,10 @@
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
 
-  textarea { height: auto; min-height: 92px; padding: 12px 13px; line-height: 1.6; }
-  input::placeholder, textarea::placeholder { color: #A79EA6; }
+  textarea { height: auto; min-height: 92px; padding: var(--sp-3) 13px; line-height: 1.6; }
+  input::placeholder, textarea::placeholder {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+     color: var(--disabled-fg); }
   input:hover, select:hover, textarea:hover { border-color: var(--border-strong); }
 
   input:focus, select:focus, textarea:focus {
@@ -3520,6 +2992,8 @@
   }
 
   input:disabled, select:disabled, textarea:disabled {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+
     background: var(--disabled-bg);
     color: var(--disabled-fg);
     cursor: not-allowed;
@@ -3546,8 +3020,24 @@
 
   .form-error .yk-icon { width: 15px; height: 15px; }
 
+  /* (2026-09-28) 성별 칩처럼 입력 요소가 아닌 그룹에 오류를 표시할 때.
+     aria-invalid는 폼 컨트롤에만 의미가 있어서, 그룹에는 클래스로 테두리를 준다. */
+  .field-invalid {
+    border-radius: var(--r-field);
+    outline: 1.5px solid var(--error);
+    outline-offset: 4px;
+  }
+
+  /* (2026-09-28) 리포트 생성 대기 화면의 "다시 생성하기" 폼 / 세션 만료 안내.
+     예전엔 인라인 style로 숨겨두고 JS가 display를 바꿨는데, 토큰을 쓰도록 클래스로 옮겼다.
+     JS는 그대로 element.style.display를 써서 이 기본값을 덮는다. */
+  .regenerate-form { display: none; margin-top: var(--sp-3); text-align: center; }
+  .report-pending-alert { margin-top: var(--sp-3); }
+
   /* ---------- 카드 ---------- */
   .card {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--r-md);
@@ -3556,7 +3046,8 @@
     margin-bottom: var(--sp-4);
   }
 
-  .card h2 {
+  /* (2026-09-28) 결제 완료 화면처럼 카드 안 주제목이 h1이 되는 경우가 생겨 h1도 함께 받는다. */
+  .card h1, .card h2 {
     font-family: var(--font-sans);
     font-size: 20px;
     font-weight: 750;
@@ -3566,7 +3057,9 @@
     color: var(--text);
   }
 
-  .hint { color: var(--text-muted); font-size: 12px; line-height: 1.65; margin-top: 0; margin-bottom: var(--sp-3); }
+  .hint {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+                 color: var(--text-muted); font-size: 12px; line-height: 1.65; margin-top: 0; margin-bottom: var(--sp-3); }
 
   /* ---------- 홈 상단 수채 배경 (2026-09-28) ----------
      사용자가 전달한 수채 구름 이미지를 홈 최상단에만 깐다. 아래쪽은 mask로 서서히
@@ -3578,7 +3071,7 @@
     isolation: isolate;
   }
 
-  /* 수채 배경 위에 얹히는 작은 글자는 --text-muted(#716875)로는 가장 짙은 구름 위에서
+  /* 수채 배경 위에 얹히는 작은 글자는 --text-muted(var(--text-muted))로는 가장 짙은 구름 위에서
      AA 4.5:1을 아슬아슬하게 못 넘긴다. 홈 상단 한정으로 한 단계 진한 --text-mid를 쓴다. */
   body.home-page .brand-header p,
   body.home-page .home-hero .section-copy p {
@@ -3599,23 +3092,17 @@
   }
 
   /* ---------- 홈 히어로 (전달본 .hero-copy / .orbit-hero) ---------- */
-  .home-hero { margin-top: var(--sp-6); }
+  .home-hero {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    padding: 0 2px 26px;
+    margin-bottom: var(--sp-3);
+ margin-top: var(--sp-6); }
   .home-hero .section-copy { margin: 0; }
-  .home-hero .section-copy h1 { margin: 0 0 14px; }
 
   /* (2026-09-28) 히어로 아트워크 — 알파 채널이 있는 PNG라 배경을 깔지 않는다.
      수채 배경 위에 그대로 떠 있게 두고, contain으로 잘림 없이 전체를 보여준다. */
-  .orbit-hero {
-    display: block;
-    width: 100%;
-    max-width: 380px;
-    height: 210px;
-    margin: var(--sp-3) auto var(--sp-2);
-    object-fit: contain;
-  }
 
-  .home-hero .action-stack { margin-top: var(--sp-4); }
-  .home-hero .action-stack .btn { width: 100%; }
+    .home-hero .action-stack .btn { width: 100%; }
 
   /* 진입 연출 — 제목 → 설명 → 일러스트 → 버튼 순서로 아주 짧게 떠오른다. */
   .home-hero .section-copy h1,
@@ -3627,10 +3114,24 @@
     animation: heroUp 0.45s ease-out forwards;
   }
 
-  .home-hero .section-copy h1 { animation-delay: 0.04s; }
+  .home-hero .section-copy h1 {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    margin: 0 0 14px;
+ animation-delay: 0.04s; }
   .home-hero .section-copy p  { animation-delay: 0.11s; }
-  .orbit-hero                 { animation-delay: 0.18s; }
-  .home-hero .action-stack    { animation-delay: 0.25s; }
+  .orbit-hero                 {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    display: block;
+    width: 100%;
+    max-width: 380px;
+    height: 210px;
+    margin: var(--sp-3) auto var(--sp-2);
+    object-fit: contain;
+ animation-delay: 0.18s; }
+  .home-hero .action-stack    {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    margin-top: var(--sp-4);
+ animation-delay: 0.25s; }
 
   @keyframes heroUp { to { opacity: 1; transform: translateY(0); } }
 
@@ -3643,6 +3144,10 @@
 
   /* ---------- 하단 탭바 (전달본 .bottom-nav) ---------- */
   .site-bottom-nav {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+                    max-width: 440px;
+                justify-content: space-around;
+
     position: fixed;
     left: 0; right: 0; bottom: 0;
     z-index: 30;
@@ -3652,13 +3157,19 @@
     grid-auto-columns: 1fr;
     align-items: stretch;
     height: calc(var(--nav-h) + env(safe-area-inset-bottom));
-    padding: 8px 8px calc(12px + env(safe-area-inset-bottom));
+    padding: var(--sp-2) var(--sp-2) calc(var(--sp-3) + env(safe-area-inset-bottom));
     border-top: 1px solid var(--border);
     background: rgba(255, 253, 252, 0.96);
     backdrop-filter: blur(12px);
   }
 
   .site-bottom-nav-item {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    flex: 1;
+        flex-direction: column;
+    align-items: center;
+        padding: var(--sp-1) 2px;
+
     display: grid;
     place-items: center;
     align-content: center;
@@ -3671,14 +3182,21 @@
   }
 
   .site-bottom-nav-icon, .site-bottom-nav-item .yk-icon { width: 23px; height: 23px; }
-  .site-bottom-nav-item.active { color: var(--brand); font-weight: 700; }
+  .site-bottom-nav-item.active {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+     color: var(--brand); font-weight: 700; }
   .site-bottom-nav-item:hover { color: var(--brand-dark); }
 
   /* 고정 탭바에 본문이 가리지 않도록 확보하는 여백 */
-  body.has-bottom-nav .wrap { padding-bottom: calc(var(--nav-h) + var(--sp-6) + env(safe-area-inset-bottom)); }
+  body.has-bottom-nav .wrap {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+     padding-bottom: calc(var(--nav-h) + var(--sp-6) + env(safe-area-inset-bottom)); }
 
   /* ---------- 전역 헤더 (하위 화면 상단) ---------- */
   .site-header {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+                    margin-bottom: 6px;
+
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -3687,34 +3205,11 @@
     padding: var(--sp-2) 0 var(--sp-3);
   }
 
-  .site-header-logo {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    font-family: var(--font-serif);
-    font-size: 19px;
-    font-weight: 800;
-    letter-spacing: -0.06em;
-    color: #1C1720;
-    text-decoration: none;
-  }
 
-  .site-header-logo-img { height: 24px; width: auto; display: block; }
+  .site-header-logo-img {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+             height: 24px; width: auto; display: block; }
 
-  .site-header-coin, .site-header-login {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    min-height: 34px;
-    padding: 0 13px;
-    border-radius: var(--r-pill);
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--brand);
-    font-size: 12px;
-    font-weight: 700;
-    text-decoration: none;
-  }
 
   .site-header-coin:hover, .site-header-login:hover { background: var(--accent-rose-soft); }
 
@@ -3762,10 +3257,16 @@
 
   .choice-icon .yk-icon { width: 21px; height: 21px; }
   .sagu-card-body, .choice-body { display: grid; gap: 5px; min-width: 0; }
-  .sagu-card-title { font-size: 15px; font-weight: 750; letter-spacing: -0.02em; color: var(--text); }
+  .sagu-card-title {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    font-family: var(--font-sans);
+                margin-bottom: 3px;
+ font-size: 15px; font-weight: 750; letter-spacing: -0.02em; color: var(--text); }
   .sagu-card-desc, .choice small { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
 
   .sagu-card-price {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+
     flex: none;
     justify-self: end;
     white-space: nowrap;
@@ -3789,18 +3290,6 @@
     background: var(--surface-sunken);
   }
 
-  .compat-stage-chip, .compat-gender-chip {
-    min-height: 40px;
-    border: 0;
-    border-radius: 11px;
-    background: transparent;
-    color: var(--text-muted);
-    font-family: var(--font-sans);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
-  }
 
   .compat-stage-chip:hover, .compat-gender-chip:hover { color: var(--brand); }
 
@@ -3814,7 +3303,7 @@
   /* ---------- 결과 지표 (전달본 .score-grid) ---------- */
   .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
   .score-grid article {
-    display: grid; gap: 4px; padding: 12px 10px;
+    display: grid; gap: var(--sp-1); padding: var(--sp-3) 10px;
     border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface);
   }
   .score-grid small { color: var(--text-muted); font-size: 11px; }
@@ -3865,13 +3354,13 @@
     position: relative;
     overflow: hidden;
     min-height: 200px;
-    padding: 20px 18px 0;
+    padding: var(--sp-5) 18px 0;
     border-radius: 22px;
     background: linear-gradient(145deg, #FFF5F7, #F5EAF0);
   }
   .report-cover > span { font-size: 12px; color: var(--brand); font-weight: 700; }
   .report-cover h1 {
-    position: relative; z-index: 2; margin: 8px 0 18px;
+    position: relative; z-index: 2; margin: var(--sp-2) 0 18px;
     font-size: 25px; line-height: 1.35; font-weight: 750; letter-spacing: -0.035em; color: var(--brand-dark);
   }
   /* (2026-09-28) 장식 일러스트를 PNG로 교체. 이전 SVG와 가로세로비가 달라서
@@ -3883,17 +3372,17 @@
     right: -4px; bottom: -6px;
     opacity: 0.92;
     pointer-events: none;
-    /* 좌우 반전해서 큰 구체를 모서리 쪽에 두고, 글자와 겹치는 왼쪽은 마스크로 지운다
-       (320px에서 결제 메타 문구가 구체 위에 올라가 안 읽히던 문제).
-       주의: mask는 transform 이전 좌표계에 적용되므로, 화면 기준 왼쪽을 지우려면
-       여기서는 to left 방향으로 써야 한다. */
-    transform: scaleX(-1);
-    -webkit-mask-image: linear-gradient(to left, transparent 0%, #000 42%);
-            mask-image: linear-gradient(to left, transparent 0%, #000 42%);
+    /* (2026-09-28) 반전·왼쪽 페이드를 CSS(transform + mask-image)로 주던 것을
+       img/handoff/orbit-hero-cover.png에 미리 구워 넣었다 — html2canvas(PDF 저장)가
+       CSS 마스크를 지원하지 않아 화면과 PDF가 달라지던 문제를 없애기 위해서다. */
   }
   .report-cover-meta { position: relative; z-index: 2; padding-bottom: 18px; color: var(--text-muted); font-size: 12px; }
 
   .chapter-tab-strip {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+                    flex-wrap: wrap;
+                margin-bottom: 18px;
+
     position: sticky; top: 0; z-index: 3;
     display: flex; gap: 0;
     margin: 14px calc(var(--app-pad) * -1) 18px;
@@ -3906,6 +3395,18 @@
   .chapter-tab-strip::-webkit-scrollbar { display: none; }
 
   .chapter-tab {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+        display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 26px;
+    border-radius: 6px;
+        font-weight: 700;
+    font-variant-numeric: tabular-nums;
+        text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+
     flex: 0 0 auto;
     min-height: 44px;
     padding: 0 14px;
@@ -3918,10 +3419,15 @@
     cursor: pointer;
     white-space: nowrap;
   }
-  .chapter-tab:hover { color: var(--brand); background: transparent; }
-  .chapter-tab.active { color: var(--brand); font-weight: 800; border-bottom-color: var(--brand); }
+  .chapter-tab:hover {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+         color: var(--brand); background: transparent; }
+  .chapter-tab.active {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+        background: var(--seal-tint);
+ color: var(--brand); font-weight: 800; border-bottom-color: var(--brand); }
 
-  .rpt-section, .report-section { padding: 4px 2px 20px; }
+  .rpt-section, .report-section { padding: var(--sp-1) 2px var(--sp-5); }
   .rpt-section-title, .report-section h2 {
     font-family: var(--font-sans);
     font-size: 21px;
@@ -3948,11 +3454,15 @@
     font-size: 13px;
     line-height: 1.55;
   }
-  .rpt-quote--final { background: var(--accent-rose-soft); }
+  .rpt-quote--final {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    border-left-color: var(--gold);
+    font-weight: 600;
+ background: var(--accent-rose-soft); }
 
   /* ---------- 결제 (전달본 .benefit-list / .price-card / .safety-row) ---------- */
   .benefit-list {
-    list-style: none; margin: 0; padding: 6px 16px;
+    list-style: none; margin: 0; padding: 6px var(--sp-4);
     border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface);
   }
   .benefit-list li {
@@ -3976,7 +3486,7 @@
   .price-card p { margin: 0; color: var(--text-muted); font-size: 12px; }
 
   .safety-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin: 14px 0; }
-  .safety-row span { display: grid; place-items: center; text-align: center; gap: 4px; font-size: 10px; color: var(--text-muted); }
+  .safety-row span { display: grid; place-items: center; text-align: center; gap: var(--sp-1); font-size: 10px; color: var(--text-muted); }
   .safety-row .yk-icon { width: 23px; height: 23px; color: var(--brand); }
 
   /* ---------- 상태 화면 (전달본 .center-state) ---------- */
@@ -3985,31 +3495,37 @@
     text-align: center; padding: 28px var(--sp-6) var(--sp-8);
   }
   .center-state img { width: 210px; max-width: 100%; max-height: 210px; }
-  .center-state h1, .center-state .yk-state-title {
+  /* (2026-09-28) 이 블록은 문서 안의 h1 개수에 따라 h1/h2 어느 쪽으로도 렌더된다. */
+  .center-state h1, .center-state h2, .center-state .yk-state-title {
     margin: 15px 0 10px; font-size: 24px; line-height: 1.35; font-weight: 750;
     letter-spacing: -0.035em; color: var(--brand-dark);
   }
   .center-state p, .center-state .yk-state-desc { margin: 0 0 22px; color: var(--text-muted); font-size: 14px; line-height: 1.65; }
-  .center-state small { color: #9A929B; font-size: 11px; }
-  .center-state .btn { margin-top: 4px; }
+    .center-state .btn { margin-top: var(--sp-1); }
 
-  .loading-bar { width: 230px; max-width: 100%; height: 7px; border-radius: 9px; background: var(--skeleton); overflow: hidden; margin: 10px 0 12px; }
+  .loading-bar { width: 230px; max-width: 100%; height: 7px; border-radius: 9px; background: var(--skeleton); overflow: hidden; margin: 10px 0 var(--sp-3); }
   .loading-bar i { display: block; width: 72%; height: 100%; border-radius: 9px; background: linear-gradient(90deg, var(--brand), var(--accent-rose)); animation: loadingPulse 1.4s ease-in-out infinite; }
   @keyframes loadingPulse { 50% { width: 88%; } }
   @media (prefers-reduced-motion: reduce) { .loading-bar i { animation: none; width: 80%; } }
 
-  .empty-state { color: var(--text-muted); font-size: 14px; line-height: 1.7; padding: var(--sp-6) var(--sp-4); text-align: center; }
+  .empty-state {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+             color: var(--text-muted); font-size: 14px; line-height: 1.7; padding: var(--sp-6) var(--sp-4); text-align: center; }
 
   /* ---------- 공유 (전달본 .share-preview / .toggle-row / .share-actions) ---------- */
   .share-preview {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    margin-top: var(--sp-4);
+    text-align: center;
+
     position: relative; overflow: hidden; border-radius: 23px;
     box-shadow: 0 12px 35px rgba(56, 23, 46, 0.12);
   }
   .toggle-row {
     display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4);
-    margin-top: 14px; padding: 16px; border: 1px solid var(--border); border-radius: 17px; background: var(--surface);
+    margin-top: 14px; padding: var(--sp-4); border: 1px solid var(--border); border-radius: var(--r-control); background: var(--surface);
   }
-  .toggle-row > span { display: grid; gap: 4px; }
+  .toggle-row > span { display: grid; gap: var(--sp-1); }
   .toggle-row small { font-size: 11px; color: var(--text-muted); }
   .toggle-row input[type="checkbox"] {
     appearance: none; width: 45px; height: 26px; flex: none; padding: 0;
@@ -4026,13 +3542,15 @@
   /* 공유 화면의 두 칸 버튼(전달본 .share-actions). 주의: 이 프로젝트의
      .share-card-actions는 "결제 버튼 + 공유 버튼"이 함께 들어가는 다른 컨테이너라,
      여기에 보조 버튼 스타일을 걸면 결제 버튼까지 흐려진다 — 분리해서 다룬다. */
-  .share-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .share-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: var(--sp-3); }
   .share-actions button {
     min-height: 48px; border: 1px solid var(--border); background: var(--surface);
     border-radius: 15px; color: var(--text); box-shadow: none; font-size: 14px;
   }
 
   .share-card-actions {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+
     display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 14px;
   }
   .share-card-actions > .btn { flex: 1 1 100%; }
@@ -4041,17 +3559,29 @@
 
   /* 결제 유도 버튼 — 폭을 꽉 채우고 은은한 펄스로 강조(전달본 .button.primary 위). */
   .btn-buy {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+                font-size: 1.02rem;
+
     display: flex;
     width: 100%;
     flex: 1 1 100%;
+    /* 좁은 화면에서는 "…전체 보기 · 9,900원"이 두 줄이 될 수 있다. 고정 높이로 두면
+       글자가 눌려 보이므로 min-height + 위아래 여백으로 두 줄도 자연스럽게 받는다. */
     min-height: var(--btn-h);
+    height: auto;
+    padding: var(--sp-3) var(--sp-4);
+    line-height: 1.35;
+    text-wrap: balance;
     border-radius: var(--r-control);
     background: var(--brand-gradient);
     color: var(--on-brand);
     box-shadow: 0 9px 22px rgba(116, 29, 88, 0.24);
     animation: btnBuyPulse 2.6s ease-in-out infinite;
   }
-  .btn-buy:hover { filter: brightness(1.08); }
+  .btn-buy:hover {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    background: linear-gradient(135deg, var(--seal), var(--seal-deep));
+     filter: brightness(1.08); }
   @keyframes btnBuyPulse {
     0%, 100% { box-shadow: 0 9px 22px rgba(116, 29, 88, 0.24); }
     50% { box-shadow: 0 12px 30px rgba(116, 29, 88, 0.34); }
@@ -4059,13 +3589,23 @@
   @media (prefers-reduced-motion: reduce) { .btn-buy { animation: none; } }
 
   /* 결제 유도 카드 (전달본 결제 화면의 구성 결) */
+  /* (2026-09-28 수정) 결제 CTA가 화면에서 가장 좁은 버튼이 되던 문제.
+     .card(18px) 안에 .report-cta(18px)가 또 들어가서 320px 기준으로 콘텐츠 276px 중
+     버튼이 200px(72%)까지 줄고 라벨이 두 줄로 꺾였다. 안쪽 좌우 여백을 줄여 폭을 돌려준다. */
   .report-cta {
-    padding: 18px;
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    margin-top: var(--sp-5);
+                    box-shadow: 0 12px 28px -18px var(--seal);
+    text-align: center;
+
+    padding: var(--sp-5) var(--sp-3);
     border-radius: var(--r-md);
     background: linear-gradient(135deg, #FFF1F4, #FAE4EB);
     border: 1px solid var(--border);
   }
   .report-cta-headline {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+
     margin: 0 0 var(--sp-4);
     text-align: center;
     font-size: 17px;
@@ -4073,12 +3613,22 @@
     letter-spacing: -0.03em;
     color: var(--brand-dark);
   }
-  .report-trust-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .report-trust-grid {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+                    text-align: left;
+ display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); margin-top: 14px; }
   .report-trust-item {
-    padding: 12px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface);
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+
+    padding: var(--sp-3); border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface);
   }
-  .report-trust-head { font-size: 13px; font-weight: 750; letter-spacing: -0.02em; margin: 8px 0 4px; color: var(--text); }
-  .report-trust-desc { font-size: 11px; color: var(--text-muted); line-height: 1.55; }
+  .report-trust-head {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+                margin-bottom: 3px;
+ font-size: 13px; font-weight: 750; letter-spacing: -0.02em; margin: var(--sp-2) 0 var(--sp-1); color: var(--text); }
+  .report-trust-desc {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+             font-size: 11px; color: var(--text-muted); line-height: 1.55; }
 
   /* ---------- 화면 상단 보조 설명 ---------- */
   .page-lead { margin: 0 0 var(--sp-4); color: var(--text-muted); font-size: 14px; line-height: 1.65; }
@@ -4090,6 +3640,9 @@
      탭이 7개(연애 4종 + 코치 + 재물운 + 커리어운)라 폰 폭에서 flex가 각 버튼을 한 글자
      폭까지 찌그러뜨린다. 줄바꿈 대신 가로 스크롤로 모든 탭을 그대로 유지한다. */
   .tabs {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+            margin-bottom: 26px;
+
     display: flex;
     flex-wrap: nowrap;
     gap: 2px;
@@ -4106,12 +3659,16 @@
   .tabs::-webkit-scrollbar { display: none; }
 
   .tab-btn {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    appearance: none;
+                            margin-right: 22px;
+
     flex: 0 0 auto;
     scroll-snap-align: start;
     white-space: nowrap;
     min-height: 44px;
     margin: 0;
-    padding: 0 12px;
+    padding: 0 var(--sp-3);
     border: 0;
     border-bottom: 2px solid transparent;
     background: none;
@@ -4122,11 +3679,22 @@
     transition: color 0.15s ease, border-color 0.15s ease;
   }
 
-  .tab-btn:hover { color: var(--brand); }
-  .tab-btn.active { color: var(--brand); font-weight: 800; border-bottom-color: var(--brand); }
+  .tab-btn:hover {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+     color: var(--brand); }
+  .tab-btn.active {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+             color: var(--brand); font-weight: 800; border-bottom-color: var(--brand); }
 
   /* ---------- 코인 충전 플랜 카드 (전달본 .price-card 결) ---------- */
   .plan-card {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+        display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+                padding: 26px 18px var(--sp-5);
+
     position: relative;
     border: 1px solid var(--border);
     border-radius: var(--r-md);
@@ -4134,15 +3702,36 @@
     box-shadow: none;
   }
 
-  .plan-card.highlight { border-color: var(--brand); }
-  .plan-badge { background: var(--brand); color: var(--on-brand); border-radius: var(--r-pill); }
-  .plan-name { font-family: var(--font-sans); font-weight: 750; letter-spacing: -0.02em; color: var(--text); }
+  .plan-card.highlight {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+        box-shadow: 0 6px 20px -8px var(--seal-tint);
+ border-color: var(--brand); }
+  .plan-badge {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    position: absolute;
+    top: -11px;
+    left: 50%;
+    transform: translateX(-50%);
+            font-size: 0.72rem;
+    font-weight: 700;
+    padding: var(--sp-1) var(--sp-3);
+     background: var(--brand); color: var(--on-brand); border-radius: var(--r-pill); }
+  .plan-name {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+        font-size: 1.1rem;
+    margin-bottom: var(--sp-2);
+ font-family: var(--font-sans); font-weight: 750; letter-spacing: -0.02em; color: var(--text); }
   .plan-credits, .plan-price { font-family: var(--font-serif); color: var(--brand-dark); }
-  .plan-unit { color: var(--text-muted); font-size: 12px; }
+  .plan-unit {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+            margin: var(--sp-1) 0 var(--sp-4);
+ color: var(--text-muted); font-size: 12px; }
   .plan-card .btn, .plan-buy { width: 100%; }
 
   /* ---------- 리포트함 카드 ---------- */
   .report-card {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+
     border: 1px solid var(--border);
     border-radius: var(--r-md);
     background: var(--surface);
@@ -4151,55 +3740,143 @@
   }
 
   .report-card-icon {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+                        align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+
     display: grid; place-items: center; width: 34px; height: 34px;
     border-radius: 11px; background: var(--accent-rose-soft); color: var(--brand);
   }
   .report-card-icon .yk-icon { width: 19px; height: 19px; }
-  .report-card-subject { font-family: var(--font-sans); font-weight: 750; letter-spacing: -0.025em; }
-  .report-card-heart { color: var(--accent-rose); }
-  .report-card-meta { color: var(--text-muted); font-size: 12px; }
-  .report-card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .report-card-actions .btn { min-height: 46px; font-size: 14px; padding: 0 12px; }
+  .report-card-subject {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+            font-size: 1.1rem;
+    color: var(--ink);
+    margin-bottom: 6px;
+    line-height: 1.4;
+ font-family: var(--font-sans); font-weight: 750; letter-spacing: -0.025em; }
+  .report-card-heart {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+        font-size: 0.85em;
+    margin: 0 2px;
+ color: var(--accent-rose); }
+  .report-card-meta {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+            margin-bottom: var(--sp-4);
+ color: var(--text-muted); font-size: 12px; }
+  .report-card-actions {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+         display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .report-card-actions .btn {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+         min-height: var(--btn-h-compact); font-size: 14px; padding: 0 var(--sp-3); }
 
   /* ---------- 뱃지 ---------- */
   .badge {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+            gap: 6px;
+                        border: 1px solid var(--gold-tint);
+
     display: inline-flex; align-items: center;
     padding: 5px 10px; border-radius: var(--r-pill);
     font-size: 11px; font-weight: 700;
     background: var(--accent-rose-soft); color: var(--brand);
   }
-  .badge.indigo { background: rgba(79, 21, 63, 0.08); color: var(--brand-dark); }
+  .badge.indigo {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+         background: rgba(79, 21, 63, 0.08); color: var(--brand-dark); }
   .badge.gold { background: rgba(216, 88, 120, 0.12); color: var(--rose-text); }
-  .badge.water { background: #E8EAF4; color: #45538A; }
+  .badge.water {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+         background: #E8EAF4; color: #45538A; }
 
   /* 리포트 본문 껍데기 — 커버가 카드 가장자리까지 붙도록 패딩을 없앤다. */
   .report-shell { padding: 0; border: 0; background: transparent; margin-bottom: var(--sp-4); }
   .report-shell > .report-cover { margin-bottom: 0; }
-  .report-meta { display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--text-muted); font-size: 12px; }
+  .report-meta {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+                        margin-bottom: 18px;
+ display: flex; flex-wrap: wrap; gap: var(--sp-1) 10px; color: var(--text-muted); font-size: 12px; }
 
   /* 껍데기 없는 카드 — 빈 상태/오류 상태처럼 일러스트가 주인공인 화면에서 쓴다. */
   .card--bare { background: transparent; border: 0; padding: 0; box-shadow: none; }
 
   /* ---------- 진행 게이지 / 단계 체크리스트 (챕터형 리포트: 실제 완료율 기반) ---------- */
-  .rpt-gauge-track { stroke: var(--skeleton); }
-  .rpt-gauge-fill { stroke: var(--brand); }
-  .rpt-gauge-percent { font-family: var(--font-serif); color: var(--brand-dark); }
-  .chapter-progress-count { color: var(--text-muted); font-size: 13px; }
+  .rpt-gauge-track {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    fill: none;
+        stroke-width: 9;
+ stroke: var(--skeleton); }
+  .rpt-gauge-fill {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    fill: none;
+        stroke-width: 9;
+    stroke-linecap: round;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 0.3s ease;
+ stroke: var(--brand); }
+  .rpt-gauge-percent {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+        font-variant-numeric: tabular-nums;
+ font-family: var(--font-serif); color: var(--brand-dark); }
+  .chapter-progress-count {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    text-align: center;
+    margin-top: 10px;
+            font-variant-numeric: tabular-nums;
+ color: var(--text-muted); font-size: 13px; }
 
-  .progress-steps { display: grid; gap: var(--sp-3); margin-top: var(--sp-5); }
-  .progress-step { display: grid; grid-template-columns: 22px 1fr; gap: var(--sp-3); align-items: start; }
+  .progress-steps {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+        text-align: left;
+ display: grid; gap: var(--sp-3); margin-top: var(--sp-5); }
+  .progress-step {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+                padding: var(--sp-2) 2px;
+ display: grid; grid-template-columns: 22px 1fr; gap: var(--sp-3); align-items: start; }
   .progress-step-icon {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    flex: none;
+        text-align: center;
+        line-height: 1.5;
+
     display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
     border: 1px solid var(--border-strong); color: var(--text-muted); font-size: 11px; background: var(--surface);
   }
   .progress-step.is-active .progress-step-icon,
   .progress-step.is-done .progress-step-icon { background: var(--brand); border-color: var(--brand); color: #fff; }
-  .progress-step-title { font-size: 14px; font-weight: 700; color: var(--text); }
-  .progress-step-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .progress-step-title {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+            line-height: 1.5;
+ font-size: 14px; font-weight: 700; color: var(--text); }
+  .progress-step-desc {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+                margin-top: 3px;
+ font-size: 12px; color: var(--text-muted); line-height: 1.6; }
   .progress-step:not(.is-active):not(.is-done) .progress-step-title { color: var(--text-muted); font-weight: 500; }
 
   /* ---------- 안내 박스 ---------- */
   .placeholder-note {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+                            margin-top: 18px;
+
     border: 1px solid var(--border);
     border-radius: var(--r-sm);
     background: var(--surface-2);
@@ -4211,6 +3888,23 @@
 
   /* ---------- 더 보기 힌트 버튼 ---------- */
   .scroll-hint {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    position: fixed;
+    left: 50%;
+    bottom: 88px;
+    transform: translateX(-50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+                display: flex;
+    align-items: center;
+    justify-content: center;
+        cursor: pointer;
+    z-index: 60;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+
     background: var(--brand);
     color: var(--on-brand);
     box-shadow: 0 9px 22px rgba(116, 29, 88, 0.28);
@@ -4218,55 +3912,142 @@
   }
 
   /* ---------- 챕터 목차 ---------- */
-  .chapter-toc-wrap { margin-bottom: var(--sp-5); }
+  .chapter-toc-wrap {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    margin-top: var(--sp-1);
+ margin-bottom: var(--sp-5); }
   .chapter-toc-item a {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+                                transition: background 0.15s ease;
+
     display: grid; grid-template-columns: 28px 1fr auto; gap: var(--sp-3); align-items: center;
-    padding: 12px 10px; border-radius: var(--r-sm); text-decoration: none; color: inherit;
+    padding: var(--sp-3) 10px; border-radius: var(--r-sm); text-decoration: none; color: inherit;
   }
-  .chapter-toc-item a:hover { background: var(--surface-2); }
-  .chapter-toc-title { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
-  .chapter-toc-teaser { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
-  .chapter-toc-badge { border-radius: var(--r-pill); font-size: 11px; padding: 4px 9px; }
-  .chapter-toc-badge--ready { background: var(--accent-rose-soft); color: var(--brand); }
-  .chapter-toc-badge--pending, .chapter-toc-badge--generating { background: var(--skeleton); color: var(--text-muted); }
-  .chapter-toc-badge--failed { background: var(--error-soft); color: var(--error); }
+  .chapter-toc-item a:hover {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+     background: var(--surface-2); }
+  .chapter-toc-title {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+             font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+  .chapter-toc-teaser {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+             font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+  .chapter-toc-badge {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    flex: none;
+    align-self: center;
+     border-radius: var(--r-pill); font-size: 11px; padding: var(--sp-1) 9px; }
+  .chapter-toc-badge--ready {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+         background: var(--accent-rose-soft); color: var(--brand); }
+  .chapter-toc-badge--pending, .chapter-toc-badge--generating {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+         background: var(--skeleton); color: var(--text-muted); }
+  .chapter-toc-badge--failed {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+         background: var(--error-soft); color: var(--error); }
 
   /* ---------- 리포트 본문 블록 ---------- */
   .rpt-chip {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+                            white-space: nowrap;
+
     display: inline-flex; align-items: center; padding: 6px 11px; border-radius: var(--r-pill);
     font-size: 12px; font-weight: 600; background: var(--accent-rose-soft); color: var(--brand);
   }
-  .rpt-chip--gold { background: rgba(216, 88, 120, 0.12); color: var(--rose-text); }
-  .rpt-chip--indigo { background: rgba(79, 21, 63, 0.08); color: var(--brand-dark); }
+  .rpt-chip--gold {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+         background: rgba(216, 88, 120, 0.12); color: var(--rose-text); }
+  .rpt-chip--indigo {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+         background: rgba(79, 21, 63, 0.08); color: var(--brand-dark); }
   .rpt-chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
 
   .rpt-score-track, .oheang-track, .lc-stat-track { background: var(--skeleton); }
-  .rpt-score-fill { background: linear-gradient(90deg, var(--brand), var(--accent-rose)); }
-  .rpt-score-fill--indigo { background: linear-gradient(90deg, var(--brand-dark), var(--brand)); }
-  .rpt-score-label { color: var(--text-mid); font-size: 13px; }
+  .rpt-score-fill {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    height: 100%;
+    border-radius: var(--r-pill);
+     background: linear-gradient(90deg, var(--brand), var(--accent-rose)); }
+  .rpt-score-fill--indigo {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+     background: linear-gradient(90deg, var(--brand-dark), var(--brand)); }
+  .rpt-score-label {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+     color: var(--text-mid); font-size: 13px; }
 
-  .rpt-os-line { font-size: 13px; line-height: 1.7; color: var(--text-mid); }
+  .rpt-os-line {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+                margin-top: var(--sp-1);
+ font-size: 13px; line-height: 1.7; color: var(--text-mid); }
   .rpt-os-line > span {
-    display: inline-block; margin-right: 6px; padding: 3px 8px; border-radius: var(--r-pill);
+    display: inline-block; margin-right: 6px; padding: 3px var(--sp-2); border-radius: var(--r-pill);
     background: var(--accent-rose-soft); color: var(--brand); font-size: 11px; font-weight: 700;
   }
 
-  .rpt-compare { border: 1px solid var(--border); border-radius: 18px; background: var(--surface); }
-  .rpt-compare-label { font-size: 12px; font-weight: 700; }
-  .rpt-compare-side--right .rpt-compare-label { color: var(--rose-text); }
-  .rpt-compare-side--left .rpt-compare-label { color: var(--brand); }
-  .rpt-compare-text { font-size: 13px; color: var(--text-mid); line-height: 1.65; }
+  .rpt-compare {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    display: flex;
+    flex-direction: column;
+    margin-top: 6px;
+        overflow: hidden;
+     border: 1px solid var(--border); border-radius: 18px; background: var(--surface); }
+  .rpt-compare-label {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+            letter-spacing: 0.03em;
+    margin-bottom: 6px;
+ font-size: 12px; font-weight: 700; }
+  .rpt-compare-side--right .rpt-compare-label {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+     color: var(--rose-text); }
+  .rpt-compare-side--left .rpt-compare-label {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+     color: var(--brand); }
+  .rpt-compare-text {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+             font-size: 13px; color: var(--text-mid); line-height: 1.65; }
 
-  .rpt-verdict { border-radius: var(--r-sm); }
-  .rpt-verdict-dot { width: 9px; height: 9px; border-radius: 999px; background: currentColor; flex: none; }
-  .rpt-verdict--go { color: var(--success); }
-  .rpt-verdict--slow { color: var(--warning); }
-  .rpt-verdict--stop { color: var(--error); }
-  .rpt-verdict--warm { color: var(--accent-rose); }
-  .rpt-verdict--info { color: var(--brand); }
-  .rpt-verdict--neutral { color: var(--text-muted); }
+  .rpt-verdict {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+        padding: 14px var(--sp-4);
+    margin-top: 10px;
+    border: 1px solid var(--line);
+ border-radius: var(--r-sm); }
+  .rpt-verdict-dot { width: 9px; height: 9px; border-radius: var(--r-pill); background: currentColor; flex: none; }
+  .rpt-verdict--go {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    background: color-mix(in srgb, var(--wood) 14%, transparent);
+    border-color: var(--wood);
+ color: var(--success); }
+  .rpt-verdict--slow {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    background: var(--gold-tint);
+    border-color: var(--gold);
+ color: var(--warning); }
+  .rpt-verdict--stop {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    background: color-mix(in srgb, var(--fire) 14%, transparent);
+    border-color: var(--fire);
+ color: var(--error); }
+  .rpt-verdict--warm {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    background: var(--seal-tint);
+    border-color: var(--seal);
+ color: var(--accent-rose); }
+  .rpt-verdict--info {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    background: color-mix(in srgb, var(--water) 14%, transparent);
+    border-color: var(--water);
+ color: var(--brand); }
+  .rpt-verdict--neutral {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    background: var(--paper);
+ color: var(--text-muted); }
 
-  .rpt-calendar-stars { display: inline-flex; gap: 2px; color: var(--accent-rose); }
+  .rpt-calendar-stars {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    letter-spacing: 1px;
+ display: inline-flex; gap: 2px; color: var(--accent-rose); }
   .rpt-star { width: 14px; height: 14px; }
   .rpt-star:not(.is-on) { color: var(--rose-pale); }
 
@@ -4281,50 +4062,188 @@
   }
   .report-trust-icon .yk-icon { width: 22px; height: 22px; }
   .compat-concern-icon .yk-icon { width: 24px; height: 24px; }
-  .report-toc-lock { color: var(--text-muted); }
+  .report-toc-lock {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    flex: none;
+    align-self: center;
+    font-size: 0.8rem;
+    opacity: 0.55;
+ color: var(--text-muted); }
   .report-toc-lock .yk-icon { width: 16px; height: 16px; }
 
   /* ---------- 소셜 로그인 (브랜드 색은 각 서비스 가이드라인이라 유지) ---------- */
   .social-btn {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    appearance: none;
+
     display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-    min-height: 50px; padding: 0 18px; border: 0; border-radius: var(--r-field);
+    /* (2026-09-28) 50px → 전달본 기본 버튼 높이 토큰(54px)으로 통일 */
+    min-height: var(--btn-h); padding: 0 18px; border: 0; border-radius: var(--r-field);
     font-family: var(--font-sans); font-size: 15px; font-weight: 700; text-decoration: none; cursor: pointer;
   }
-  .social-btn.kakao { background: #FEE500; color: #191600; }
-  .social-btn.naver { background: #03C75A; color: #FFFFFF; }
-  .social-btn:hover { filter: brightness(0.96); }
+  .social-btn.kakao {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+         background: #FEE500; color: #191600; }
+  .social-btn.naver {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+         background: #03C75A; color: #FFFFFF; }
+  .social-btn:hover {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+     filter: brightness(0.96); }
 
   /* ---------- 사전 / 정책 ---------- */
-  .dict-term-name { font-family: var(--font-sans); font-weight: 750; letter-spacing: -0.02em; color: var(--text); }
-  .dict-term-desc { color: var(--text-mid); font-size: 14px; line-height: 1.7; }
-  .policy-section h3 { font-family: var(--font-sans); font-weight: 750; letter-spacing: -0.02em; }
+  .dict-term-name {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+        font-size: 1rem;
+        margin-bottom: var(--sp-1);
+ font-family: var(--font-sans); font-weight: 750; letter-spacing: -0.02em; color: var(--text); }
+  .dict-term-desc {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+             color: var(--text-mid); font-size: 14px; line-height: 1.7; }
+  /* (2026-09-28) 상단바가 h1을 갖게 되면서 조항 제목을 h3 → h2로 올렸다. */
+  .policy-section h2, .policy-section h3 { font-family: var(--font-sans); font-weight: 750; letter-spacing: -0.02em; }
+  /* (2026-09-28) 약관 페이지의 조(h2) 아래 항목 제목(h3). 위 공통 규칙보다 뒤에 둬야
+     font-size/margin이 실제로 적용된다(둘 다 같은 특정도라 순서로 결정된다). */
+  .policy-section h3 { margin: var(--sp-4) 0 var(--sp-2); font-size: 0.94rem; font-weight: 700; color: var(--brand-dark); }
+
+  /* ---------- 결제 전 필수 동의 (2026-09-28) ----------
+     .check-row는 한 줄짜리 체크("시간을 몰라요")용이라 align-items: center인데,
+     동의 문구는 2~3줄이라 그대로 두면 체크박스가 글의 세로 가운데에 떠 버린다. */
+  .check-row.consent-row {
+    align-items: flex-start;
+    gap: var(--sp-2);
+    padding: var(--sp-3) var(--sp-4);
+    margin: var(--sp-4) 0;
+    border: 1px solid var(--border);
+    border-radius: var(--r-field);
+    background: var(--surface-2);
+    /* 결제 카드(.report-cta, 구독 카드)가 text-align:center라 그대로 두면 동의 문구가
+       가운데 정렬돼 체크박스와 글이 어긋난다. 여기서 왼쪽 정렬로 되돌린다. */
+    text-align: left;
+  }
+  /* (특정도 주의) 아래 .check-row label 규칙이 이 블록보다 뒤에 선언돼 있어,
+     .check-row.consent-row 로 한 단계 올려야 실제로 적용된다. */
+  .check-row.consent-row label {
+    /* .check-row label이 display:flex라 strong/a가 블록 플렉스 아이템이 돼버린다
+       (한 줄짜리 체크 라벨용 규칙). 여러 줄 문장이므로 일반 인라인 흐름으로 되돌린다. */
+    display: block;
+    min-height: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.6;
+    color: var(--text-mid);
+    cursor: pointer;
+  }
+  .check-row.consent-row label strong { color: var(--brand); font-weight: 700; }
+  /* "이용약관·환불정책"이 가운뎃점에서 줄바꿈되면 링크가 두 조각으로 보인다. */
+  .check-row.consent-row a {
+    color: var(--brand);
+    text-decoration: underline;
+    white-space: nowrap;
+    /* 문장 안 링크라 터치 영역 44px 규정의 예외지만, 15px 높이는 실제로 누르기 어렵다.
+       줄 높이를 바꾸지 않으면서(음수 margin으로 상쇄) 히트 영역만 세로로 넓힌다. */
+    padding: 6px 0;
+    margin: -6px 0;
+  }
+  /* 체크박스는 44x44 히트 영역을 유지하되, 첫 줄 높이에 맞춰 위로 당긴다. */
+  .check-row.consent-row input[type="checkbox"] { margin-top: -11px; }
+
+  /* ---------- 리포트 실패 구제 안내 (2026-09-28) ----------
+     "다시 시도"만 있고 그 다음이 없던 자리에 문의·환불 경로를 붙인다. */
+  .support-notice {
+    margin-top: var(--sp-4);
+    padding: var(--sp-4);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    background: var(--surface-2);
+    text-align: left;
+  }
+  .support-notice p { margin: 0 0 var(--sp-3); font-size: 13px; line-height: 1.7; color: var(--text-mid); }
+  .support-notice p strong { color: var(--text); }
+  .support-notice-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
+  .support-notice-actions .btn { flex: 1 1 auto; min-width: 160px; }
+  .support-notice small { display: block; margin-top: var(--sp-3); font-size: 11px; color: var(--text-muted); }
+
+  /* 동의 전 잠긴 결제 버튼 — 눌리지 않는다는 게 보이되 사라지지는 않게. */
+  .btn[disabled], .btn[aria-disabled="true"] {
+    opacity: 0.45;
+    cursor: not-allowed;
+    animation: none;
+  }
   .policy-table-wrap, .admin-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 0 var(--sp-4); }
-  .policy-table { border-radius: var(--r-field); overflow: hidden; font-size: 13px; }
-  .policy-table th, .policy-table td { border-color: var(--border); padding: 10px 12px; line-height: 1.7; }
-  .policy-table th { background: var(--accent-rose-soft); color: var(--brand); font-weight: 700; white-space: nowrap; }
+  .policy-table {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    width: 100%;
+    border-collapse: collapse;
+        margin: 0 0 var(--sp-2);
+ border-radius: var(--r-field); overflow: hidden; font-size: 13px; }
+  .policy-table th, .policy-table td {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    border: 1px solid var(--line);
+        text-align: left;
+    vertical-align: top;
+ border-color: var(--border); padding: 10px var(--sp-3); line-height: 1.7; }
+  .policy-table th {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+             background: var(--accent-rose-soft); color: var(--brand); font-weight: 700; white-space: nowrap; }
 
   /* ---------- 푸터 ---------- */
-  .business-footer { color: var(--text-muted); font-size: 12px; line-height: 1.8; border-top: 1px solid var(--border); }
-  .business-footer a { color: var(--text-muted); }
+  .business-footer {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    margin-top: 14px;
+    padding-top: 14px;
+             color: var(--text-muted); font-size: 12px; line-height: 1.8; border-top: 1px solid var(--border); }
+  .business-footer a {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+        text-decoration: underline;
+ color: var(--text-muted); }
 
   /* ---------- 접근성 보정 (2026-09-28 검증 결과 반영) ----------
      실제 렌더 화면을 훑어 찾아낸 항목들: 터치 영역 44px 미만, 명암비 미달. */
 
   /* 헤더의 로고/코인 칩이 44px보다 작아 터치하기 어려웠다. */
-  .site-header-logo { min-height: 44px; padding: 4px 2px; }
-  .site-header-coin, .site-header-login { min-height: 44px; }
+  .site-header-logo {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+            gap: 7px;
+                letter-spacing: -0.06em;
+
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 1.4rem;
+    color: var(--ink);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+ min-height: 44px; padding: var(--sp-1) 2px; }
+  .site-header-coin, .site-header-login {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+        padding: 0 13px;
+    border-radius: var(--r-pill);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--brand);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+ min-height: 44px; }
 
   /* 체크박스: 기본 13px은 너무 작다. 입력 요소 자체를 44x44로 만들어 터치 영역을
      확보하고(pseudo-element로는 히트 테스트가 안 넓어진다 — 실제로 클릭 테스트해서 확인),
      눈에 보이는 상자는 가운데 22px로 그린다. */
-  .check-row { display: flex; align-items: center; gap: 6px; min-height: 44px; margin: var(--sp-2) 0 var(--sp-4); }
-  .check-row input[type="checkbox"], .privacy-check input[type="checkbox"] {
-    appearance: none;
-    position: relative;
-    width: 44px; height: 44px; min-height: 44px; flex: none; margin: 0 -11px; padding: 0;
-    border: 0; background: transparent; cursor: pointer;
-  }
-  .check-row input[type="checkbox"]::after, .privacy-check input[type="checkbox"]::after {
+  .check-row {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+                    font-size: 0.86rem;
+    color: var(--ink-soft);
+ display: flex; align-items: center; gap: 6px; min-height: 44px; margin: var(--sp-2) 0 var(--sp-4); }
+    .check-row input[type="checkbox"]::after, .privacy-check input[type="checkbox"]::after {
     content: "";
     position: absolute; left: 50%; top: 50%;
     width: 22px; height: 22px; transform: translate(-50%, -50%);
@@ -4343,14 +4262,40 @@
   .check-row label { margin: 0; display: flex; align-items: center; min-height: 44px; cursor: pointer; font-weight: 500; font-size: 14px; }
 
   /* 세그먼트/성별 칩도 44px 확보 */
-  .compat-stage-chip, .compat-gender-chip { min-height: 44px; }
+  .compat-stage-chip, .compat-gender-chip {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+        border: 0;
+    border-radius: 11px;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+ min-height: 44px; }
 
   /* 명암비: 로즈를 작은 글자색으로 쓰던 자리를 한 단계 진한 파생색으로 */
   .chapter-toc-num, .rpt-section-index, .report-card-heart { color: var(--rose-text); }
-  .center-state small { color: var(--text-muted); }
+  .center-state small {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+        font-size: 11px;
+ color: var(--text-muted); }
 
   /* 체크박스 자체의 터치 영역을 44px로 넓힌다(시각 크기는 22px 유지). */
-  .check-row input[type="checkbox"], .privacy-check input[type="checkbox"] { position: relative; }
+  .check-row input[type="checkbox"], .privacy-check input[type="checkbox"] {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    appearance: none;
+        width: 44px;
+    height: 44px;
+    min-height: 44px;
+    flex: none;
+    margin: 0 -11px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+ position: relative; }
   .check-row input[type="checkbox"]::before, .privacy-check input[type="checkbox"]::before {
     content: "";
     position: absolute;
@@ -4360,7 +4305,11 @@
   }
 
   .complete-badge .yk-icon { width: 26px; height: 26px; }
-  .complete-title { font-family: var(--font-sans); font-weight: 750; letter-spacing: -0.03em; }
+  .complete-title {
+    /* ↓ 2026-09-28 병합: 위쪽에 따로 있던 같은 셀렉터의 구 선언 */
+    text-align: center;
+    margin-bottom: 26px;
+ font-family: var(--font-sans); font-weight: 750; letter-spacing: -0.03em; }
 
   /* ---------- 오늘의 운세 지표 3칸 ---------- */
   .fortune-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); margin-top: var(--sp-5); }
@@ -4393,4 +4342,4 @@
 
   .feedback--success { background: var(--success-soft); border-color: rgba(31, 122, 90, 0.28); color: var(--success); }
   .feedback--error { background: var(--error-soft); border-color: rgba(179, 36, 63, 0.26); color: var(--error); }
-  .feedback--info { background: var(--accent-rose-soft); border-color: var(--border); color: var(--brand); }
+  .feedback--info { background: var(--info-soft); border-color: var(--border); color: var(--info); }

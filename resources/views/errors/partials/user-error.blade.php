@@ -17,7 +17,8 @@
 <body class="phone-app">
 
 <div class="wrap">
-  @include('partials.app-topbar', ['title' => '연록', 'back' => route('home'), 'backLabel' => '홈으로'])
+  {{-- (2026-09-28) 아래 center-state의 오류 제목이 이 화면의 h1이라, 상단바는 heading으로 올리지 않는다. --}}
+  @include('partials.app-topbar', ['titleTag' => 'p', 'title' => '연록', 'back' => route('home'), 'backLabel' => '홈으로'])
 
   <div class="center-state">
     <img src="{{ asset('img/handoff/error-state.svg') }}" alt="" aria-hidden="true">

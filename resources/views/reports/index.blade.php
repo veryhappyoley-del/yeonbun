@@ -9,7 +9,7 @@
 </head>
 <body class="phone-app has-bottom-nav">
 
-<div class="wrap wrap-narrow">
+<div class="wrap">
 
   @include('partials.site-header')
 
@@ -26,7 +26,9 @@
       {{-- (2026-09-28 개편) UI 전달본의 빈 상태 화면(assets/empty-state.svg). --}}
       <div class="center-state">
         <img src="{{ asset('img/handoff/empty-state.svg') }}" alt="" aria-hidden="true">
-        <h1>아직 구매한 리포트가 없어요</h1>
+        {{-- (2026-09-28) 상단바 제목이 이 화면의 h1이라, 빈 상태 제목은 h2로 둔다.
+             (목록이 있을 때는 이 블록이 아예 렌더되지 않아 h1이 사라지던 문제도 함께 해결) --}}
+        <h2>아직 구매한 리포트가 없어요</h2>
         <p>'나의 연애 나침반'이나 '우리의 연애온도' 결과 화면 아래에서<br>프리미엄 리포트를 만나보세요.</p>
         <a class="btn narrow" href="{{ route('sagu.index') }}">궁금한 것 고르러 가기</a>
       </div>

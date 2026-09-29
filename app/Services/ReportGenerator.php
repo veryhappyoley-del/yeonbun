@@ -87,7 +87,7 @@ class ReportGenerator
             ]);
 
             if ($response->failed()) {
-                Log::warning('결 리포트 생성 실패', ['report_id' => $report->id, 'status' => $response->status()]);
+                Log::warning('연록 리포트 생성 실패', ['report_id' => $report->id, 'status' => $response->status()]);
 
                 return;
             }
@@ -98,7 +98,7 @@ class ReportGenerator
             // max_tokens에 도달해서 응답이 잘렸다면, 그 자체가 "왜 저장이 안 됐는지"를
             // 설명해주는 가장 중요한 단서라서 별도로 눈에 띄게 남겨둔다.
             if ($stopReason === 'max_tokens') {
-                Log::warning('결 리포트: max_tokens 도달로 응답이 잘렸을 수 있음', [
+                Log::warning('연록 리포트: max_tokens 도달로 응답이 잘렸을 수 있음', [
                     'report_id' => $report->id,
                     'type' => $report->type,
                     'output_tokens' => $outputTokens,
@@ -126,7 +126,7 @@ class ReportGenerator
                 'content' => strip_tags($text, self::ALLOWED_TAGS),
             ]);
         } catch (\Throwable $e) {
-            Log::warning('결 리포트 생성 예외', ['report_id' => $report->id, 'message' => $e->getMessage()]);
+            Log::warning('연록 리포트 생성 예외', ['report_id' => $report->id, 'message' => $e->getMessage()]);
         }
     }
 
@@ -140,7 +140,7 @@ class ReportGenerator
         $jsonText = $this->extractJson($text);
 
         if ($jsonText === null) {
-            Log::warning('결 심층 리포트: 응답에서 JSON을 찾지 못함', [
+            Log::warning('연록 심층 리포트: 응답에서 JSON을 찾지 못함', [
                 'report_id' => $report->id,
                 'stop_reason' => $stopReason,
                 // 실패 원인을 재현 없이 로그만 보고 진단할 수 있도록, 응답의 끝부분을
@@ -154,7 +154,7 @@ class ReportGenerator
         $decoded = json_decode($jsonText, true);
 
         if (! is_array($decoded) || ! isset($decoded['love_profile'], $decoded['final_verdict'], $decoded['love_os'])) {
-            Log::warning('결 심층 리포트: JSON 스키마 검증 실패', [
+            Log::warning('연록 심층 리포트: JSON 스키마 검증 실패', [
                 'report_id' => $report->id,
                 'stop_reason' => $stopReason,
                 'has_love_profile' => is_array($decoded) && isset($decoded['love_profile']),

@@ -25,6 +25,10 @@
     for (var i = 0; i < tabs.length; i += 1) {
       var isActive = tabs[i].getAttribute('data-chapter-tab') === key;
       tabs[i].classList.toggle('active', isActive);
+      // (2026-09-28 추가) 현재 위치를 색(.active)으로만 알리면 스크린리더가 알 수 없다.
+      // 이 스트립은 탭 위젯이 아니라 문서 안 위치를 가리키는 링크 모음이라 aria-current="location"이 맞다.
+      if (isActive) tabs[i].setAttribute('aria-current', 'location');
+      else tabs[i].removeAttribute('aria-current');
     }
   }
 
@@ -124,6 +128,7 @@
             }
           })
             .then(function (res) {
+              if (res.status === 429) throw new Error('요청이 너무 잦아요. 잠시 후 다시 시도해 주세요.');
               if (!res.ok) throw new Error('regenerate request failed');
               return res.json();
             })

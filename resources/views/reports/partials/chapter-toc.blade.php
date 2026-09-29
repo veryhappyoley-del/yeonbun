@@ -20,9 +20,15 @@
 
 <div id="chapter-toc" class="chapter-toc-wrap" data-status-url="{{ route('reports.status', $report) }}">
 
-  <nav class="chapter-tab-strip">
+  {{-- (2026-09-28) 이 스트립은 탭 위젯이 아니라 "지금 보고 있는 챕터"를 가리키는 링크
+       모음이다. 그래서 role="tab"이 아니라 nav + aria-current(public/js/report-toc.js가
+       스크롤에 따라 갱신)를 쓴다. 보이는 글자는 "01"뿐이라 링크 이름만으로는 어디로
+       가는지 알 수 없어서, 보이는 글자로 시작하는 aria-label을 함께 준다. --}}
+  <nav class="chapter-tab-strip" aria-label="챕터 바로가기">
     @foreach ($type->chapters as $i => $chapter)
-      <a href="#chapter-{{ $chapter->key }}" class="chapter-tab" data-chapter-tab="{{ $chapter->key }}">{{ str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) }}</a>
+      @php $num = str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT); @endphp
+      <a href="#chapter-{{ $chapter->key }}" class="chapter-tab" data-chapter-tab="{{ $chapter->key }}"
+         aria-label="{{ $num }} {{ $chapter->title }}">{{ $num }}</a>
     @endforeach
   </nav>
 

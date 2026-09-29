@@ -45,6 +45,9 @@
     </div>
   @endif
 
+  {{-- (2026-09-28) 결제 전 필수 동의. 체크하기 전에는 아래 결제 버튼이 잠긴다. --}}
+  @include('partials.payment-consent', ['id' => 'billing-consent', 'targets' => '.plan-buy, .plan-card button[type=submit]'])
+
   <div class="plan-grid">
     @foreach ($plans as $key => $plan)
       @if ($tossConfigured)
@@ -57,7 +60,7 @@
           <div class="plan-desc">{{ $plan['desc'] }}</div>
           <div class="plan-price">{{ number_format($plan['price']) }}원</div>
           <div class="plan-unit">메시지 1개당 약 {{ number_format($plan['price'] / $plan['credits']) }}원</div>
-          <button type="button" class="btn plan-buy" data-plan="{{ $key }}">결제하기</button>
+          <button type="button" class="btn plan-buy" data-plan="{{ $key }}" disabled aria-disabled="true">결제하기</button>
         </div>
       @else
         <form method="POST" action="{{ route('billing.purchase') }}" class="plan-card @if(!empty($plan['highlight'])) highlight @endif">
@@ -71,7 +74,7 @@
           <div class="plan-desc">{{ $plan['desc'] }}</div>
           <div class="plan-price">{{ number_format($plan['price']) }}원</div>
           <div class="plan-unit">메시지 1개당 약 {{ number_format($plan['price'] / $plan['credits']) }}원</div>
-          <button type="submit" class="btn">[테스트] 충전하기</button>
+          <button type="submit" class="btn" disabled aria-disabled="true">[테스트] 충전하기</button>
         </form>
       @endif
     @endforeach
@@ -119,8 +122,10 @@
         },
         body: JSON.stringify({ plan: button.dataset.plan })
       })
-        .then(function (res) { return res.json().then(function (body) { return { ok: res.ok, body: body }; }); })
+        .then(function (res) { return res.json().then(function (body) { return { ok: res.ok, status: res.status, body: body }; }); })
         .then(function (r) {
+          {{-- (2026-09-28) 결제 엔드포인트에 throttle을 걸면서 429가 올 수 있게 됐다. --}}
+          if (r.status === 429) throw new Error('요청이 너무 잦아요. 잠시 후 다시 시도해 주세요.');
           if (!r.ok) throw new Error(r.body.error || '결제를 시작하지 못했어요.');
 
           return tossPayments.requestPayment('카드', {
@@ -145,5 +150,6 @@
 </script>
 @endif
 
+<script src="{{ asset('js/consent.js') }}"></script>
 </body>
 </html>

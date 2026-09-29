@@ -35,6 +35,6 @@
       @include('partials.icon', ['name' => $variant['icon']])
       @if ($label !== ''){{ $label }}@endif
     </div>
-    @if ($reason !== '')<p class="rpt-p" style="margin-top:8px;">{{ $reason }}</p>@endif
+    @if ($reason !== '')<p class="rpt-p u-mt-2">{{ $reason }}</p>@endif
   </div>
 @endif

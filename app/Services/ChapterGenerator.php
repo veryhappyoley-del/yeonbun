@@ -134,7 +134,7 @@ class ChapterGenerator
         if ($response instanceof Throwable) {
             $row->update(['status' => 'failed', 'last_error' => $response->getMessage()]);
 
-            Log::warning('결 챕터 리포트: 요청 예외', [
+            Log::warning('연록 챕터 리포트: 요청 예외', [
                 'report_chapter_id' => $row->id,
                 'chapter_key' => $row->chapter_key,
                 'message' => $response->getMessage(),
@@ -146,7 +146,7 @@ class ChapterGenerator
         if ($response->failed()) {
             $row->update(['status' => 'failed', 'last_error' => 'http_'.$response->status()]);
 
-            Log::warning('결 챕터 리포트: API 실패', [
+            Log::warning('연록 챕터 리포트: API 실패', [
                 'report_chapter_id' => $row->id,
                 'chapter_key' => $row->chapter_key,
                 'status' => $response->status(),
@@ -159,7 +159,7 @@ class ChapterGenerator
         $outputTokens = $response->json('usage.output_tokens');
 
         if ($stopReason === 'max_tokens') {
-            Log::warning('결 챕터 리포트: max_tokens 도달로 응답이 잘렸을 수 있음', [
+            Log::warning('연록 챕터 리포트: max_tokens 도달로 응답이 잘렸을 수 있음', [
                 'report_chapter_id' => $row->id,
                 'chapter_key' => $row->chapter_key,
                 'output_tokens' => $outputTokens,
@@ -197,7 +197,7 @@ class ChapterGenerator
                 'last_error' => $lastError,
             ]);
 
-            Log::warning('결 챕터 리포트: 도구 호출 스키마 검증 실패', [
+            Log::warning('연록 챕터 리포트: 도구 호출 스키마 검증 실패', [
                 'report_chapter_id' => $row->id,
                 'chapter_key' => $row->chapter_key,
                 'stop_reason' => $stopReason,
@@ -281,7 +281,7 @@ class ChapterGenerator
         if ($response instanceof Throwable) {
             $row->update(['status' => 'failed', 'last_error' => $response->getMessage()]);
 
-            Log::warning('결 챕터 미리보기: 요청 예외', [
+            Log::warning('연록 챕터 미리보기: 요청 예외', [
                 'chapter_preview_id' => $row->id,
                 'chapter_key' => $row->chapter_key,
                 'message' => $response->getMessage(),
@@ -293,7 +293,7 @@ class ChapterGenerator
         if ($response->failed()) {
             $row->update(['status' => 'failed', 'last_error' => 'http_'.$response->status()]);
 
-            Log::warning('결 챕터 미리보기: API 실패', [
+            Log::warning('연록 챕터 미리보기: API 실패', [
                 'chapter_preview_id' => $row->id,
                 'chapter_key' => $row->chapter_key,
                 'status' => $response->status(),
@@ -324,7 +324,7 @@ class ChapterGenerator
                 'last_error' => $lastError,
             ]);
 
-            Log::warning('결 챕터 미리보기: 도구 호출 스키마 검증 실패', [
+            Log::warning('연록 챕터 미리보기: 도구 호출 스키마 검증 실패', [
                 'chapter_preview_id' => $row->id,
                 'chapter_key' => $row->chapter_key,
                 'stop_reason' => $stopReason,

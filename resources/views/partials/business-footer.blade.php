@@ -45,6 +45,8 @@
   @endif
 
   <div class="business-footer-links">
+    {{-- (2026-09-28) 이용약관 추가 — 결제를 받는 서비스라 상시 노출이 필요하다. --}}
+    <a href="{{ route('terms.index') }}">이용약관</a>
     <a href="{{ route('privacy.index') }}">개인정보 처리방침</a>
     @if (config('business.instagram'))
       <a class="business-footer-instagram" href="{{ config('business.instagram') }}" target="_blank" rel="noopener noreferrer" aria-label="인스타그램">

@@ -58,7 +58,7 @@
 </head>
 <body class="phone-app has-bottom-nav">
 
-<div class="wrap wrap-narrow">
+<div class="wrap">
 
   @include('partials.site-header')
 

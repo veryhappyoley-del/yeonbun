@@ -96,7 +96,9 @@ class BillingController extends Controller
         return response()->json([
             'order_id' => $payment->order_id,
             'amount' => $payment->amount,
-            'order_name' => "결 {$plan['label']} ({$plan['credits']}개)",
+            // (2026-09-28) 브랜드명이 2026-08-25에 "결" → "연록"으로 바뀌었는데 이 문구만
+            // 남아 있었다. 토스 결제창에 사용자가 직접 보게 되는 주문명이라 사소하지 않다.
+            'order_name' => "연록 {$plan['label']} ({$plan['credits']}개)",
             'customer_name' => $request->user()->name,
         ]);
     }

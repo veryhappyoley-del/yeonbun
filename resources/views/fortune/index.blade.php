@@ -20,7 +20,7 @@
 </head>
 <body class="phone-app has-bottom-nav">
 
-<div class="wrap wrap-narrow">
+<div class="wrap">
 
   @include('partials.site-header')
 
@@ -95,8 +95,16 @@
         {{ $profile->name ?? '회원' }}님의 저장된 생년월일시로 매일 오늘의 운세를 만들어드려요.
       </div>
       <div class="plan-price" style="margin-bottom:4px;">{{ number_format($price) }}원<span style="font-size:0.5em;">/월</span></div>
+      {{-- (2026-09-28) 카드 등록 실패를 alert()로 알리던 걸 인라인 피드백으로 바꿨다 —
+           이 서비스의 다른 오류 표시(.feedback / .form-error)와 맞추기 위해서. --}}
+      <div class="feedback feedback--error" id="fortune-checkout-error" role="alert" style="display:none;">
+        @include('partials.icon', ['name' => 'alert'])
+        <div class="feedback-body"></div>
+      </div>
+      {{-- (2026-09-28) 정기결제 시작 전 필수 동의. 체크 전에는 버튼이 잠긴다. --}}
+      @include('partials.payment-consent', ['id' => 'fortune-consent', 'targets' => '#fortune-subscribe-btn'])
       @if ($tossConfigured)
-        <button type="button" id="fortune-subscribe-btn" class="btn btn-center">카드 등록하고 구독 시작</button>
+        <button type="button" id="fortune-subscribe-btn" class="btn btn-center" disabled aria-disabled="true">카드 등록하고 구독 시작</button>
       @else
         <div class="placeholder-note">결제 기능이 아직 설정되지 않았어요.</div>
       @endif
@@ -146,10 +154,19 @@
   // 그 무거운 파일을 로드하지 않으므로 여기에 아주 작게 다시 둔다.
   var genderRow = document.getElementById('fortune-gender-row');
   if (genderRow) {
+    // (2026-09-28) 선택 상태를 색으로만 알리지 않도록 aria-pressed를 함께 갱신한다
+    // (public/js/app.js의 wireSingleSelect와 같은 처리).
+    var syncGenderPressed = function () {
+      genderRow.querySelectorAll('.compat-gender-chip').forEach(function (c) {
+        c.setAttribute('aria-pressed', c.classList.contains('active') ? 'true' : 'false');
+      });
+    };
+    syncGenderPressed();
     genderRow.querySelectorAll('.compat-gender-chip').forEach(function (chip) {
       chip.addEventListener('click', function () {
         genderRow.querySelectorAll('.compat-gender-chip').forEach(function (c) { c.classList.remove('active'); });
         chip.classList.add('active');
+        syncGenderPressed();
         document.getElementById('fortune-gender-input').value = chip.dataset.gender;
       });
     });
@@ -176,7 +193,17 @@
       return meta ? meta.getAttribute('content') : '';
     }
 
+    function showCheckoutError(message) {
+      var box = document.getElementById('fortune-checkout-error');
+      if (!box) return;
+      box.querySelector('.feedback-body').textContent = message;
+      box.style.display = '';
+      box.scrollIntoView({ block: 'center' });
+    }
+
     subscribeBtn.addEventListener('click', function () {
+      var errBox = document.getElementById('fortune-checkout-error');
+      if (errBox) errBox.style.display = 'none';
       subscribeBtn.disabled = true;
 
       fetch('{{ route('fortune.checkout') }}', {
@@ -184,8 +211,10 @@
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
         body: '{}'
       })
-        .then(function (res) { return res.json().then(function (body) { return { ok: res.ok, body: body }; }); })
+        .then(function (res) { return res.json().then(function (body) { return { ok: res.ok, status: res.status, body: body }; }); })
         .then(function (r) {
+          {{-- (2026-09-28) 결제 엔드포인트 throttle 도입으로 429가 올 수 있다. --}}
+          if (r.status === 429) throw new Error('요청이 너무 잦아요. 잠시 후 다시 시도해 주세요.');
           if (!r.ok) throw new Error(r.body.error || '구독을 시작하지 못했어요.');
 
           return tossPayments.requestBillingAuth('카드', {
@@ -196,7 +225,7 @@
         })
         .catch(function (error) {
           if (error && error.code === 'USER_CANCEL') return;
-          alert((error && error.message) || '카드 등록 중 문제가 발생했어요.');
+          showCheckoutError((error && error.message) || '카드 등록 중 문제가 발생했어요.');
         })
         .finally(function () { subscribeBtn.disabled = false; });
     });
@@ -205,5 +234,6 @@
 })();
 </script>
 
+<script src="{{ asset('js/consent.js') }}"></script>
 </body>
 </html>

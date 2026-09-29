@@ -107,6 +107,7 @@
   function openSession(id) {
     hideChatError();
     jsonFetch('/chat/' + id).then(function (r) {
+      if (r.status === 429) { showChatError('요청이 너무 잦아요. 잠시 후 다시 시도해 주세요.'); return; }
       if (!r.ok) { showChatError(r.body.error || '상담을 불러오지 못했어요.'); return; }
       chatSessionId = r.body.chat_session_id;
       document.getElementById('chat-log').innerHTML = '';
@@ -129,6 +130,9 @@
     })
       .then(function (r) {
         if (r.status === 402 && r.body.needs_payment) { window.location.href = '/billing'; return; }
+        // (2026-09-28) AI 호출 경로에 throttle을 걸면서 429가 실제로 올 수 있게 됐다.
+        // Laravel 기본 429 응답에는 error 필드가 없어 안내가 뭉뚱그려지므로 따로 처리한다.
+        if (r.status === 429) throw new Error('요청이 너무 잦아요. 잠시 후 다시 시도해 주세요.');
         if (!r.ok) throw new Error(r.body.error || '상담을 시작하지 못했어요.');
         chatSessionId = r.body.chat_session_id;
         document.getElementById('chat-log').innerHTML = '';
@@ -163,6 +167,7 @@
     })
       .then(function (r) {
         if (r.status === 402 && r.body.needs_payment) { window.location.href = '/billing'; return; }
+        if (r.status === 429) throw new Error('요청이 너무 잦아요. 잠시 후 다시 시도해 주세요.');
         if (!r.ok) throw new Error(r.body.error || 'AI 응답을 받아오지 못했어요.');
         addBubble('assistant', r.body.message);
         updateCreditsDisplay(r.body.credits);

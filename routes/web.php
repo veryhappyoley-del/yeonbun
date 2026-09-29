@@ -45,6 +45,13 @@ Route::get('/privacy', function () {
     return view('privacy');
 })->name('privacy.index');
 
+// (2026-09-28 신설) 이용약관 + 환불/청약철회 안내. 결제를 받는 서비스는 약관을 게시해야
+// 하고(전자상거래법), 토스페이먼츠 라이브 키 심사에서도 약관 URL을 요구하는 경우가 많다.
+// privacy와 같은 이유로 로그인/사업자등록 여부와 무관하게 항상 공개한다.
+Route::get('/terms', function () {
+    return view('terms');
+})->name('terms.index');
+
 // (2026-08-24 신설) 하단 탭바 "마이"/"로그인" — 코인 잔액·충전·리포트함·로그아웃(로그인 시)
 // 또는 카카오/네이버 로그인 버튼(비로그인 시)을 한 곳에 모은 페이지. 비로그인 사용자도
 // 로그인 버튼을 보려면 이 페이지에 들어와야 하므로 auth 미들웨어 밖에 둔다.
@@ -56,6 +63,13 @@ Route::get('/my', function () {
 // auth 미들웨어 밖에 둡니다 — 대신 throttle로 남용을 막습니다(1분에 20회, 정상적인
 // 폴링 패턴엔 충분하고 무한 반복 호출은 막는 수준). ChapterPreviewController가 실제로
 // 허용된 (type, chapter) 조합인지 한 번 더 확인합니다.
+// (2026-09-28 추가) 돈이 드는 엔드포인트의 요청 제한.
+// 지금까지 throttle이 걸린 곳은 아래 chapter-previews 하나뿐이었고, 정작 AI를 호출하거나
+// 결제 주문을 만드는 경로에는 없었다. 크레딧 잔액 검사가 1차 방어선이긴 하지만,
+// 짧은 시간에 반복 요청을 던지는 패턴 자체를 막지는 못한다(리포트 재생성은 크레딧을
+// 쓰지 않고 바로 큐에 AI 작업을 올린다).
+// 값은 정상 사용을 막지 않는 선에서 잡았다 — 챕터 재생성은 실패한 챕터를 연달아 누를 수
+// 있어 넉넉히, 리포트 전체 재생성은 한 번에 20챕터를 다시 만드는 가장 비싼 작업이라 좁게.
 Route::post('/chapter-previews', [ChapterPreviewController::class, 'store'])
     ->middleware('throttle:20,1')
     ->name('chapter-previews.store');
@@ -74,42 +88,45 @@ Route::post('/logout', [SocialAuthController::class, 'logout'])->name('logout');
 // 사주 계산/궁합/상담가이드는 전부 클라이언트에서 계산돼서 여기 안 걸림.
 Route::middleware('auth')->prefix('chat')->group(function () {
     Route::get('/', [ChatController::class, 'index']);
-    Route::post('/start', [ChatController::class, 'start']);
+    Route::post('/start', [ChatController::class, 'start'])->middleware('throttle:20,1');
     Route::get('/{chatSession}', [ChatController::class, 'show']);
-    Route::post('/{chatSession}/message', [ChatController::class, 'sendMessage']);
+    // 실제 Anthropic 호출이 일어나는 유일한 채팅 엔드포인트.
+    Route::post('/{chatSession}/message', [ChatController::class, 'sendMessage'])->middleware('throttle:20,1');
 });
 
 // 코인(메시지) 충전 페이지. 토스페이먼츠 키가 없으면 로컬 전용 가짜 결제(purchase)로 자동 대체됨.
 // 자세한 흐름은 BillingController 상단 주석 참고.
 Route::middleware('auth')->group(function () {
     Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
-    Route::post('/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
+    Route::post('/billing/checkout', [BillingController::class, 'checkout'])->middleware('throttle:20,1')->name('billing.checkout');
     Route::get('/billing/success', [BillingController::class, 'success'])->name('billing.success');
     Route::get('/billing/complete/{payment}', [BillingController::class, 'complete'])->name('billing.complete');
     Route::get('/billing/fail', [BillingController::class, 'fail'])->name('billing.fail');
-    Route::post('/billing/purchase', [BillingController::class, 'purchase'])->name('billing.purchase');
+    Route::post('/billing/purchase', [BillingController::class, 'purchase'])->middleware('throttle:20,1')->name('billing.purchase');
 });
 
 // 심층 개인 리포트 / 프리미엄 궁합 리포트 (단건 결제 + AI 리포트 생성). 흐름은 위 billing.* 와 동일.
 Route::middleware('auth')->group(function () {
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::post('/reports/checkout', [ReportController::class, 'checkout'])->name('reports.checkout');
+    Route::post('/reports/checkout', [ReportController::class, 'checkout'])->middleware('throttle:20,1')->name('reports.checkout');
     Route::get('/reports/success', [ReportController::class, 'success'])->name('reports.success');
     Route::get('/reports/fail', [ReportController::class, 'fail'])->name('reports.fail');
     Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
     Route::get('/reports/{report}/status', [ReportController::class, 'status'])->name('reports.status');
-    Route::post('/reports/{report}/regenerate', [ReportController::class, 'regenerate'])->name('reports.regenerate');
+    // 20챕터를 통째로 다시 만드는 가장 비싼 작업이라 가장 좁게 잡는다.
+    Route::post('/reports/{report}/regenerate', [ReportController::class, 'regenerate'])->middleware('throttle:6,1')->name('reports.regenerate');
     // 챕터형(schema_version=2) 리포트에서 챕터 하나만 재시도. 레거시(schema_version=1)
     // 리포트에는 챕터가 없으므로 이 라우트를 쓰지 않습니다(regenerate가 그대로 담당).
-    Route::post('/reports/{report}/chapters/{chapterKey}/regenerate', [ReportController::class, 'regenerateChapter'])->name('reports.chapters.regenerate');
+    // 실패한 챕터를 여러 개 연달아 누르는 게 정상 사용이라 넉넉히 잡는다.
+    Route::post('/reports/{report}/chapters/{chapterKey}/regenerate', [ReportController::class, 'regenerateChapter'])->middleware('throttle:30,1')->name('reports.chapters.regenerate');
 });
 
 // (2026-08-31 신설) "오늘의 운세" 구독 — 생년월일시 프로필 저장, 토스 빌링(정기결제)
 // 카드 등록/해지, 오늘의 운세 열람. 전부 로그인 사용자 전용.
 Route::middleware('auth')->prefix('fortune')->name('fortune.')->group(function () {
     Route::get('/', [SubscriptionController::class, 'index'])->name('index');
-    Route::post('/profile', [SubscriptionController::class, 'saveProfile'])->name('profile');
-    Route::post('/checkout', [SubscriptionController::class, 'checkout'])->name('checkout');
+    Route::post('/profile', [SubscriptionController::class, 'saveProfile'])->middleware('throttle:30,1')->name('profile');
+    Route::post('/checkout', [SubscriptionController::class, 'checkout'])->middleware('throttle:20,1')->name('checkout');
     Route::get('/confirm', [SubscriptionController::class, 'confirm'])->name('confirm');
     Route::post('/cancel', [SubscriptionController::class, 'cancel'])->name('cancel');
     Route::get('/today', [SubscriptionController::class, 'today'])->name('today');
