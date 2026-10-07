@@ -38,7 +38,7 @@ class WealthFortuneReportType implements ReportTypeDefinition
         return new ReportType(
             key: 'wealth_fortune',
             label: '재물운',
-            price: 21900,
+            price: 9900,
             inputShape: InputShape::Self,
             chapters: self::chapters(),
             freePreviewChapterKey: 'wealth_overview',

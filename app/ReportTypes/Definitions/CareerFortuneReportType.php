@@ -53,7 +53,7 @@ class CareerFortuneReportType implements ReportTypeDefinition
         return new ReportType(
             key: 'career_fortune',
             label: '커리어운',
-            price: 19900,
+            price: 9900,
             inputShape: InputShape::Self,
             chapters: self::chapters(),
             freePreviewChapterKey: 'career_overview',
