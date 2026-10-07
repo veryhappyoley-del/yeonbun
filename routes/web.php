@@ -106,9 +106,12 @@ Route::middleware('auth')->group(function () {
 });
 
 // 심층 개인 리포트 / 프리미엄 궁합 리포트 (단건 결제 + AI 리포트 생성). 흐름은 위 billing.* 와 동일.
+// (2026-10-07) 리포트 결제 시작(checkout)만 auth 밖. ALLOW_GUEST_CHECKOUT=true 일 때 비로그인이면
+// 컨트롤러가 게스트 계정을 만들어 로그인시킨 뒤 진행하고, 꺼져 있으면 401을 돌려준다.
+// success/fail/show 등 나머지는 그대로 auth 안에 둔다(게스트도 로그인된 상태로 돌아오므로 통과).
+Route::post('/reports/checkout', [ReportController::class, 'checkout'])->middleware('throttle:20,1')->name('reports.checkout');
 Route::middleware('auth')->group(function () {
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::post('/reports/checkout', [ReportController::class, 'checkout'])->middleware('throttle:20,1')->name('reports.checkout');
     Route::get('/reports/success', [ReportController::class, 'success'])->name('reports.success');
     Route::get('/reports/fail', [ReportController::class, 'fail'])->name('reports.fail');
     Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');

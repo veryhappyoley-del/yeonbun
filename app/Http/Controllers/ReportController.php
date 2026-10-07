@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Jobs\GenerateReportChapterJob;
 use App\Jobs\GenerateReportJob;
 use App\Models\Report;
+use App\Models\User;
 use App\ReportTypes\ReportTypeRegistry;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -92,13 +94,31 @@ class ReportController extends Controller
 
         $type = ReportTypeRegistry::get($data['type']);
 
+        // (2026-10-07) 토스 심사용 임시 게스트 결제. 비로그인이면 게스트 계정을 만들어 로그인시키고
+        // 이후 흐름은 로그인 사용자와 완전히 동일하다(user_id로 묶인 리포트/결제 구조 유지).
+        $user = $request->user();
+        if (! $user) {
+            if (! config('guest.checkout')) {
+                return response()->json(['error' => '로그인이 필요해요.'], 401);
+            }
+
+            $user = User::create([
+                'name' => '연록 고객',
+                'email' => 'guest_'.Str::uuid()->toString().'@yeonbun.local',
+                'password' => Str::random(40),
+                'provider' => 'guest',
+                'provider_id' => Str::uuid()->toString(),
+            ]);
+            Auth::login($user, remember: true);
+        }
+
         // (2026-09-28 추가) 중복 결제 방지 — 프런트에서도 버튼을 잠그지만(public/js/reports.js
         // 의 lockButton), 연타·새로고침·뒤로가기 후 재시도처럼 프런트 잠금이 무력화되는 경로가
         // 있어서 서버에서도 한 번 더 막는다. 같은 사용자가 같은 타입·같은 입력·같은 금액으로
         // 아직 결제를 끝내지 않은(pending) 건이 최근에 있으면 새 주문을 만들지 않고 그 건을
         // 그대로 재사용한다 — 그러면 결제창이 두 번 떠도 주문번호가 하나라 청구도 한 번이다.
         // 오래된 pending은 입력을 바꿔 다시 시도한 흔적일 수 있어 재사용하지 않는다.
-        $report = Report::where('user_id', $request->user()->id)
+        $report = Report::where('user_id', $user->id)
             ->where('type', $data['type'])
             ->where('status', 'pending')
             ->where('amount', $type->price)
@@ -112,7 +132,7 @@ class ReportController extends Controller
             $report->forceFill(['title' => $data['title'] ?? $report->title])->save();
         } else {
             $report = Report::create([
-                'user_id' => $request->user()->id,
+                'user_id' => $user->id,
                 'type' => $data['type'],
                 'schema_version' => $type->schemaVersion,
                 'order_id' => 'gyeol_report_'.Str::uuid()->toString(),
@@ -128,7 +148,7 @@ class ReportController extends Controller
             'amount' => $report->amount,
             // (2026-09-28) 위 BillingController와 같은 이유 — 결제창에 보이는 주문명의 구 브랜드명 교체.
             'order_name' => "연록 {$type->label}",
-            'customer_name' => $request->user()->name,
+            'customer_name' => $user->name,
         ]);
     }
 

@@ -226,18 +226,9 @@
     // 이미 진행 중이면(연타·엔터 중복) 두 번째 호출은 그냥 버린다.
     if (buyBtn && buyBtn.disabled) return;
     lockButton(buyBtn);
-    if (!window.YeonbunAuth || !window.YeonbunAuth.loggedIn) {
-      // (2026-09-08 추가) 로그인 안 된 걸 감지한 바로 이 순간이 "구매하려던 참이었다"는
-      // 신호라, public/js/app.js에 지금 탭 상태를 저장하고 "로그인 후 돌아오면 이 탭을
-      // 다시 계산해 달라"는 표시를 남겨달라고 요청한다 — 그래야 로그인하고 돌아왔을 때
-      // 사주풀이 버튼을 한 번 더 누르지 않고 바로 구매 버튼까지 갈 수 있다.
-      if (window.YeonbunDraft && window.YeonbunDraft.markPendingCheckoutResume) {
-        window.YeonbunDraft.markPendingCheckoutResume();
-      }
-      showLoginGate(statusBox);
-      unlockButton(buyBtn);
-      return;
-    }
+    // (2026-10-07) 비로그인이어도 바로 로그인 게이트를 띄우지 않고 일단 checkout을 시도한다.
+    // 서버가 게스트 결제를 허용(ALLOW_GUEST_CHECKOUT)하면 그대로 결제창으로 가고, 허용하지
+    // 않으면 401을 돌려주며 아래에서 예전과 같은 로그인 게이트를 띄운다.
 
     if (!window.YeonbunBilling || !window.YeonbunBilling.tossConfigured) {
       statusBox.textContent = '결제 기능이 아직 설정되지 않았어요.';
@@ -260,8 +251,17 @@
       .then(function (r) {
         // (2026-09-28) throttle 도입으로 429가 올 수 있다. 기본 429 본문에는 error가 없다.
         if (r.status === 429) throw new Error('요청이 너무 잦아요. 잠시 후 다시 시도해 주세요.');
+        if (r.status === 401 || r.status === 419) {
+          // 게스트 결제가 꺼져 있거나 로그인이 필요한 경우 — 예전 로그인 게이트 동작 그대로.
+          if (window.YeonbunDraft && window.YeonbunDraft.markPendingCheckoutResume) {
+            window.YeonbunDraft.markPendingCheckoutResume();
+          }
+          showLoginGate(statusBox);
+          return null;
+        }
         if (!r.ok) throw new Error(r.body.error || '리포트 결제를 시작하지 못했어요.');
 
+        if (!r.body || !r.body.order_id) return null; // 로그인 게이트가 이미 표시됨
         statusBox.textContent = '';
         var tossPayments = TossPayments(window.YeonbunBilling.tossClientKey);
 
